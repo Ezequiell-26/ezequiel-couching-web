@@ -98,3 +98,21 @@ Stage Summary:
 - `bun run lint` (ESLint 9 flat + eslint-config-next 16): 0 errores, 0 warnings (eran 31 errores al empezar: 27 de react-hooks/set-state-in-effect + 1 react-hooks/refs en use-async-data + 3 de imports/vars sin uso).
 - `bunx tsc --noEmit`: 0 errores.
 - 14 archivos tocados: src/hooks/use-async-data.ts y 13 vistas (tienda, planes, plan, post, producto, blog, checkout, admin, coach, calculadoras, contador, dashboard, progress).
+
+---
+Task ID: 22 (integración principal)
+Agent: Z.ai Code (principal)
+Task: Restauración completa + verificación E2E de la app tras el incidente del workspace.
+
+Work Log:
+- Núcleo restaurado por el principal: router verbatim, navbar verbatim, home verbatim, shell, footer, UI kit, lib (seo, nutrition, admin-auth, rate-limit, stores), 25 rutas API, esquema Prisma.
+- 3 subagentes en paralelo: 22-b (14 vistas de contenido), 22-c (8 vistas herramientas/tienda), 22-d (paneles coach/admin + 12 rutas API admin).
+- Subagente 22-e: 33 errores de lint (react-hooks/set-state-in-effect) → 0 con hook useAsyncData + inicialización perezosa.
+- Correcciones del principal tras integración: sync hashchange en SiteShell (bug crítico: el hash no cambiaba de vista), dynamic() con literales inline (Next 16), eslint flat config, columnas Intake sex/daysPerWeek/equipment (aditivo) + CSV export ampliado.
+- E2E con agent-browser: home/coaching/planes/tienda/producto/checkout/pedido/cuestionario/calculadoras/contador/faq/404/coach, IMC=22,9 y BMR=1649/TDEE=2556 verificados, contador persiste tras reload, pedido pendiente honesto, admin 401 sin sesión y 503 sin password, CRUD admin OK, menú móvil, footer, consola limpia, 1280/390/320 sin overflow.
+- Datos de prueba borrados: BD entregada vacía (sin intake/order/lead/message).
+
+Stage Summary:
+- App restaurada y verificada. lint 0, tsc 0, BD vacía sin datos inventados.
+- Pendientes documentados en PROJECT_STATUS.md (SMTP, Stripe, cuentas de cliente, placeholders).
+- ADMIN_PASSWORD temporal en .env: ezequiel-temp-2026 (CAMBIAR).

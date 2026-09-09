@@ -114,6 +114,16 @@ export function SiteShell() {
   const pendingAnchor = useRouter((s) => s.pendingAnchor);
   const view = useRouter((s) => s.view);
 
+  // Sincroniza el router con location.hash: estado inicial + botón atrás/adelante.
+  useEffect(() => {
+    const sync = () => {
+      useRouter.getState().syncFromHash(window.location.hash);
+    };
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+
   useEffect(() => {
     if (pendingAnchor) {
       scrollToAnchor(pendingAnchor);

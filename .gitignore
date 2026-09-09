@@ -4,3 +4,10 @@ node_modules/
 dev.log
 *.tsbuildinfo
 next-env.d.ts
+# Secretos y datos locales — NO subir a GitHub
+.env
+.env.*
+db/*.db
+db/*.db-journal
+tool-results/
+agent-ctx/

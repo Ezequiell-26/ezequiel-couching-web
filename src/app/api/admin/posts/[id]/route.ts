@@ -1,0 +1,90 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { Prisma } from "@prisma/client";
+import { isAdminRequest } from "@/lib/admin-auth";
+import { db } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+
+const updateSchema = z
+  .object({
+    slug: z
+      .string()
+      .min(1)
+      .max(80)
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug no válido (minúsculas, números y guiones).")
+      .optional(),
+    title: z.string().min(1).max(120).optional(),
+    excerpt: z.string().min(1).max(300).optional(),
+    body: z.string().min(1).max(20000).optional(),
+    category: z.string().min(1).max(40).optional(),
+    published: z.boolean().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, { message: "Nada que actualizar." });
+
+function slugConflict(error: unknown): boolean {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002"
+  );
+}
+
+/** PUT /api/admin/posts/[id] — edita un artículo (parcial). */
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authed = await isAdminRequest();
+  if (!authed) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
+
+  const { id } = await params;
+  const numId = Number(id);
+  if (!Number.isInteger(numId) || numId < 1) {
+    return NextResponse.json({ ok: false, error: "ID inválido." }, { status: 400 });
+  }
+
+  try {
+    const parsed = updateSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { ok: false, error: parsed.error.issues[0]?.message ?? "Datos no válidos." },
+        { status: 400 },
+      );
+    }
+
+    const existing = await db.post.findUnique({ where: { id: numId } });
+    if (!existing) {
+      return NextResponse.json({ ok: false, error: "Artículo no encontrado." }, { status: 404 });
+    }
+
+    const post = await db.post.update({ where: { id: numId }, data: parsed.data });
+    return NextResponse.json({ ok: true, post });
+  } catch (error) {
+    if (slugConflict(error)) {
+      return NextResponse.json({ ok: false, error: "Ese slug ya existe" }, { status: 409 });
+    }
+    console.error("[api/admin/posts/id]", error);
+    return NextResponse.json({ ok: false, error: "Error interno." }, { status: 500 });
+  }
+}
+
+/** DELETE /api/admin/posts/[id] — borrado suave (published:false). */
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authed = await isAdminRequest();
+  if (!authed) return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
+
+  const { id } = await params;
+  const numId = Number(id);
+  if (!Number.isInteger(numId) || numId < 1) {
+    return NextResponse.json({ ok: false, error: "ID inválido." }, { status: 400 });
+  }
+
+  try {
+    const existing = await db.post.findUnique({ where: { id: numId } });
+    if (!existing) {
+      return NextResponse.json({ ok: false, error: "Artículo no encontrado." }, { status: 404 });
+    }
+
+    await db.post.update({ where: { id: numId }, data: { published: false } });
+    return NextResponse.json({ ok: true, soft: true });
+  } catch (error) {
+    console.error("[api/admin/posts/id]", error);
+    return NextResponse.json({ ok: false, error: "Error interno." }, { status: 500 });
+  }
+}

@@ -1,0 +1,98 @@
+// Esquema recreado tras incidente de pérdida del workspace (Task 22-a).
+// Arranca VACÍA: sin datos inventados. Compatibilidad de nombres con la
+// arquitectura documentada (leads, intakes, messages, orders, products, plans, posts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id        Int      @id @default(autoincrement())
+  email     String
+  name      String?
+  source    String   @default("guia-gratis")
+  createdAt DateTime @default(now())
+}
+
+model Intake {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String
+  age          Int?
+  sex          String? // hombre | mujer
+  heightCm     Float?
+  weightKg     Float?
+  goal         String?
+  experience   String?
+  daysPerWeek  Int?
+  equipment    String?
+  injuries     String?
+  message      String?
+  status       String   @default("nuevo")
+  createdAt    DateTime @default(now())
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  body      String
+  read      Boolean  @default(false)
+  reply     String?
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id            Int      @id @default(autoincrement())
+  number        String   @unique
+  kind          String   @default("producto") // producto | plan
+  itemSlug      String
+  itemName      String
+  amountCents   Int
+  customerName  String
+  customerEmail String
+  status        String   @default("pendiente") // pendiente | pagado | entregado | cancelado
+  provider      String   @default("manual") // manual | stripe
+  providerRef   String?
+  createdAt     DateTime @default(now())
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  title       String
+  description String
+  category    String   @default("programa")
+  priceCents  Int
+  fileName    String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model Plan {
+  id         Int      @id @default(autoincrement())
+  slug       String   @unique
+  title      String
+  level      String   @default("iniciacion")
+  weeks      Int      @default(8)
+  summary    String
+  priceCents Int?
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  slug      String   @unique
+  title     String
+  excerpt   String
+  body      String
+  category  String   @default("general")
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+}

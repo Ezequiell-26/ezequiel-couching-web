@@ -1,0 +1,894 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import * as React from "react";
+     4→     4→import { Download, LogOut, LockKeyhole } from "lucide-react";
+     5→     5→import { PageHeader } from "@/components/site/page-header";
+     6→     6→import { Container } from "@/components/site/container";
+     7→     7→import { PlaceholderNote } from "@/components/site/placeholder-note";
+     8→     8→import { LoadingState, EmptyState, ErrorState } from "@/components/site/states";
+     9→     9→import { Card, CardContent } from "@/components/ui/card";
+    10→    10→import { Button, buttonVariants } from "@/components/ui/button";
+    11→    11→import { Input, Textarea, Select, Label } from "@/components/ui/input";
+    12→    12→import { Badge } from "@/components/ui/badge";
+    13→    13→import { toast } from "@/components/ui/toaster";
+    14→    14→import { formatDate, formatPrice, cn } from "@/lib/utils";
+    15→    15→import { useRouter } from "@/lib/router";
+    16→    16→
+    17→    17→/**
+    18→    18→ * CoachView — panel del entrenador: resumen, leads, mensajes, cuestionarios y pedidos.
+    19→    19→ * La sesión vive en /api/admin/session (cookie firmada httpOnly); este componente
+    20→    20→ * solo consulta su estado y monta las pestañas cuando hay acceso.
+    21→    21→ */
+    22→    22→
+    23→    23→type SessionInfo = { authed: boolean; configured: boolean };
+    24→    24→type Counts = { leads: number; unreadMessages: number; newIntakes: number; pendingOrders: number };
+    25→    25→
+    26→    26→type Lead = {
+    27→    27→  id: number;
+    28→    28→  email: string;
+    29→    29→  name: string | null;
+    30→    30→  source: string;
+    31→    31→  createdAt: string;
+    32→    32→};
+    33→    33→
+    34→    34→type Message = {
+    35→    35→  id: number;
+    36→    36→  name: string;
+    37→    37→  email: string;
+    38→    38→  body: string;
+    39→    39→  read: boolean;
+    40→    40→  reply: string | null;
+    41→    41→  createdAt: string;
+    42→    42→};
+    43→    43→
+    44→    44→type Intake = {
+    45→    45→  id: number;
+    46→    46→  name: string;
+    47→    47→  email: string;
+    48→    48→  age: number | null;
+    49→    49→  heightCm: number | null;
+    50→    50→  weightKg: number | null;
+    51→    51→  goal: string | null;
+    52→    52→  experience: string | null;
+    53→    53→  injuries: string | null;
+    54→    54→  message: string | null;
+    55→    55→  status: string;
+    56→    56→  createdAt: string;
+    57→    57→};
+    58→    58→
+    59→    59→type Order = {
+    60→    60→  id: number;
+    61→    61→  number: string;
+    62→    62→  kind: string;
+    63→    63→  itemName: string;
+    64→    64→  amountCents: number;
+    65→    65→  customerName: string;
+    66→    66→  customerEmail: string;
+    67→    67→  status: string;
+    68→    68→  createdAt: string;
+    69→    69→};
+    70→    70→
+    71→    71→type TabId = "resumen" | "leads" | "mensajes" | "cuestionarios" | "pedidos";
+    72→    72→
+    73→    73→const TABS: { id: TabId; label: string }[] = [
+    74→    74→  { id: "resumen", label: "Resumen" },
+    75→    75→  { id: "leads", label: "Leads" },
+    76→    76→  { id: "mensajes", label: "Mensajes" },
+    77→    77→  { id: "cuestionarios", label: "Cuestionarios" },
+    78→    78→  { id: "pedidos", label: "Pedidos" },
+    79→    79→];
+    80→    80→
+    81→    81→const INTAKE_STATUS: { value: string; label: string }[] = [
+    82→    82→  { value: "nuevo", label: "Nuevo" },
+    83→    83→  { value: "contactado", label: "Contactado" },
+    84→    84→  { value: "cliente", label: "Cliente" },
+    85→    85→  { value: "descartado", label: "Descartado" },
+    86→    86→];
+    87→    87→
+    88→    88→const ORDER_STATUS: { value: string; label: string }[] = [
+    89→    89→  { value: "pendiente", label: "Pendiente" },
+    90→    90→  { value: "pagado", label: "Pagado" },
+    91→    91→  { value: "entregado", label: "Entregado" },
+    92→    92→  { value: "cancelado", label: "Cancelado" },
+    93→    93→];
+    94→    94→
+    95→    95→function statusBadgeVariant(status: string): "default" | "secondary" | "outline" | "muted" {
+    96→    96→  switch (status) {
+    97→    97→    case "nuevo":
+    98→    98→    case "pagado":
+    99→    99→      return "default";
+   100→   100→    case "contactado":
+   101→   101→    case "pendiente":
+   102→   102→      return "secondary";
+   103→   103→    case "cliente":
+   104→   104→    case "entregado":
+   105→   105→      return "outline";
+   106→   106→    default:
+   107→   107→      return "muted";
+   108→   108→  }
+   109→   109→}
+   110→   110→
+   111→   111→async function readError(res: Response): Promise<string> {
+   112→   112→  try {
+   113→   113→    const data = (await res.json()) as { error?: string };
+   114→   114→    return data.error ?? "Error inesperado.";
+   115→   115→  } catch {
+   116→   116→    return "Error inesperado.";
+   117→   117→  }
+   118→   118→}
+   119→   119→
+   120→   120→export function CoachView() {
+   121→   121→  const navigate = useRouter((s) => s.navigate);
+   122→   122→  const [session, setSession] = React.useState<SessionInfo | null>(null);
+   123→   123→  const [sessionError, setSessionError] = React.useState(false);
+   124→   124→  const [tab, setTab] = React.useState<TabId>("resumen");
+   125→   125→
+   126→   126→  const loadSession = React.useCallback(async () => {
+   127→   127→    setSessionError(false);
+   128→   128→    try {
+   129→   129→      const res = await fetch("/api/admin/session", { cache: "no-store" });
+   130→   130→      if (!res.ok) throw new Error("session");
+   131→   131→      const data = (await res.json()) as { authed?: boolean; configured?: boolean };
+   132→   132→      setSession({ authed: Boolean(data.authed), configured: Boolean(data.configured) });
+   133→   133→    } catch {
+   134→   134→      setSessionError(true);
+   135→   135→    }
+   136→   136→  }, []);
+   137→   137→
+   138→   138→  React.useEffect(() => {
+   139→   139→    void loadSession();
+   140→   140→  }, [loadSession]);
+   141→   141→
+   142→   142→  const handleLogout = async () => {
+   143→   143→    try {
+   144→   144→      await fetch("/api/admin/session", { method: "DELETE" });
+   145→   145→    } catch {
+   146→   146→      /* aunque falle la petición, refrescamos el estado local */
+   147→   147→    }
+   148→   148→    setTab("resumen");
+   149→   149→    await loadSession();
+   150→   150→  };
+   151→   151→
+   152→   152→  return (
+   153→   153→    <>
+   154→   154→      <PageHeader
+   155→   155→        eyebrow="Panel interno"
+   156→   156→        title="Panel del entrenador"
+   157→   157→        description="Leads, mensajes, cuestionarios y pedidos en un único sitio. Solo para Ezequiel."
+   158→   158→      >
+   159→   159→        <div className="mt-6">
+   160→   160→          <Button variant="outline" size="sm" onClick={() => navigate("home", {}, { source: "coach" })}>
+   161→   161→            Volver a la web
+   162→   162→          </Button>
+   163→   163→        </div>
+   164→   164→      </PageHeader>
+   165→   165→
+   166→   166→      <Container className="py-10 sm:py-12">
+   167→   167→        {sessionError ? (
+   168→   168→          <ErrorState message="No pudimos comprobar tu sesión." onRetry={() => void loadSession()} />
+   169→   169→        ) : session === null ? (
+   170→   170→          <LoadingState label="Comprobando sesión…" />
+   171→   171→        ) : !session.configured ? (
+   172→   172→          <Card>
+   173→   173→            <CardContent className="flex flex-col items-start gap-3 p-6">
+   174→   174→              <div className="flex items-center gap-2">
+   175→   175→                <LockKeyhole aria-hidden className="size-5 text-primary" />
+   176→   176→                <h2 className="text-lg font-semibold">Acceso deshabilitado</h2>
+   177→   177→              </div>
+   178→   178→              <PlaceholderNote>
+   179→   179→                Acceso deshabilitado: define ADMIN_PASSWORD (mín. 8 caracteres) en .env
+   180→   180→              </PlaceholderNote>
+   181→   181→              <p className="text-sm text-muted-foreground">
+   182→   182→                Sin contraseña configurada en el servidor no existe acceso por defecto: nunca se
+   183→   183→                fabrica una. Define la variable y recarga esta página.
+   184→   184→              </p>
+   185→   185→            </CardContent>
+   186→   186→          </Card>
+   187→   187→        ) : !session.authed ? (
+   188→   188→          <LoginForm onSuccess={loadSession} />
+   189→   189→        ) : (
+   190→   190→          <div className="space-y-6">
+   191→   191→            <div className="flex flex-wrap items-center justify-between gap-3">
+   192→   192→              <p className="text-sm text-muted-foreground">
+   193→   193→                Sesión activa durante 12 horas.
+   194→   194→              </p>
+   195→   195→              <Button variant="outline" size="sm" onClick={() => void handleLogout()}>
+   196→   196→                <LogOut aria-hidden />
+   197→   197→                Salir
+   198→   198→              </Button>
+   199→   199→            </div>
+   200→   200→
+   201→   201→            <PlaceholderNote className="max-w-2xl">
+   202→   202→              Entrega de guía y emails: pendiente de configurar SMTP (los leads quedan registrados)
+   203→   203→            </PlaceholderNote>
+   204→   204→
+   205→   205→            <div role="tablist" aria-label="Secciones del panel" className="flex flex-wrap gap-2">
+   206→   206→              {TABS.map((t) => (
+   207→   207→                <button
+   208→   208→                  key={t.id}
+   209→   209→                  type="button"
+   210→   210→                  role="tab"
+   211→   211→                  aria-selected={tab === t.id}
+   212→   212→                  onClick={() => setTab(t.id)}
+   213→   213→                  className={cn(
+   214→   214→                    "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+   215→   215→                    tab === t.id
+   216→   216→                      ? "border-primary bg-primary text-primary-foreground"
+   217→   217→                      : "border-border bg-transparent text-foreground hover:bg-accent/60",
+   218→   218→                  )}
+   219→   219→                >
+   220→   220→                  {t.label}
+   221→   221→                </button>
+   222→   222→              ))}
+   223→   223→            </div>
+   224→   224→
+   225→   225→            <div role="tabpanel" aria-label={TABS.find((t) => t.id === tab)?.label}>
+   226→   226→              {tab === "resumen" ? <SummaryTab onExpired={loadSession} /> : null}
+   227→   227→              {tab === "leads" ? <LeadsTab onExpired={loadSession} /> : null}
+   228→   228→              {tab === "mensajes" ? <MessagesTab onExpired={loadSession} /> : null}
+   229→   229→              {tab === "cuestionarios" ? <IntakesTab onExpired={loadSession} /> : null}
+   230→   230→              {tab === "pedidos" ? <OrdersTab onExpired={loadSession} /> : null}
+   231→   231→            </div>
+   232→   232→          </div>
+   233→   233→        )}
+   234→   234→      </Container>
+   235→   235→    </>
+   236→   236→  );
+   237→   237→}
+   238→   238→
+   239→   239→/* ---------------------------------- Login --------------------------------- */
+   240→   240→
+   241→   241→function LoginForm({ onSuccess }: { onSuccess: () => Promise<void> }) {
+   242→   242→  const [password, setPassword] = React.useState("");
+   243→   243→  const [error, setError] = React.useState<string | null>(null);
+   244→   244→  const [busy, setBusy] = React.useState(false);
+   245→   245→
+   246→   246→  const handleSubmit = async (e: React.FormEvent) => {
+   247→   247→    e.preventDefault();
+   248→   248→    if (busy) return;
+   249→   249→    setError(null);
+   250→   250→    setBusy(true);
+   251→   251→    try {
+   252→   252→      const res = await fetch("/api/admin/session", {
+   253→   253→        method: "POST",
+   254→   254→        headers: { "Content-Type": "application/json" },
+   255→   255→        body: JSON.stringify({ password }),
+   256→   256→      });
+   257→   257→      if (res.ok) {
+   258→   258→        setPassword("");
+   259→   259→        await onSuccess();
+   260→   260→        return;
+   261→   261→      }
+   262→   262→      const message = await readError(res);
+   263→   263→      setError(res.status === 429 ? message : res.status === 401 ? "Contraseña incorrecta." : message);
+   264→   264→    } catch {
+   265→   265→      setError("Error de conexión. Inténtalo de nuevo.");
+   266→   266→    } finally {
+   267→   267→      setBusy(false);
+   268→   268→    }
+   269→   269→  };
+   270→   270→
+   271→   271→  return (
+   272→   272→    <Card className="mx-auto max-w-md">
+   273→   273→      <CardContent className="p-6">
+   274→   274→        <h2 className="flex items-center gap-2 text-lg font-semibold">
+   275→   275→          <LockKeyhole aria-hidden className="size-5 text-primary" />
+   276→   276→          Acceso del entrenador
+   277→   277→        </h2>
+   278→   278→        <p className="mt-1 text-sm text-muted-foreground">
+   279→   279→          Introduce la contraseña del panel para continuar.
+   280→   280→        </p>
+   281→   281→        <form onSubmit={handleSubmit} className="mt-5 space-y-4" noValidate>
+   282→   282→          <div className="space-y-2">
+   283→   283→            <Label htmlFor="coach-password">Contraseña</Label>
+   284→   284→            <Input
+   285→   285→              id="coach-password"
+   286→   286→              type="password"
+   287→   287→              autoComplete="current-password"
+   288→   288→              value={password}
+   289→   289→              onChange={(e) => setPassword(e.target.value)}
+   290→   290→              required
+   291→   291→              autoFocus
+   292→   292→            />
+   293→   293→          </div>
+   294→   294→          {error ? (
+   295→   295→            <p role="alert" className="text-sm font-medium text-destructive">
+   296→   296→              {error}
+   297→   297→            </p>
+   298→   298→          ) : null}
+   299→   299→          <Button type="submit" className="w-full" disabled={busy || password.length === 0}>
+   300→   300→            {busy ? "Entrando…" : "Entrar"}
+   301→   301→          </Button>
+   302→   302→        </form>
+   303→   303→      </CardContent>
+   304→   304→    </Card>
+   305→   305→  );
+   306→   306→}
+   307→   307→
+   308→   308→/* --------------------------------- Resumen -------------------------------- */
+   309→   309→
+   310→   310→function SummaryTab({ onExpired }: { onExpired: () => Promise<void> }) {
+   311→   311→  const [counts, setCounts] = React.useState<Counts | null>(null);
+   312→   312→  const [state, setState] = React.useState<"loading" | "ready" | "error">("loading");
+   313→   313→
+   314→   314→  const load = React.useCallback(async () => {
+   315→   315→    setState("loading");
+   316→   316→    try {
+   317→   317→      const res = await fetch("/api/admin/session", { method: "PUT", cache: "no-store" });
+   318→   318→      if (res.status === 401) {
+   319→   319→        await onExpired();
+   320→   320→        return;
+   321→   321→      }
+   322→   322→      if (!res.ok) throw new Error("counts");
+   323→   323→      const data = (await res.json()) as { counts?: Counts };
+   324→   324→      setCounts(
+   325→   325→        data.counts ?? { leads: 0, unreadMessages: 0, newIntakes: 0, pendingOrders: 0 },
+   326→   326→      );
+   327→   327→      setState("ready");
+   328→   328→    } catch {
+   329→   329→      setState("error");
+   330→   330→    }
+   331→   331→  }, [onExpired]);
+   332→   332→
+   333→   333→  React.useEffect(() => {
+   334→   334→    void load();
+   335→   335→  }, [load]);
+   336→   336→
+   337→   337→  if (state === "error") {
+   338→   338→    return <ErrorState onRetry={() => void load()} />;
+   339→   339→  }
+   340→   340→
+   341→   341→  const items: { label: string; value: number | null }[] = [
+   342→   342→    { label: "Leads registrados", value: counts?.leads ?? null },
+   343→   343→    { label: "Mensajes sin leer", value: counts?.unreadMessages ?? null },
+   344→   344→    { label: "Cuestionarios nuevos", value: counts?.newIntakes ?? null },
+   345→   345→    { label: "Pedidos pendientes", value: counts?.pendingOrders ?? null },
+   346→   346→  ];
+   347→   347→
+   348→   348→  return (
+   349→   349→    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+   350→   350→      {items.map((item) => (
+   351→   351→        <Card key={item.label} className="p-6">
+   352→   352→          <p className="text-sm text-muted-foreground">{item.label}</p>
+   353→   353→          {state === "loading" || item.value === null ? (
+   354→   354→            <p aria-hidden className="mt-2 animate-pulse text-4xl font-bold text-muted">—</p>
+   355→   355→          ) : (
+   356→   356→            <p aria-label={`${item.value}`} className="mt-2 text-4xl font-bold text-primary">
+   357→   357→              {item.value}
+   358→   358→            </p>
+   359→   359→          )}
+   360→   360→        </Card>
+   361→   361→      ))}
+   362→   362→      {state === "loading" ? <span className="sr-only">Cargando resumen…</span> : null}
+   363→   363→    </div>
+   364→   364→  );
+   365→   365→}
+   366→   366→
+   367→   367→/* ---------------------------------- Leads --------------------------------- */
+   368→   368→
+   369→   369→function LeadsTab({ onExpired }: { onExpired: () => Promise<void> }) {
+   370→   370→  const [leads, setLeads] = React.useState<Lead[]>([]);
+   371→   371→  const [state, setState] = React.useState<"loading" | "ready" | "error">("loading");
+   372→   372→
+   373→   373→  const load = React.useCallback(async () => {
+   374→   374→    setState("loading");
+   375→   375→    try {
+   376→   376→      const res = await fetch("/api/admin/leads", { cache: "no-store" });
+   377→   377→      if (res.status === 401) {
+   378→   378→        await onExpired();
+   379→   379→        return;
+   380→   380→      }
+   381→   381→      if (!res.ok) throw new Error("leads");
+   382→   382→      const data = (await res.json()) as { leads?: Lead[] };
+   383→   383→      setLeads(data.leads ?? []);
+   384→   384→      setState("ready");
+   385→   385→    } catch {
+   386→   386→      setState("error");
+   387→   387→    }
+   388→   388→  }, [onExpired]);
+   389→   389→
+   390→   390→  React.useEffect(() => {
+   391→   391→    void load();
+   392→   392→  }, [load]);
+   393→   393→
+   394→   394→  if (state === "loading") return <LoadingState label="Cargando leads…" />;
+   395→   395→  if (state === "error") return <ErrorState onRetry={() => void load()} />;
+   396→   396→  if (leads.length === 0)
+   397→   397→    return <EmptyState title="Sin leads todavía." hint="Cuando alguien descargue la guía aparecerá aquí." />;
+   398→   398→
+   399→   399→  return (
+   400→   400→    <>
+   401→   401→      {/* Móvil: lista de cards */}
+   402→   402→      <ul className="space-y-3 md:hidden">
+   403→   403→        {leads.map((lead) => (
+   404→   404→          <li key={lead.id}>
+   405→   405→            <Card className="p-4">
+   406→   406→              <p className="font-medium break-words">{lead.email}</p>
+   407→   407→              <p className="text-sm text-muted-foreground">{lead.name ?? "Sin nombre"}</p>
+   408→   408→              <div className="mt-2 flex flex-wrap items-center gap-2">
+   409→   409→                <Badge variant="secondary">{lead.source}</Badge>
+   410→   410→                <span className="text-xs text-muted-foreground">{formatDate(lead.createdAt)}</span>
+   411→   411→              </div>
+   412→   412→            </Card>
+   413→   413→          </li>
+   414→   414→        ))}
+   415→   415→      </ul>
+   416→   416→
+   417→   417→      {/* Escritorio: tabla */}
+   418→   418→      <Card className="hidden md:block">
+   419→   419→        <div className="overflow-x-auto">
+   420→   420→          <table className="w-full text-sm">
+   421→   421→            <caption className="sr-only">Listado de leads registrados</caption>
+   422→   422→            <thead>
+   423→   423→              <tr className="border-b border-border text-left text-muted-foreground">
+   424→   424→                <th scope="col" className="px-4 py-3 font-medium">Email</th>
+   425→   425→                <th scope="col" className="px-4 py-3 font-medium">Nombre</th>
+   426→   426→                <th scope="col" className="px-4 py-3 font-medium">Origen</th>
+   427→   427→                <th scope="col" className="px-4 py-3 font-medium">Fecha</th>
+   428→   428→              </tr>
+   429→   429→            </thead>
+   430→   430→            <tbody>
+   431→   431→              {leads.map((lead) => (
+   432→   432→                <tr key={lead.id} className="border-b border-border/60 last:border-0">
+   433→   433→                  <td className="px-4 py-3 break-words">{lead.email}</td>
+   434→   434→                  <td className="px-4 py-3 text-muted-foreground">{lead.name ?? "—"}</td>
+   435→   435→                  <td className="px-4 py-3">
+   436→   436→                    <Badge variant="secondary">{lead.source}</Badge>
+   437→   437→                  </td>
+   438→   438→                  <td className="px-4 py-3 text-muted-foreground">{formatDate(lead.createdAt)}</td>
+   439→   439→                </tr>
+   440→   440→              ))}
+   441→   441→            </tbody>
+   442→   442→          </table>
+   443→   443→        </div>
+   444→   444→      </Card>
+   445→   445→    </>
+   446→   446→  );
+   447→   447→}
+   448→   448→
+   449→   449→/* --------------------------------- Mensajes -------------------------------- */
+   450→   450→
+   451→   451→function MessagesTab({ onExpired }: { onExpired: () => Promise<void> }) {
+   452→   452→  const [messages, setMessages] = React.useState<Message[]>([]);
+   453→   453→  const [state, setState] = React.useState<"loading" | "ready" | "error">("loading");
+   454→   454→
+   455→   455→  const load = React.useCallback(async () => {
+   456→   456→    setState("loading");
+   457→   457→    try {
+   458→   458→      const res = await fetch("/api/admin/messages", { cache: "no-store" });
+   459→   459→      if (res.status === 401) {
+   460→   460→        await onExpired();
+   461→   461→        return;
+   462→   462→      }
+   463→   463→      if (!res.ok) throw new Error("messages");
+   464→   464→      const data = (await res.json()) as { messages?: Message[] };
+   465→   465→      setMessages(data.messages ?? []);
+   466→   466→      setState("ready");
+   467→   467→    } catch {
+   468→   468→      setState("error");
+   469→   469→    }
+   470→   470→  }, [onExpired]);
+   471→   471→
+   472→   472→  React.useEffect(() => {
+   473→   473→    void load();
+   474→   474→  }, [load]);
+   475→   475→
+   476→   476→  if (state === "loading") return <LoadingState label="Cargando mensajes…" />;
+   477→   477→  if (state === "error") return <ErrorState onRetry={() => void load()} />;
+   478→   478→  if (messages.length === 0)
+   479→   479→    return <EmptyState title="Sin mensajes todavía." hint="Los mensajes del formulario de contacto aparecerán aquí." />;
+   480→   480→
+   481→   481→  return (
+   482→   482→    <div className="max-h-[36rem] space-y-3 overflow-y-auto pr-1">
+   483→   483→      {messages.map((message) => (
+   484→   484→        <MessageItem
+   485→   485→          key={message.id}
+   486→   486→          message={message}
+   487→   487→          onUpdate={(updated) =>
+   488→   488→            setMessages((prev) => prev.map((m) => (m.id === updated.id ? updated : m)))
+   489→   489→          }
+   490→   490→          onExpired={onExpired}
+   491→   491→        />
+   492→   492→      ))}
+   493→   493→    </div>
+   494→   494→  );
+   495→   495→}
+   496→   496→
+   497→   497→function MessageItem({
+   498→   498→  message,
+   499→   499→  onUpdate,
+   500→   500→  onExpired,
+   501→   501→}: {
+   502→   502→  message: Message;
+   503→   503→  onUpdate: (m: Message) => void;
+   504→   504→  onExpired: () => Promise<void>;
+   505→   505→}) {
+   506→   506→  const [reply, setReply] = React.useState(message.reply ?? "");
+   507→   507→  const [saving, setSaving] = React.useState<"read" | "reply" | null>(null);
+   508→   508→  const [error, setError] = React.useState<string | null>(null);
+   509→   509→
+   510→   510→  const patch = async (body: { read?: boolean; reply?: string }, kind: "read" | "reply") => {
+   511→   511→    setError(null);
+   512→   512→    setSaving(kind);
+   513→   513→    try {
+   514→   514→      const res = await fetch(`/api/admin/messages/${message.id}`, {
+   515→   515→        method: "PATCH",
+   516→   516→        headers: { "Content-Type": "application/json" },
+   517→   517→        body: JSON.stringify(body),
+   518→   518→      });
+   519→   519→      if (res.status === 401) {
+   520→   520→        await onExpired();
+   521→   521→        return;
+   522→   522→      }
+   523→   523→      if (!res.ok) throw new Error("patch");
+   524→   524→      const data = (await res.json()) as { message?: Message };
+   525→   525→      if (data.message) onUpdate(data.message);
+   526→   526→      if (kind === "reply") toast({ title: "Guardado", description: "Nota interna guardada." });
+   527→   527→    } catch {
+   528→   528→      setError("No se pudo guardar. Inténtalo de nuevo.");
+   529→   529→    } finally {
+   530→   530→      setSaving(null);
+   531→   531→    }
+   532→   532→  };
+   533→   533→
+   534→   534→  return (
+   535→   535→    <Card className="p-4">
+   536→   536→      <div className="flex flex-wrap items-start justify-between gap-2">
+   537→   537→        <div>
+   538→   538→          <p className="font-medium">{message.name}</p>
+   539→   539→          <p className="text-sm break-words text-muted-foreground">{message.email}</p>
+   540→   540→        </div>
+   541→   541→        <div className="flex items-center gap-2">
+   542→   542→          {!message.read ? <Badge>Nuevo</Badge> : null}
+   543→   543→          <span className="text-xs text-muted-foreground">{formatDate(message.createdAt)}</span>
+   544→   544→        </div>
+   545→   545→      </div>
+   546→   546→
+   547→   547→      <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{message.body}</p>
+   548→   548→
+   549→   549→      <div className="mt-4 space-y-2">
+   550→   550→        <Label htmlFor={`reply-${message.id}`} className="text-xs uppercase tracking-wide text-muted-foreground">
+   551→   551→          Respuesta interna (nota)
+   552→   552→        </Label>
+   553→   553→        <Textarea
+   554→   554→          id={`reply-${message.id}`}
+   555→   555→          value={reply}
+   556→   556→          onChange={(e) => setReply(e.target.value)}
+   557→   557→          placeholder="Nota privada sobre este mensaje…"
+   558→   558→          maxLength={4000}
+   559→   559→        />
+   560→   560→        <div className="flex flex-wrap gap-2">
+   561→   561→          <Button
+   562→   562→            size="sm"
+   563→   563→            variant="outline"
+   564→   564→            disabled={saving !== null || message.read}
+   565→   565→            onClick={() => void patch({ read: true }, "read")}
+   566→   566→          >
+   567→   567→            {saving === "read" ? "Marcando…" : "Marcar leído"}
+   568→   568→          </Button>
+   569→   569→          <Button
+   570→   570→            size="sm"
+   571→   571→            disabled={saving !== null}
+   572→   572→            onClick={() => void patch({ reply }, "reply")}
+   573→   573→          >
+   574→   574→            {saving === "reply" ? "Guardando…" : "Guardar nota"}
+   575→   575→          </Button>
+   576→   576→        </div>
+   577→   577→        {error ? (
+   578→   578→          <p role="alert" className="text-sm font-medium text-destructive">
+   579→   579→            {error}
+   580→   580→          </p>
+   581→   581→        ) : null}
+   582→   582→      </div>
+   583→   583→    </Card>
+   584→   584→  );
+   585→   585→}
+   586→   586→
+   587→   587→/* ------------------------------ Cuestionarios ------------------------------ */
+   588→   588→
+   589→   589→function IntakesTab({ onExpired }: { onExpired: () => Promise<void> }) {
+   590→   590→  const [intakes, setIntakes] = React.useState<Intake[]>([]);
+   591→   591→  const [state, setState] = React.useState<"loading" | "ready" | "error">("loading");
+   592→   592→
+   593→   593→  const load = React.useCallback(async () => {
+   594→   594→    setState("loading");
+   595→   595→    try {
+   596→   596→      const res = await fetch("/api/admin/intakes", { cache: "no-store" });
+   597→   597→      if (res.status === 401) {
+   598→   598→        await onExpired();
+   599→   599→        return;
+   600→   600→      }
+   601→   601→      if (!res.ok) throw new Error("intakes");
+   602→   602→      const data = (await res.json()) as { intakes?: Intake[] };
+   603→   603→      setIntakes(data.intakes ?? []);
+   604→   604→      setState("ready");
+   605→   605→    } catch {
+   606→   606→      setState("error");
+   607→   607→    }
+   608→   608→  }, [onExpired]);
+   609→   609→
+   610→   610→  React.useEffect(() => {
+   611→   611→    void load();
+   612→   612→  }, [load]);
+   613→   613→
+   614→   614→  if (state === "loading") return <LoadingState label="Cargando cuestionarios…" />;
+   615→   615→  if (state === "error") return <ErrorState onRetry={() => void load()} />;
+   616→   616→
+   617→   617→  return (
+   618→   618→    <div className="space-y-4">
+   619→   619→      <div>
+   620→   620→        <a
+   621→   621→          href="/api/admin/intakes/export"
+   622→   622→          download
+   623→   623→          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+   624→   624→        >
+   625→   625→          <Download aria-hidden />
+   626→   626→          Exportar CSV
+   627→   627→        </a>
+   628→   628→      </div>
+   629→   629→
+   630→   630→      {intakes.length === 0 ? (
+   631→   631→        <EmptyState
+   632→   632→          title="Sin cuestionarios todavía."
+   633→   633→          hint="Los cuestionarios del formulario de alto valor aparecerán aquí."
+   634→   634→        />
+   635→   635→      ) : (
+   636→   636→        <div className="max-h-[40rem] space-y-3 overflow-y-auto pr-1">
+   637→   637→          {intakes.map((intake) => (
+   638→   638→            <IntakeItem
+   639→   639→              key={intake.id}
+   640→   640→              intake={intake}
+   641→   641→              onUpdate={(updated) =>
+   642→   642→                setIntakes((prev) => prev.map((i) => (i.id === updated.id ? updated : i)))
+   643→   643→              }
+   644→   644→              onExpired={onExpired}
+   645→   645→            />
+   646→   646→          ))}
+   647→   647→        </div>
+   648→   648→      )}
+   649→   649→    </div>
+   650→   650→  );
+   651→   651→}
+   652→   652→
+   653→   653→function IntakeItem({
+   654→   654→  intake,
+   655→   655→  onUpdate,
+   656→   656→  onExpired,
+   657→   657→}: {
+   658→   658→  intake: Intake;
+   659→   659→  onUpdate: (i: Intake) => void;
+   660→   660→  onExpired: () => Promise<void>;
+   661→   661→}) {
+   662→   662→  const [saving, setSaving] = React.useState(false);
+   663→   663→  const [error, setError] = React.useState<string | null>(null);
+   664→   664→
+   665→   665→  const changeStatus = async (status: string) => {
+   666→   666→    setError(null);
+   667→   667→    setSaving(true);
+   668→   668→    try {
+   669→   669→      const res = await fetch(`/api/admin/intakes/${intake.id}`, {
+   670→   670→        method: "PATCH",
+   671→   671→        headers: { "Content-Type": "application/json" },
+   672→   672→        body: JSON.stringify({ status }),
+   673→   673→      });
+   674→   674→      if (res.status === 401) {
+   675→   675→        await onExpired();
+   676→   676→        return;
+   677→   677→      }
+   678→   678→      if (!res.ok) throw new Error("status");
+   679→   679→      const data = (await res.json()) as { intake?: Intake };
+   680→   680→      if (data.intake) onUpdate(data.intake);
+   681→   681→      toast({ title: "Guardado", description: "Estado actualizado." });
+   682→   682→    } catch {
+   683→   683→      setError("No se pudo actualizar el estado.");
+   684→   684→    } finally {
+   685→   685→      setSaving(false);
+   686→   686→    }
+   687→   687→  };
+   688→   688→
+   689→   689→  const rows: { label: string; value: string | null }[] = [
+   690→   690→    { label: "Edad", value: intake.age !== null ? `${intake.age} años` : null },
+   691→   691→    { label: "Altura", value: intake.heightCm !== null ? `${intake.heightCm} cm` : null },
+   692→   692→    { label: "Peso", value: intake.weightKg !== null ? `${intake.weightKg} kg` : null },
+   693→   693→    { label: "Objetivo", value: intake.goal },
+   694→   694→    { label: "Experiencia", value: intake.experience },
+   695→   695→    { label: "Lesiones", value: intake.injuries },
+   696→   696→    { label: "Mensaje", value: intake.message },
+   697→   697→  ];
+   698→   698→
+   699→   699→  return (
+   700→   700→    <Card className="p-4">
+   701→   701→      <div className="flex flex-wrap items-start justify-between gap-2">
+   702→   702→        <div>
+   703→   703→          <p className="font-medium">{intake.name}</p>
+   704→   704→          <p className="text-sm break-words text-muted-foreground">{intake.email}</p>
+   705→   705→        </div>
+   706→   706→        <div className="flex items-center gap-2">
+   707→   707→          <Badge variant={statusBadgeVariant(intake.status)}>
+   708→   708→            {INTAKE_STATUS.find((s) => s.value === intake.status)?.label ?? intake.status}
+   709→   709→          </Badge>
+   710→   710→          <span className="text-xs text-muted-foreground">{formatDate(intake.createdAt)}</span>
+   711→   711→        </div>
+   712→   712→      </div>
+   713→   713→
+   714→   714→      <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
+   715→   715→        {rows.map((row) => (
+   716→   716→          <div key={row.label} className="flex gap-2">
+   717→   717→            <dt className="shrink-0 text-muted-foreground">{row.label}:</dt>
+   718→   718→            <dd className="min-w-0 break-words">{row.value ?? "—"}</dd>
+   719→   719→          </div>
+   720→   720→        ))}
+   721→   721→      </dl>
+   722→   722→
+   723→   723→      <div className="mt-4 flex flex-wrap items-center gap-2">
+   724→   724→        <Label htmlFor={`status-${intake.id}`} className="text-xs text-muted-foreground">
+   725→   725→          Estado:
+   726→   726→        </Label>
+   727→   727→        <Select
+   728→   728→          id={`status-${intake.id}`}
+   729→   729→          value={intake.status}
+   730→   730→          disabled={saving}
+   731→   731→          onChange={(e) => void changeStatus(e.target.value)}
+   732→   732→          className="w-44"
+   733→   733→        >
+   734→   734→          {INTAKE_STATUS.map((s) => (
+   735→   735→            <option key={s.value} value={s.value}>
+   736→   736→              {s.label}
+   737→   737→            </option>
+   738→   738→          ))}
+   739→   739→        </Select>
+   740→   740→        {saving ? <span className="text-xs text-muted-foreground">Guardando…</span> : null}
+   741→   741→      </div>
+   742→   742→      {error ? (
+   743→   743→        <p role="alert" className="mt-2 text-sm font-medium text-destructive">
+   744→   744→          {error}
+   745→   745→        </p>
+   746→   746→      ) : null}
+   747→   747→    </Card>
+   748→   748→  );
+   749→   749→}
+   750→   750→
+   751→   751→/* --------------------------------- Pedidos --------------------------------- */
+   752→   752→
+   753→   753→function OrdersTab({ onExpired }: { onExpired: () => Promise<void> }) {
+   754→   754→  const [orders, setOrders] = React.useState<Order[]>([]);
+   755→   755→  const [state, setState] = React.useState<"loading" | "ready" | "error">("loading");
+   756→   756→
+   757→   757→  const load = React.useCallback(async () => {
+   758→   758→    setState("loading");
+   759→   759→    try {
+   760→   760→      const res = await fetch("/api/admin/orders", { cache: "no-store" });
+   761→   761→      if (res.status === 401) {
+   762→   762→        await onExpired();
+   763→   763→        return;
+   764→   764→      }
+   765→   765→      if (!res.ok) throw new Error("orders");
+   766→   766→      const data = (await res.json()) as { orders?: Order[] };
+   767→   767→      setOrders(data.orders ?? []);
+   768→   768→      setState("ready");
+   769→   769→    } catch {
+   770→   770→      setState("error");
+   771→   771→    }
+   772→   772→  }, [onExpired]);
+   773→   773→
+   774→   774→  React.useEffect(() => {
+   775→   775→    void load();
+   776→   776→  }, [load]);
+   777→   777→
+   778→   778→  const changeStatus = async (order: Order, status: string) => {
+   779→   779→    try {
+   780→   780→      const res = await fetch(`/api/admin/orders/${order.id}`, {
+   781→   781→        method: "PATCH",
+   782→   782→        headers: { "Content-Type": "application/json" },
+   783→   783→        body: JSON.stringify({ status }),
+   784→   784→      });
+   785→   785→      if (res.status === 401) {
+   786→   786→        await onExpired();
+   787→   787→        return;
+   788→   788→      }
+   789→   789→      if (!res.ok) throw new Error("status");
+   790→   790→      const data = (await res.json()) as { order?: Order };
+   791→   791→      const updated = data.order;
+   792→   792→      if (updated) setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+   793→   793→      toast({ title: "Guardado", description: "Estado del pedido actualizado." });
+   794→   794→    } catch {
+   795→   795→      toast({ title: "Error", description: "No se pudo actualizar el pedido.", variant: "error" });
+   796→   796→    }
+   797→   797→  };
+   798→   798→
+   799→   799→  if (state === "loading") return <LoadingState label="Cargando pedidos…" />;
+   800→   800→  if (state === "error") return <ErrorState onRetry={() => void load()} />;
+   801→   801→  if (orders.length === 0)
+   802→   802→    return <EmptyState title="Sin pedidos todavía." hint="Las compras aparecerán aquí al confirmarse." />;
+   803→   803→
+   804→   804→  return (
+   805→   805→    <>
+   806→   806→      {/* Móvil: lista de cards */}
+   807→   807→      <ul className="space-y-3 md:hidden">
+   808→   808→        {orders.map((order) => (
+   809→   809→          <li key={order.id}>
+   810→   810→            <Card className="p-4">
+   811→   811→              <div className="flex items-start justify-between gap-2">
+   812→   812→                <div>
+   813→   813→                  <p className="font-mono text-sm font-medium">{order.number}</p>
+   814→   814→                  <p className="text-sm text-muted-foreground">{order.itemName}</p>
+   815→   815→                </div>
+   816→   816→                <Badge variant={statusBadgeVariant(order.status)}>
+   817→   817→                  {ORDER_STATUS.find((s) => s.value === order.status)?.label ?? order.status}
+   818→   818→                </Badge>
+   819→   819→              </div>
+   820→   820→              <p className="mt-2 text-sm font-semibold text-primary">{formatPrice(order.amountCents)}</p>
+   821→   821→              <p className="text-sm break-words text-muted-foreground">{order.customerEmail}</p>
+   822→   822→              <p className="mt-1 text-xs text-muted-foreground">{formatDate(order.createdAt)}</p>
+   823→   823→              <div className="mt-3">
+   824→   824→                <Label htmlFor={`order-status-${order.id}`} className="sr-only">
+   825→   825→                  Estado del pedido {order.number}
+   826→   826→                </Label>
+   827→   827→                <Select
+   828→   828→                  id={`order-status-${order.id}`}
+   829→   829→                  value={order.status}
+   830→   830→                  onChange={(e) => void changeStatus(order, e.target.value)}
+   831→   831→                  className="w-40"
+   832→   832→                >
+   833→   833→                  {ORDER_STATUS.map((s) => (
+   834→   834→                    <option key={s.value} value={s.value}>
+   835→   835→                      {s.label}
+   836→   836→                    </option>
+   837→   837→                  ))}
+   838→   838→                </Select>
+   839→   839→              </div>
+   840→   840→            </Card>
+   841→   841→          </li>
+   842→   842→        ))}
+   843→   843→      </ul>
+   844→   844→
+   845→   845→      {/* Escritorio: tabla */}
+   846→   846→      <Card className="hidden md:block">
+   847→   847→        <div className="overflow-x-auto">
+   848→   848→          <table className="w-full text-sm">
+   849→   849→            <caption className="sr-only">Listado de pedidos</caption>
+   850→   850→            <thead>
+   851→   851→              <tr className="border-b border-border text-left text-muted-foreground">
+   852→   852→                <th scope="col" className="px-4 py-3 font-medium">Número</th>
+   853→   853→                <th scope="col" className="px-4 py-3 font-medium">Artículo</th>
+   854→   854→                <th scope="col" className="px-4 py-3 font-medium">Importe</th>
+   855→   855→                <th scope="col" className="px-4 py-3 font-medium">Cliente</th>
+   856→   856→                <th scope="col" className="px-4 py-3 font-medium">Estado</th>
+   857→   857→              </tr>
+   858→   858→            </thead>
+   859→   859→            <tbody>
+   860→   860→              {orders.map((order) => (
+   861→   861→                <tr key={order.id} className="border-b border-border/60 last:border-0">
+   862→   862→                  <td className="px-4 py-3 font-mono">{order.number}</td>
+   863→   863→                  <td className="px-4 py-3">{order.itemName}</td>
+   864→   864→                  <td className="px-4 py-3 font-semibold text-primary">{formatPrice(order.amountCents)}</td>
+   865→   865→                  <td className="px-4 py-3 break-words text-muted-foreground">{order.customerEmail}</td>
+   866→   866→                  <td className="px-4 py-3">
+   867→   867→                    <div className="flex items-center gap-2">
+   868→   868→                      <Label htmlFor={`order-status-d-${order.id}`} className="sr-only">
+   869→   869→                        Estado del pedido {order.number}
+   870→   870→                      </Label>
+   871→   871→                      <Select
+   872→   872→                        id={`order-status-d-${order.id}`}
+   873→   873→                        value={order.status}
+   874→   874→                        onChange={(e) => void changeStatus(order, e.target.value)}
+   875→   875→                        className="w-36"
+   876→   876→                      >
+   877→   877→                        {ORDER_STATUS.map((s) => (
+   878→   878→                          <option key={s.value} value={s.value}>
+   879→   879→                            {s.label}
+   880→   880→                          </option>
+   881→   881→                        ))}
+   882→   882→                      </Select>
+   883→   883→                    </div>
+   884→   884→                  </td>
+   885→   885→                </tr>
+   886→   886→              ))}
+   887→   887→            </tbody>
+   888→   888→          </table>
+   889→   889→        </div>
+   890→   890→      </Card>
+   891→   891→    </>
+   892→   892→  );
+   893→   893→}
+   894→   894→

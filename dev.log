@@ -1,0 +1,572 @@
+$ next dev -p 3000
+▲ Next.js 16.3.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://21.0.8.12:3000
+- Environments: .env
+✓ Ready in 355ms
+✓ Running next.config.ts took 35ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+  We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+  The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+  	- include was updated to add '.next/dev/types/**/*.ts'
+
+  The following mandatory changes were made to your tsconfig.json:
+
+  	- jsx was set to react-jsx (next.js uses the React automatic runtime)
+
+
+○ Compiling / ...
+⨯ ./src/components/site/site-shell.tsx:30:18
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m28 |[0m [36mconst[0m [33mLoadingA[0m = () => <[33mLoading[0m />;
+  [90m29 |[0m
+[31m[1m>[0m [90m30 |[0m [36mconst[0m [33mHomeView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/home-view"[0m).then((m) => m.[33mHomeVi..[0m.
+  [90m   |[0m                  [31m[1m^^^^^^^[0m
+  [90m31 |[0m [36mconst[0m [33mCoachingView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/coaching-view"[0m).then((m) => ..[33m.[0m
+  [90m32 |[0m [36mconst[0m [33mServicioDetailView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/servicio-detail-view"[0m)...
+  [90m33 |[0m [36mconst[0m [33mTiendaView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/tienda-view"[0m).then((m) => m.[33mTi...[0m
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:31:22
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m29 |[0m
+  [90m30 |[0m [36mconst[0m [33mHomeView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/home-view"[0m).then((m) => m.[33mHomeVi..[0m.
+[31m[1m>[0m [90m31 |[0m [36mconst[0m [33mCoachingView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/coaching-view"[0m).then((m) => ..[33m.[0m
+  [90m   |[0m                      [31m[1m^^^^^^^[0m
+  [90m32 |[0m [36mconst[0m [33mServicioDetailView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/servicio-detail-view"[0m)...
+  [90m33 |[0m [36mconst[0m [33mTiendaView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/tienda-view"[0m).then((m) => m.[33mTi...[0m
+  [90m34 |[0m [36mconst[0m [33mProductoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/producto-view"[0m).then((m) => ..[33m.[0m
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:32:28
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m30 |[0m [36mconst[0m [33mHomeView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/home-view"[0m).then((m) => m.[33mHomeVi..[0m.
+  [90m31 |[0m [36mconst[0m [33mCoachingView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/coaching-view"[0m).then((m) => ..[33m.[0m
+[31m[1m>[0m [90m32 |[0m [36mconst[0m [33mServicioDetailView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/servicio-detail-view"[0m)...
+  [90m   |[0m                            [31m[1m^^^^^^^[0m
+  [90m33 |[0m [36mconst[0m [33mTiendaView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/tienda-view"[0m).then((m) => m.[33mTi...[0m
+  [90m34 |[0m [36mconst[0m [33mProductoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/producto-view"[0m).then((m) => ..[33m.[0m
+  [90m35 |[0m [36mconst[0m [33mCheckoutView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/checkout-view"[0m).then((m) => ..[33m.[0m
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:33:20
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m31 |[0m [36mconst[0m [33mCoachingView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/coaching-view"[0m).then((m) => ..[33m.[0m
+  [90m32 |[0m [36mconst[0m [33mServicioDetailView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/servicio-detail-view"[0m)...
+[31m[1m>[0m [90m33 |[0m [36mconst[0m [33mTiendaView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/tienda-view"[0m).then((m) => m.[33mTi...[0m
+  [90m   |[0m                    [31m[1m^^^^^^^[0m
+  [90m34 |[0m [36mconst[0m [33mProductoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/producto-view"[0m).then((m) => ..[33m.[0m
+  [90m35 |[0m [36mconst[0m [33mCheckoutView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/checkout-view"[0m).then((m) => ..[33m.[0m
+  [90m36 |[0m [36mconst[0m [33mPedidoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/pedido-view"[0m).then((m) => m.[33mPe...[0m
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:34:22
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m32 |[0m [36mconst[0m [33mServicioDetailView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/servicio-detail-view"[0m)...
+  [90m33 |[0m [36mconst[0m [33mTiendaView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/tienda-view"[0m).then((m) => m.[33mTi...[0m
+[31m[1m>[0m [90m34 |[0m [36mconst[0m [33mProductoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/producto-view"[0m).then((m) => ..[33m.[0m
+  [90m   |[0m                      [31m[1m^^^^^^^[0m
+  [90m35 |[0m [36mconst[0m [33mCheckoutView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/checkout-view"[0m).then((m) => ..[33m.[0m
+  [90m36 |[0m [36mconst[0m [33mPedidoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/pedido-view"[0m).then((m) => m.[33mPe...[0m
+  [90m37 |[0m [36mconst[0m [33mGuiaGratisView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/guia-gratis-view"[0m).then((m...
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:35:22
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m33 |[0m [36mconst[0m [33mTiendaView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/tienda-view"[0m).then((m) => m.[33mTi...[0m
+  [90m34 |[0m [36mconst[0m [33mProductoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/producto-view"[0m).then((m) => ..[33m.[0m
+[31m[1m>[0m [90m35 |[0m [36mconst[0m [33mCheckoutView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/checkout-view"[0m).then((m) => ..[33m.[0m
+  [90m   |[0m                      [31m[1m^^^^^^^[0m
+  [90m36 |[0m [36mconst[0m [33mPedidoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/pedido-view"[0m).then((m) => m.[33mPe...[0m
+  [90m37 |[0m [36mconst[0m [33mGuiaGratisView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/guia-gratis-view"[0m).then((m...
+  [90m38 |[0m [36mconst[0m [33mCuestionarioView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/cuestionario-view"[0m).then...
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:36:20
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m34 |[0m [36mconst[0m [33mProductoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/producto-view"[0m).then((m) => ..[33m.[0m
+  [90m35 |[0m [36mconst[0m [33mCheckoutView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/checkout-view"[0m).then((m) => ..[33m.[0m
+[31m[1m>[0m [90m36 |[0m [36mconst[0m [33mPedidoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/pedido-view"[0m).then((m) => m.[33mPe...[0m
+  [90m   |[0m                    [31m[1m^^^^^^^[0m
+  [90m37 |[0m [36mconst[0m [33mGuiaGratisView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/guia-gratis-view"[0m).then((m...
+  [90m38 |[0m [36mconst[0m [33mCuestionarioView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/cuestionario-view"[0m).then...
+  [90m39 |[0m [36mconst[0m [33mMetodoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/metodo-view"[0m).then((m) => m.[33mMe...[0m
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:37:24
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m35 |[0m [36mconst[0m [33mCheckoutView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/checkout-view"[0m).then((m) => ..[33m.[0m
+  [90m36 |[0m [36mconst[0m [33mPedidoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/pedido-view"[0m).then((m) => m.[33mPe...[0m
+[31m[1m>[0m [90m37 |[0m [36mconst[0m [33mGuiaGratisView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/guia-gratis-view"[0m).then((m...
+  [90m   |[0m                        [31m[1m^^^^^^^[0m
+  [90m38 |[0m [36mconst[0m [33mCuestionarioView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/cuestionario-view"[0m).then...
+  [90m39 |[0m [36mconst[0m [33mMetodoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/metodo-view"[0m).then((m) => m.[33mMe...[0m
+  [90m40 |[0m [36mconst[0m [33mResultadosView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/resultados-view"[0m).then((m)...
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:38:26
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m36 |[0m [36mconst[0m [33mPedidoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/pedido-view"[0m).then((m) => m.[33mPe...[0m
+  [90m37 |[0m [36mconst[0m [33mGuiaGratisView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/guia-gratis-view"[0m).then((m...
+[31m[1m>[0m [90m38 |[0m [36mconst[0m [33mCuestionarioView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/cuestionario-view"[0m).then...
+  [90m   |[0m                          [31m[1m^^^^^^^[0m
+  [90m39 |[0m [36mconst[0m [33mMetodoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/metodo-view"[0m).then((m) => m.[33mMe...[0m
+  [90m40 |[0m [36mconst[0m [33mResultadosView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/resultados-view"[0m).then((m)...
+  [90m41 |[0m [36mconst[0m [33mBlogView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/blog-view"[0m).then((m) => m.[33mBlogVi..[0m.
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:39:20
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m37 |[0m [36mconst[0m [33mGuiaGratisView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/guia-gratis-view"[0m).then((m...
+  [90m38 |[0m [36mconst[0m [33mCuestionarioView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/cuestionario-view"[0m).then...
+[31m[1m>[0m [90m39 |[0m [36mconst[0m [33mMetodoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/metodo-view"[0m).then((m) => m.[33mMe...[0m
+  [90m   |[0m                    [31m[1m^^^^^^^[0m
+  [90m40 |[0m [36mconst[0m [33mResultadosView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/resultados-view"[0m).then((m)...
+  [90m41 |[0m [36mconst[0m [33mBlogView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/blog-view"[0m).then((m) => m.[33mBlogVi..[0m.
+  [90m42 |[0m [36mconst[0m [33mPostView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/post-view"[0m).then((m) => m.[33mPostVi..[0m.
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:40:24
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m38 |[0m [36mconst[0m [33mCuestionarioView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/cuestionario-view"[0m).then...
+  [90m39 |[0m [36mconst[0m [33mMetodoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/metodo-view"[0m).then((m) => m.[33mMe...[0m
+[31m[1m>[0m [90m40 |[0m [36mconst[0m [33mResultadosView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/resultados-view"[0m).then((m)...
+  [90m   |[0m                        [31m[1m^^^^^^^[0m
+  [90m41 |[0m [36mconst[0m [33mBlogView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/blog-view"[0m).then((m) => m.[33mBlogVi..[0m.
+  [90m42 |[0m [36mconst[0m [33mPostView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/post-view"[0m).then((m) => m.[33mPostVi..[0m.
+  [90m43 |[0m [36mconst[0m [33mPlanesView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/planes-view"[0m).then((m) => m.[33mPl...[0m
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:41:18
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m39 |[0m [36mconst[0m [33mMetodoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/metodo-view"[0m).then((m) => m.[33mMe...[0m
+  [90m40 |[0m [36mconst[0m [33mResultadosView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/resultados-view"[0m).then((m)...
+[31m[1m>[0m [90m41 |[0m [36mconst[0m [33mBlogView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/blog-view"[0m).then((m) => m.[33mBlogVi..[0m.
+  [90m   |[0m                  [31m[1m^^^^^^^[0m
+  [90m42 |[0m [36mconst[0m [33mPostView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/post-view"[0m).then((m) => m.[33mPostVi..[0m.
+  [90m43 |[0m [36mconst[0m [33mPlanesView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/planes-view"[0m).then((m) => m.[33mPl...[0m
+  [90m44 |[0m [36mconst[0m [33mPlanView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/plan-view"[0m).then((m) => m.[33mPlanVi..[0m.
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:42:18
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m40 |[0m [36mconst[0m [33mResultadosView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/resultados-view"[0m).then((m)...
+  [90m41 |[0m [36mconst[0m [33mBlogView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/blog-view"[0m).then((m) => m.[33mBlogVi..[0m.
+[31m[1m>[0m [90m42 |[0m [36mconst[0m [33mPostView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/post-view"[0m).then((m) => m.[33mPostVi..[0m.
+  [90m   |[0m                  [31m[1m^^^^^^^[0m
+  [90m43 |[0m [36mconst[0m [33mPlanesView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/planes-view"[0m).then((m) => m.[33mPl...[0m
+  [90m44 |[0m [36mconst[0m [33mPlanView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/plan-view"[0m).then((m) => m.[33mPlanVi..[0m.
+  [90m45 |[0m [36mconst[0m [33mProgressView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/progress-view"[0m).then((m) => ..[33m.[0m
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:43:20
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m41 |[0m [36mconst[0m [33mBlogView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/blog-view"[0m).then((m) => m.[33mBlogVi..[0m.
+  [90m42 |[0m [36mconst[0m [33mPostView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/post-view"[0m).then((m) => m.[33mPostVi..[0m.
+[31m[1m>[0m [90m43 |[0m [36mconst[0m [33mPlanesView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/planes-view"[0m).then((m) => m.[33mPl...[0m
+  [90m   |[0m                    [31m[1m^^^^^^^[0m
+  [90m44 |[0m [36mconst[0m [33mPlanView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/plan-view"[0m).then((m) => m.[33mPlanVi..[0m.
+  [90m45 |[0m [36mconst[0m [33mProgressView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/progress-view"[0m).then((m) => ..[33m.[0m
+  [90m46 |[0m [36mconst[0m [33mCalculadorasView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/calculadoras-view"[0m).then...
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:44:18
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m42 |[0m [36mconst[0m [33mPostView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/post-view"[0m).then((m) => m.[33mPostVi..[0m.
+  [90m43 |[0m [36mconst[0m [33mPlanesView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/planes-view"[0m).then((m) => m.[33mPl...[0m
+[31m[1m>[0m [90m44 |[0m [36mconst[0m [33mPlanView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/plan-view"[0m).then((m) => m.[33mPlanVi..[0m.
+  [90m   |[0m                  [31m[1m^^^^^^^[0m
+  [90m45 |[0m [36mconst[0m [33mProgressView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/progress-view"[0m).then((m) => ..[33m.[0m
+  [90m46 |[0m [36mconst[0m [33mCalculadorasView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/calculadoras-view"[0m).then...
+  [90m47 |[0m [36mconst[0m [33mContadorView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/contador-view"[0m).then((m) => ..[33m.[0m
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:45:22
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m43 |[0m [36mconst[0m [33mPlanesView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/planes-view"[0m).then((m) => m.[33mPl...[0m
+  [90m44 |[0m [36mconst[0m [33mPlanView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/plan-view"[0m).then((m) => m.[33mPlanVi..[0m.
+[31m[1m>[0m [90m45 |[0m [36mconst[0m [33mProgressView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/progress-view"[0m).then((m) => ..[33m.[0m
+  [90m   |[0m                      [31m[1m^^^^^^^[0m
+  [90m46 |[0m [36mconst[0m [33mCalculadorasView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/calculadoras-view"[0m).then...
+  [90m47 |[0m [36mconst[0m [33mContadorView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/contador-view"[0m).then((m) => ..[33m.[0m
+  [90m48 |[0m [36mconst[0m [33mContactoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/contacto-view"[0m).then((m) => ..[33m.[0m
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:46:26
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m44 |[0m [36mconst[0m [33mPlanView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/plan-view"[0m).then((m) => m.[33mPlanVi..[0m.
+  [90m45 |[0m [36mconst[0m [33mProgressView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/progress-view"[0m).then((m) => ..[33m.[0m
+[31m[1m>[0m [90m46 |[0m [36mconst[0m [33mCalculadorasView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/calculadoras-view"[0m).then...
+  [90m   |[0m                          [31m[1m^^^^^^^[0m
+  [90m47 |[0m [36mconst[0m [33mContadorView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/contador-view"[0m).then((m) => ..[33m.[0m
+  [90m48 |[0m [36mconst[0m [33mContactoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/contacto-view"[0m).then((m) => ..[33m.[0m
+  [90m49 |[0m [36mconst[0m [33mFaqView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/faq-view"[0m).then((m) => m.[33mFaqView[0m)...
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:47:22
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m45 |[0m [36mconst[0m [33mProgressView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/progress-view"[0m).then((m) => ..[33m.[0m
+  [90m46 |[0m [36mconst[0m [33mCalculadorasView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/calculadoras-view"[0m).then...
+[31m[1m>[0m [90m47 |[0m [36mconst[0m [33mContadorView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/contador-view"[0m).then((m) => ..[33m.[0m
+  [90m   |[0m                      [31m[1m^^^^^^^[0m
+  [90m48 |[0m [36mconst[0m [33mContactoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/contacto-view"[0m).then((m) => ..[33m.[0m
+  [90m49 |[0m [36mconst[0m [33mFaqView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/faq-view"[0m).then((m) => m.[33mFaqView[0m)...
+  [90m50 |[0m [36mconst[0m [33mLegalView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/legal-view"[0m).then((m) => m.[33mLega...[0m
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:48:22
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m46 |[0m [36mconst[0m [33mCalculadorasView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/calculadoras-view"[0m).then...
+  [90m47 |[0m [36mconst[0m [33mContadorView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/contador-view"[0m).then((m) => ..[33m.[0m
+[31m[1m>[0m [90m48 |[0m [36mconst[0m [33mContactoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/contacto-view"[0m).then((m) => ..[33m.[0m
+  [90m   |[0m                      [31m[1m^^^^^^^[0m
+  [90m49 |[0m [36mconst[0m [33mFaqView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/faq-view"[0m).then((m) => m.[33mFaqView[0m)...
+  [90m50 |[0m [36mconst[0m [33mLegalView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/legal-view"[0m).then((m) => m.[33mLega...[0m
+  [90m51 |[0m [36mconst[0m [33mDashboardView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/dashboard-view"[0m).then((m) =...
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:49:17
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m47 |[0m [36mconst[0m [33mContadorView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/contador-view"[0m).then((m) => ..[33m.[0m
+  [90m48 |[0m [36mconst[0m [33mContactoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/contacto-view"[0m).then((m) => ..[33m.[0m
+[31m[1m>[0m [90m49 |[0m [36mconst[0m [33mFaqView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/faq-view"[0m).then((m) => m.[33mFaqView[0m)...
+  [90m   |[0m                 [31m[1m^^^^^^^[0m
+  [90m50 |[0m [36mconst[0m [33mLegalView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/legal-view"[0m).then((m) => m.[33mLega...[0m
+  [90m51 |[0m [36mconst[0m [33mDashboardView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/dashboard-view"[0m).then((m) =...
+  [90m52 |[0m [36mconst[0m [33mCoachView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/coach-view"[0m).then((m) => m.[33mCoac...[0m
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:50:19
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m48 |[0m [36mconst[0m [33mContactoView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/contacto-view"[0m).then((m) => ..[33m.[0m
+  [90m49 |[0m [36mconst[0m [33mFaqView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/faq-view"[0m).then((m) => m.[33mFaqView[0m)...
+[31m[1m>[0m [90m50 |[0m [36mconst[0m [33mLegalView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/legal-view"[0m).then((m) => m.[33mLega...[0m
+  [90m   |[0m                   [31m[1m^^^^^^^[0m
+  [90m51 |[0m [36mconst[0m [33mDashboardView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/dashboard-view"[0m).then((m) =...
+  [90m52 |[0m [36mconst[0m [33mCoachView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/coach-view"[0m).then((m) => m.[33mCoac...[0m
+  [90m53 |[0m [36mconst[0m [33mAdminView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/admin-view"[0m).then((m) => m.[33mAdmi...[0m
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:51:23
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m49 |[0m [36mconst[0m [33mFaqView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/faq-view"[0m).then((m) => m.[33mFaqView[0m)...
+  [90m50 |[0m [36mconst[0m [33mLegalView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/legal-view"[0m).then((m) => m.[33mLega...[0m
+[31m[1m>[0m [90m51 |[0m [36mconst[0m [33mDashboardView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/dashboard-view"[0m).then((m) =...
+  [90m   |[0m                       [31m[1m^^^^^^^[0m
+  [90m52 |[0m [36mconst[0m [33mCoachView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/coach-view"[0m).then((m) => m.[33mCoac...[0m
+  [90m53 |[0m [36mconst[0m [33mAdminView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/admin-view"[0m).then((m) => m.[33mAdmi...[0m
+  [90m54 |[0m [36mconst[0m [33mNotFoundView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/not-found-view"[0m).then((m) =>...
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:52:19
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m50 |[0m [36mconst[0m [33mLegalView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/legal-view"[0m).then((m) => m.[33mLega...[0m
+  [90m51 |[0m [36mconst[0m [33mDashboardView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/dashboard-view"[0m).then((m) =...
+[31m[1m>[0m [90m52 |[0m [36mconst[0m [33mCoachView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/coach-view"[0m).then((m) => m.[33mCoac...[0m
+  [90m   |[0m                   [31m[1m^^^^^^^[0m
+  [90m53 |[0m [36mconst[0m [33mAdminView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/admin-view"[0m).then((m) => m.[33mAdmi...[0m
+  [90m54 |[0m [36mconst[0m [33mNotFoundView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/not-found-view"[0m).then((m) =>...
+  [90m55 |[0m
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:53:19
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m51 |[0m [36mconst[0m [33mDashboardView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/dashboard-view"[0m).then((m) =...
+  [90m52 |[0m [36mconst[0m [33mCoachView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/coach-view"[0m).then((m) => m.[33mCoac...[0m
+[31m[1m>[0m [90m53 |[0m [36mconst[0m [33mAdminView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/admin-view"[0m).then((m) => m.[33mAdmi...[0m
+  [90m   |[0m                   [31m[1m^^^^^^^[0m
+  [90m54 |[0m [36mconst[0m [33mNotFoundView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/not-found-view"[0m).then((m) =>...
+  [90m55 |[0m
+  [90m56 |[0m [36mfunction[0m [33mCurrentView[0m() {
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+
+./src/components/site/site-shell.tsx:54:22
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  [90m52 |[0m [36mconst[0m [33mCoachView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/coach-view"[0m).then((m) => m.[33mCoac...[0m
+  [90m53 |[0m [36mconst[0m [33mAdminView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/admin-view"[0m).then((m) => m.[33mAdmi...[0m
+[31m[1m>[0m [90m54 |[0m [36mconst[0m [33mNotFoundView[0m = dynamic(() => [36mimport[0m([32m"@/components/views/not-found-view"[0m).then((m) =>...
+  [90m   |[0m                      [31m[1m^^^^^^^[0m
+  [90m55 |[0m
+  [90m56 |[0m [36mfunction[0m [33mCurrentView[0m() {
+  [90m57 |[0m   [36mconst[0m view = useRouter((s) => s.view);
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+ GET / 500 in 7.1s (next.js: 7.0s, application-code: 101ms)
+⚠ Blocked cross-origin request to Next.js dev resource /__nextjs_original-stack-frames from "preview-chat-c4052c27-31cc-4687-9443-1fc885b02864.space-z.ai".
+Cross-origin access to Next.js dev resources is blocked by default for safety.
+
+To allow this host in development, add it to "allowedDevOrigins" in next.config.js and restart the dev server:
+
+// next.config.js
+module.exports = {
+  allowedDevOrigins: ['preview-chat-c4052c27-31cc-4687-9443-1fc885b02864.space-z.ai'],
+}
+
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[browser] Uncaught Error: ./src/components/site/site-shell.tsx:54:22
+Error: next/dynamic options must be an object literal.
+    Read more: https://nextjs.org/docs/messages/invalid-dynamic-options-type
+  52 | const CoachView = dynamic(() => import("@/components/views/coach-view").then((m) => m.Coac...
+  53 | const AdminView = dynamic(() => import("@/components/views/admin-view").then((m) => m.Admi...
+> 54 | const NotFoundView = dynamic(() => import("@/components/views/not-found-view").then((m) =>...
+     |                      ^^^^^^^
+  55 |
+  56 | function CurrentView() {
+  57 |   const view = useRouter((s) => s.view);
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./src/components/site/site-shell.tsx
+    ./src/app/page.tsx
+
+
+    at <unknown> (Error: ./src/components/site/site-shell.tsx:54:22)
+    at <unknown> (Error: (./src/components/site/site-shell.tsx:54:22)
+⚠ Blocked cross-origin request to Next.js dev resource /__nextjs_font/geist-latin.woff2 from "preview-chat-c4052c27-31cc-4687-9443-1fc885b02864.space-z.ai".
+Cross-origin access to Next.js dev resources is blocked by default for safety.
+
+To allow this host in development, add it to "allowedDevOrigins" in next.config.js and restart the dev server:
+
+// next.config.js
+module.exports = {
+  allowedDevOrigins: ['preview-chat-c4052c27-31cc-4687-9443-1fc885b02864.space-z.ai'],
+}
+
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+✓ Compiled in 412ms
+ GET / 200 in 422ms (next.js: 205ms, application-code: 217ms)
+ GET /api/products 200 in 650ms (next.js: 589ms, application-code: 61ms)
+ GET /api/products 200 in 8ms (next.js: 3ms, application-code: 5ms)
+ GET / 200 in 46ms (next.js: 9ms, application-code: 37ms)

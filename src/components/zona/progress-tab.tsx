@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Activity, Check, Download, Droplets, Flame, Loader2, Scale, Target, Trophy } from "lucide-react";
+import { Activity, Check, Download, Droplets, Flame, Loader2, Scale, Target, TrendingUp, Trophy } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input, Label } from "@/components/ui/input";
+import { Input, Label, Select } from "@/components/ui/input";
 import { toast } from "@/components/ui/toaster";
 import { EmptyState } from "@/components/site/states";
 import { cn } from "@/lib/utils";
@@ -14,11 +14,15 @@ import { BarChart, LineChart } from "./charts";
 import {
   HABITS,
   ZonaUnauthorized,
+  fetchExerciseTrend,
+  fetchExerciseTrendList,
   fmtInt,
   fmtKg,
   shortDate,
   shortWeek,
   zonaApi,
+  type ExerciseTrendItemDTO,
+  type ExerciseTrendPointDTO,
   type ProgressDTO,
   type ZonaProfileGoals,
   type ZonaProfileWithGoals,
@@ -487,6 +491,9 @@ export function ProgressTab({
         </Card>
       </div>
 
+      {/* ── Evolución por ejercicio (Task 27-b): e1RM por sesión completada ── */}
+      <ExerciseTrendSection onActionError={onActionError} />
+
       {/* ── Heatmap de actividad (Task 26-b, inspirado en LiftShift/openGym) ─ */}
       <ActivityHeatmap activityDays={progress.activityDays} />
 
@@ -534,6 +541,190 @@ export function ProgressTab({
       {/* ── Exportar mis datos (portabilidad, Task 25-e) ────────────────── */}
       <ExportCard onActionError={onActionError} />
     </div>
+  );
+}
+
+/* ── Evolución por ejercicio (Task 27-b) ──────────────────────────────────── */
+
+const TREND_ERROR_FALLBACK = "No pudimos cargar la evolución. Intentá de nuevo.";
+
+/**
+ * Selector de ejercicios con sesiones completadas + curva de e1RM (Epley) por
+ * sesión, usando el LineChart propio. Carga perezosa: la lista se pide al
+ * montar (setState SOLO en continuaciones del fetch) y los puntos se cachean
+ * por ejercicio en un Map; las respuestas desviadas (de una selección
+ * anterior) se ignoran con un contador de request. Sin datos reales, mensaje
+ * honesto: nunca se dibuja una curva vacía ni inventada.
+ */
+function ExerciseTrendSection({ onActionError }: { onActionError: (err: unknown) => void }) {
+  const [trendList, setTrendList] = React.useState<ExerciseTrendItemDTO[] | null>(null);
+  const [trendListError, setTrendListError] = React.useState<string | null>(null);
+  const [trendListRetry, setTrendListRetry] = React.useState(0);
+  const [selectedId, setSelectedId] = React.useState("");
+  const [points, setPoints] = React.useState<ExerciseTrendPointDTO[] | null>(null);
+  const [loadingPoints, setLoadingPoints] = React.useState(false);
+  const [pointsError, setPointsError] = React.useState<string | null>(null);
+  const trendCache = React.useRef<Map<string, ExerciseTrendPointDTO[]>>(new Map());
+  const trendReqId = React.useRef(0);
+
+  // Lista de ejercicios entrenados: al montar (y al reintentar). El setState
+  // vive únicamente en .then/.catch: nada de estado síncrono en el effect.
+  React.useEffect(() => {
+    let alive = true;
+    fetchExerciseTrendList()
+      .then((res) => {
+        if (!alive) return;
+        setTrendList(res.exercises);
+        setTrendListError(null);
+      })
+      .catch((err: unknown) => {
+        if (!alive) return;
+        if (err instanceof ZonaUnauthorized) {
+          onActionError(err); // 401 → AuthGate (patrón de la casa)
+          return;
+        }
+        setTrendListError(err instanceof Error && err.message ? err.message : TREND_ERROR_FALLBACK);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [onActionError, trendListRetry]);
+
+  /**
+   * Selección del <select>: cache hit → pinto al instante; cache miss → fetch
+   * con guard de respuestas obsoletas (solo la última selección pinta).
+   */
+  function selectExercise(id: string) {
+    setSelectedId(id);
+    const reqId = ++trendReqId.current;
+    setPointsError(null);
+
+    if (!id) {
+      setPoints(null);
+      setLoadingPoints(false);
+      return;
+    }
+
+    const cached = trendCache.current.get(id);
+    if (cached) {
+      setPoints(cached);
+      setLoadingPoints(false);
+      return;
+    }
+
+    setLoadingPoints(true);
+    fetchExerciseTrend(id)
+      .then((res) => {
+        trendCache.current.set(id, res.points);
+        if (trendReqId.current !== reqId) return; // respuesta obsoleta
+        setPoints(res.points);
+        setLoadingPoints(false);
+        track("zona_exercise_trend", { exerciseId: id, points: res.points.length });
+      })
+      .catch((err: unknown) => {
+        if (trendReqId.current !== reqId) return;
+        setLoadingPoints(false);
+        if (err instanceof ZonaUnauthorized) {
+          onActionError(err);
+          return;
+        }
+        setPointsError(err instanceof Error && err.message ? err.message : TREND_ERROR_FALLBACK);
+      });
+  }
+
+  const selected = trendList?.find((e) => e.exerciseId === selectedId) ?? null;
+  const chartData =
+    points !== null && points.length >= 2
+      ? points.map((p) => ({ label: shortDate(p.date.slice(0, 10)), value: p.e1rm }))
+      : null;
+  const trendAriaLabel =
+    points !== null && points.length >= 2
+      ? `Evolución de e1RM en ${selected?.exerciseName ?? "el ejercicio"}: de ${fmtKg(points[0].e1rm)} a ${fmtKg(points[points.length - 1].e1rm)} kg en ${points.length} ${points.length === 1 ? "sesión" : "sesiones"}`
+      : "Evolución por ejercicio";
+
+  return (
+    <Card>
+      <CardHeader className="gap-1">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <TrendingUp aria-hidden className="size-4 text-primary" /> Evolución por ejercicio
+        </CardTitle>
+        <CardDescription>
+          Tu 1RM estimado (Epley) sesión a sesión: el mejor set de cada sesión completada.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {trendList === null && trendListError === null ? (
+          <p className="flex items-center gap-2 text-sm text-muted-foreground" aria-live="polite">
+            <Loader2 aria-hidden className="size-4 animate-spin" /> Cargando ejercicios…
+          </p>
+        ) : trendListError !== null ? (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">{trendListError}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="min-h-11"
+              onClick={() => {
+                setTrendListError(null);
+                setTrendListRetry((n) => n + 1);
+              }}
+            >
+              Reintentar
+            </Button>
+          </div>
+        ) : trendList !== null && trendList.length === 0 ? (
+          <EmptyState
+            title="Todavía no tenés ejercicios para mostrar"
+            hint="Cuando completes tu primera sesión con series, vas a poder elegir acá cada ejercicio y ver su evolución."
+          />
+        ) : trendList !== null ? (
+          <>
+            <div className="space-y-1.5">
+              <Label htmlFor="zona-trend-exercise">Ejercicio</Label>
+              <Select
+                id="zona-trend-exercise"
+                className="min-h-11"
+                value={selectedId}
+                onChange={(e) => selectExercise(e.target.value)}
+              >
+                <option value="">Elegí un ejercicio…</option>
+                {trendList.map((e) => (
+                  <option key={e.exerciseId} value={e.exerciseId}>
+                    {e.exerciseName} ({e.sessions} {e.sessions === 1 ? "sesión" : "sesiones"})
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            {loadingPoints ? (
+              <p className="flex items-center gap-2 text-sm text-muted-foreground" aria-live="polite">
+                <Loader2 aria-hidden className="size-4 animate-spin" /> Cargando evolución…
+              </p>
+            ) : pointsError !== null ? (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">{pointsError}</p>
+                <Button variant="outline" size="sm" className="min-h-11" onClick={() => selectExercise(selectedId)}>
+                  Reintentar
+                </Button>
+              </div>
+            ) : selectedId === "" || points === null ? (
+              <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+                Elegí un ejercicio de la lista para ver su curva de e1RM.
+              </p>
+            ) : chartData === null ? (
+              <EmptyState
+                title="Necesitás al menos 2 sesiones con este ejercicio para ver la evolución"
+                hint="Completá otra sesión con este ejercicio y la curva aparece acá."
+              />
+            ) : (
+              <div className="rounded-lg border border-border/70 bg-background/40 p-2">
+                <LineChart data={chartData} ariaLabel={trendAriaLabel} />
+              </div>
+            )}
+          </>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 

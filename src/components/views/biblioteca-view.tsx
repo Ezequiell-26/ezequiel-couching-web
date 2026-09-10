@@ -200,7 +200,7 @@ export function BibliotecaView() {
       <PageHeader
         eyebrow="Recursos"
         title="Biblioteca de ejercicios"
-        description="Más de 150 ejercicios con ejecución paso a paso, músculos implicados y consejos de técnica. Filtra por grupo muscular, músculo, material disponible o nivel y aprende a entrenar bien."
+        description="Más de 200 ejercicios con ejecución paso a paso, músculos implicados y consejos de técnica. Filtra por grupo muscular, músculo, material disponible o nivel y aprende a entrenar bien."
       >
         <p className="mt-4 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
           {EXERCISES.length} ejercicios · {EXERCISE_GROUPS.length} grupos musculares

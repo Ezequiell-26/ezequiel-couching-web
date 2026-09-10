@@ -155,6 +155,49 @@ export type LastPerformanceDTO = {
   previous: PerformancePointDTO | null;
 };
 
+// ── Evolución por ejercicio (Task 27-b) ──────────────────────────────────────
+
+/**
+ * Item del listado (GET /api/zona/exercise-trend sin exerciseId): ejercicios
+ * con al menos una serie en sesiones completadas; sessions = cantidad de
+ * sesiones completadas que incluyen el ejercicio (varias series cuentan 1).
+ */
+export type ExerciseTrendItemDTO = {
+  exerciseId: string;
+  exerciseName: string;
+  sessions: number;
+};
+
+/**
+ * Punto de evolución (GET /api/zona/exercise-trend?exerciseId=X): el mejor set
+ * de UNA sesión completada según e1RM (Epley, redondeado a 1 decimal), con la
+ * fecha de finalización de la sesión. Orden ascendente por fecha.
+ */
+export type ExerciseTrendPointDTO = {
+  date: string;
+  e1rm: number;
+  weightKg: number;
+  reps: number;
+};
+
+/** GET /api/zona/exercise-trend (sin exerciseId). */
+export type ExerciseTrendListDTO = { exercises: ExerciseTrendItemDTO[] };
+
+/** GET /api/zona/exercise-trend?exerciseId=X — sin datos reales → points: []. */
+export type ExerciseTrendDTO = { points: ExerciseTrendPointDTO[] };
+
+/** Lista de ejercicios entrenados (sesiones completadas) para el selector. */
+export function fetchExerciseTrendList(): Promise<ExerciseTrendListDTO> {
+  return zonaApi<ExerciseTrendListDTO>("/api/zona/exercise-trend");
+}
+
+/** Curva de e1RM por sesión completada del ejercicio indicado. */
+export function fetchExerciseTrend(exerciseId: string): Promise<ExerciseTrendDTO> {
+  return zonaApi<ExerciseTrendDTO>(
+    `/api/zona/exercise-trend?exerciseId=${encodeURIComponent(exerciseId)}`,
+  );
+}
+
 // ── Errores ──────────────────────────────────────────────────────────────────
 
 /** Cualquier 401: la sesión de cookie no existe o expiró. */

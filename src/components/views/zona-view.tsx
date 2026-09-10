@@ -10,6 +10,7 @@ import { toast } from "@/components/ui/toaster";
 import { ErrorState, LoadingState, SuccessNote } from "@/components/site/states";
 import { track } from "@/lib/analytics";
 import { AuthGate } from "@/components/zona/auth-gate";
+import { TodayWidget } from "@/components/zona/today-widget";
 import { RoutinesTab } from "@/components/zona/routines-tab";
 import { TrainEmpty, TrainTab } from "@/components/zona/train-tab";
 import { ProgressTab } from "@/components/zona/progress-tab";
@@ -31,7 +32,8 @@ import {
 /**
  * Mi Zona (#/mi-zona): área personal de entrenamiento. AuthGate con nombre+PIN
  * y cinco tabs (Rutinas · Entrenar · Progreso · Logros · Historial) sobre las
- * APIs reales /api/zona/*. Arranca vacío: sin datos demo, estados vacíos honestos.
+ * APIs reales /api/zona/*. Encima de las tabs, el widget Plan de hoy (Task 27-a)
+ * resume la asignación del día. Arranca vacío: sin datos demo, estados vacíos honestos.
  */
 
 type TabId = "rutinas" | "entrenar" | "progreso" | "logros" | "historial";
@@ -306,6 +308,14 @@ export function ZonaView() {
           )
         ) : (
           <>
+            {/* Plan de hoy (Task 27-a): card compacto encima de las tabs. Puro
+                montaje aditivo: el cambio de tab usa el switchTab existente. */}
+            <TodayWidget
+              onGoToTrain={() => switchTab("entrenar")}
+              onGoToRoutines={() => switchTab("rutinas")}
+              onActionError={handleActionError}
+            />
+
             {/* Tabs principales */}
             <nav role="tablist" aria-label="Secciones de Mi Zona" className="grid grid-cols-2 gap-2 sm:grid-cols-5">
               {TABS.map((t) => {

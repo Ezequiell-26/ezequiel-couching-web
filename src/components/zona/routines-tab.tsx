@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronDown, Loader2, Sparkles, Trash2 } from "lucide-react";
+import { CalendarDays, ChevronDown, Loader2, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,13 +15,16 @@ import {
   EQUIPMENT_LABELS,
   GOAL_LABELS,
   LEVEL_LABELS,
+  ZonaUnauthorized,
   zonaApi,
   type RoutineDTO,
+  type ScheduleSlotDTO,
 } from "./api";
 
 /**
- * Tab Rutinas: lista desplegable de rutinas (con "Entrenar día N" y borrado
- * con confirmación) + generador IA con carga honesta (tarda varios segundos).
+ * Tab Rutinas: plan semanal (asignar rutinas a los 7 días), lista desplegable
+ * de rutinas (con "Entrenar día N" y borrado con confirmación) + generador IA
+ * con carga honesta (tarda varios segundos).
  */
 export function RoutinesTab({
   routines,
@@ -68,6 +71,9 @@ export function RoutinesTab({
 
   return (
     <div className="space-y-6">
+      {/* ── Plan semanal (solo con rutinas: sin rutinas no hay nada que asignar) ── */}
+      {routines.length > 0 ? <WeeklyPlan routines={routines} onActionError={onActionError} /> : null}
+
       {/* ── Lista de rutinas ─────────────────────────────────────────────── */}
       {routines.length === 0 ? (
         <EmptyState
@@ -196,6 +202,294 @@ export function RoutinesTab({
         </div>
       </Dialog>
     </div>
+  );
+}
+
+/* ── Plan semanal (Task 25-e, inspirado en My-Workouts scheduling) ────────── */
+
+const WEEKDAYS: { initial: string; short: string; full: string }[] = [
+  { initial: "L", short: "Lun", full: "Lunes" },
+  { initial: "M", short: "Mar", full: "Martes" },
+  { initial: "X", short: "Mié", full: "Miércoles" },
+  { initial: "J", short: "Jue", full: "Jueves" },
+  { initial: "V", short: "Vie", full: "Viernes" },
+  { initial: "S", short: "Sáb", full: "Sábado" },
+  { initial: "D", short: "Dom", full: "Domingo" },
+];
+
+type SlotPayload = { weekday: number; routineId: number | null; day: number | null };
+
+function emptySlots(): SlotPayload[] {
+  return Array.from({ length: 7 }, (_, weekday) => ({ weekday, routineId: null, day: null }));
+}
+
+/**
+ * Plan semanal: fila de 7 días (0=Lunes..6=Domingo) donde cada día puede tener
+ * una rutina asignada con su día. Guardado como PUT del array completo de 7
+ * (los días libres con routineId/day en null). En mobile la fila scrollea
+ * horizontal (celdas de 112px): a 320px un grid de 7 columnas no deja espacio
+ * para "Título · Día N" + botón quitar; en ≥sm pasa a grid de 7 columnas.
+ */
+function WeeklyPlan({ routines, onActionError }: { routines: RoutineDTO[]; onActionError: (err: unknown) => void }) {
+  const [schedule, setSchedule] = React.useState<ScheduleSlotDTO[] | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [saving, setSaving] = React.useState(false);
+  const [assignTarget, setAssignTarget] = React.useState<number | null>(null);
+  const [pickRoutine, setPickRoutine] = React.useState("");
+  const [pickDay, setPickDay] = React.useState("1");
+
+  // Solo rutinas activas: el API rechaza asignaciones de rutinas inactivas.
+  const activeRoutines = React.useMemo(() => routines.filter((r) => r.active), [routines]);
+  const pickRoutineObj = activeRoutines.find((r) => String(r.id) === pickRoutine) ?? null;
+  const dayOptions = pickRoutineObj ? Array.from({ length: pickRoutineObj.daysPerWeek }, (_, i) => i + 1) : [];
+  const targetSlot = assignTarget != null ? (schedule?.find((s) => s.weekday === assignTarget) ?? null) : null;
+  const targetDay = assignTarget != null ? WEEKDAYS[assignTarget] : null;
+
+  function applySlots(payload: SlotPayload[]) {
+    setSaving(true);
+    zonaApi<ScheduleSlotDTO[]>("/api/zona/schedule", { method: "PUT", body: JSON.stringify({ slots: payload }) })
+      .then((updated) => {
+        setSchedule(updated);
+        setSaving(false);
+        setAssignTarget(null);
+        toast({ title: "Plan semanal guardado", description: "Tu semana quedó actualizada." });
+        track("zona_schedule_save", { weekdays: payload.filter((s) => s.routineId != null).length });
+      })
+      .catch((err: unknown) => {
+        setSaving(false);
+        onActionError(err); // el diálogo queda abierto para reintentar
+      });
+  }
+
+  function replaceSlot(weekday: number, routineId: number | null, day: number | null) {
+    const base = schedule ?? [];
+    applySlots(
+      emptySlots().map((s) => {
+        if (s.weekday === weekday) return { weekday, routineId, day };
+        const cur = base.find((b) => b.weekday === s.weekday);
+        return { weekday: s.weekday, routineId: cur?.routineId ?? null, day: cur?.day ?? null };
+      }),
+    );
+  }
+
+  function fetchSchedule(onFinish?: (ok: boolean) => void) {
+    zonaApi<ScheduleSlotDTO[]>("/api/zona/schedule")
+      .then((slots) => {
+        setSchedule(slots);
+        setLoadError(null);
+        onFinish?.(true);
+      })
+      .catch((err: unknown) => {
+        if (err instanceof ZonaUnauthorized) {
+          onActionError(err); // patrón de la casa: vuelve al AuthGate
+          onFinish?.(false);
+          return;
+        }
+        setLoadError(err instanceof Error ? err.message : "No pudimos cargar tu plan semanal.");
+        onFinish?.(false);
+      })
+      .finally(() => setLoading(false));
+  }
+
+  // Carga (y re-carga al cambiar la lista de rutinas, p. ej. tras borrar una)
+  // en la continuación de la promesa: nunca setState síncrono en el effect.
+  React.useEffect(() => {
+    if (routines.length === 0) return;
+    let alive = true;
+    zonaApi<ScheduleSlotDTO[]>("/api/zona/schedule")
+      .then((slots) => {
+        if (!alive) return;
+        setSchedule(slots);
+        setLoadError(null);
+      })
+      .catch((err: unknown) => {
+        if (!alive) return;
+        if (err instanceof ZonaUnauthorized) {
+          onActionError(err);
+          return;
+        }
+        setLoadError(err instanceof Error ? err.message : "No pudimos cargar tu plan semanal.");
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [routines, onActionError]);
+
+  function retry() {
+    setLoading(true);
+    setLoadError(null);
+    fetchSchedule();
+  }
+
+  function openAssign(weekday: number) {
+    const current = schedule?.find((s) => s.weekday === weekday) ?? null;
+    setPickRoutine(current?.routineId != null ? String(current.routineId) : "");
+    setPickDay(current?.day != null ? String(current.day) : "1");
+    setAssignTarget(weekday);
+  }
+
+  return (
+    <Card>
+      <CardContent className="p-4 sm:p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15">
+            <CalendarDays className="size-5 text-primary" />
+          </span>
+          <div>
+            <h3 className="text-base font-semibold sm:text-lg">Plan semanal</h3>
+            <p className="text-xs text-muted-foreground sm:text-sm">Asigná tus rutinas a los días de la semana.</p>
+          </div>
+        </div>
+
+        {loading ? (
+          <div role="status" aria-live="polite" className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
+            <Loader2 aria-hidden className="size-4 animate-spin" /> Cargando tu plan semanal…
+          </div>
+        ) : loadError ? (
+          <ErrorState message={loadError} onRetry={retry} />
+        ) : (
+          <>
+            {/* Mobile: fila scrolleable (celdas fijas, no se rompe a 320px).
+                ≥sm: grid de 7 columnas que reparte el ancho. contain-paint
+                garantiza que el scroller no infle el scroll del documento. */}
+            <ul
+              className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 contain-paint sm:mx-0 sm:grid sm:grid-cols-7 sm:overflow-visible sm:px-0 sm:contain-none"
+              aria-label="Plan semanal de la semana"
+            >
+              {WEEKDAYS.map((wd, weekday) => {
+                const slot = schedule?.find((s) => s.weekday === weekday) ?? null;
+                const assigned = slot?.routineId != null;
+                return (
+                  <li
+                    key={wd.full}
+                    aria-label={`${wd.full}: ${assigned ? `${slot?.routineTitle}, día ${slot?.day}` : "día libre"}`}
+                    className="w-28 shrink-0 snap-start sm:w-auto sm:shrink"
+                  >
+                    <p aria-hidden className="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <span className="sm:hidden">{wd.initial}</span>
+                      <span className="hidden sm:inline">{wd.short}</span>
+                      <span className="sr-only">{wd.full}</span>
+                    </p>
+                    {assigned ? (
+                      <div className="flex min-h-11 items-stretch overflow-hidden rounded-lg border border-primary/50 bg-primary/10">
+                        <button
+                          type="button"
+                          onClick={() => openAssign(weekday)}
+                          aria-label={`Editar la asignación del ${wd.full}: ${slot?.routineTitle}, día ${slot?.day}`}
+                          className="min-w-0 flex-1 px-1.5 text-left"
+                        >
+                          <span className="block truncate text-[11px] font-semibold leading-tight sm:text-xs">{slot?.routineTitle}</span>
+                          <span className="block text-[10px] text-muted-foreground sm:text-[11px]">Día {slot?.day}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => replaceSlot(weekday, null, null)}
+                          disabled={saving}
+                          aria-label={`Quitar la asignación del ${wd.full}`}
+                          className="flex w-8 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/60 hover:text-destructive disabled:opacity-50"
+                        >
+                          <X aria-hidden className="size-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => openAssign(weekday)}
+                        aria-label={`Asignar rutina al ${wd.full}`}
+                        className="flex min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-border text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground"
+                      >
+                        <Plus aria-hidden className="size-3.5" />
+                        <span className="text-[10px] leading-none sm:text-[11px]">Asignar</span>
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-2 text-[11px] text-muted-foreground sm:hidden">Deslizá la fila para ver los 7 días.</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Se guarda en cuanto confirmás cada día.</p>
+          </>
+        )}
+      </CardContent>
+
+      {/* ── Diálogo de asignación ──────────────────────────────────────────── */}
+      <Dialog
+        open={assignTarget !== null}
+        onClose={() => (saving ? null : setAssignTarget(null))}
+        title={targetDay ? (targetSlot?.routineId != null ? `Editar ${targetDay.full}` : `Asignar al ${targetDay.full}`) : ""}
+      >
+        {targetDay ? (
+          <div className="space-y-4">
+            {activeRoutines.length === 0 ? (
+              <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
+                No tenés rutinas activas para asignar. Generá o creá una rutina primero.
+              </p>
+            ) : (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="zona-plan-routine">Rutina</Label>
+                  <Select
+                    id="zona-plan-routine"
+                    className="h-11"
+                    value={pickRoutine}
+                    onChange={(e) => {
+                      setPickRoutine(e.target.value);
+                      setPickDay("1");
+                    }}
+                  >
+                    <option value="">Elegí una rutina…</option>
+                    {activeRoutines.map((r) => (
+                      <option key={r.id} value={String(r.id)}>
+                        {r.name} · {r.daysPerWeek} {r.daysPerWeek === 1 ? "día" : "días"}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="zona-plan-day">Día de la rutina</Label>
+                  <Select
+                    id="zona-plan-day"
+                    className="h-11"
+                    value={pickDay}
+                    disabled={!pickRoutineObj}
+                    onChange={(e) => setPickDay(e.target.value)}
+                  >
+                    {dayOptions.map((d) => (
+                      <option key={d} value={String(d)}>
+                        Día {d}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </>
+            )}
+            <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row">
+              {targetSlot?.routineId != null ? (
+                <Button
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  disabled={saving}
+                  onClick={() => replaceSlot(assignTarget!, null, null)}
+                >
+                  Quitar asignación
+                </Button>
+              ) : null}
+              <Button
+                disabled={saving || !pickRoutineObj}
+                onClick={() => pickRoutineObj && replaceSlot(assignTarget!, pickRoutineObj.id, Number(pickDay))}
+              >
+                {saving ? <Loader2 aria-hidden className="animate-spin" /> : null}
+                {saving ? "Guardando…" : "Guardar"}
+              </Button>
+            </div>
+          </div>
+        ) : null}
+      </Dialog>
+    </Card>
   );
 }
 

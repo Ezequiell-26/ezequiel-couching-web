@@ -11,7 +11,11 @@ import { toast } from "@/components/ui/toaster";
 import { EmptyState, ErrorState, LoadingState } from "@/components/site/states";
 import { EXERCISES, EXERCISE_GROUPS, getExerciseById, exerciseName } from "@/lib/content/exercises";
 import { track } from "@/lib/analytics";
-import { fmtInt, fmtKg, zonaApi, type NewPRDTO, type RoutineDTO, type SessionDTO, type SessionDetailDTO, type SetDTO } from "./api";
+import { ZonaUnauthorized, fmtInt, fmtKg, shortDate, zonaApi, type LastPerformanceDTO, type NewPRDTO, type RoutineDTO, type SessionDTO, type SessionDetailDTO, type SetDTO } from "./api";
+import { RestTimer } from "./rest-timer";
+
+/** Descanso por defecto cuando la serie no viene de una rutina planificada. */
+const DEFAULT_REST_SECONDS = 90;
 
 /**
  * Tab Entrenar: sesión activa con timer, registro de series por ejercicio
@@ -39,6 +43,14 @@ export function TrainTab({
   const [registeringFor, setRegisteringFor] = React.useState<string | null>(null);
   const [finishOpen, setFinishOpen] = React.useState(false);
   const [finishing, setFinishing] = React.useState(false);
+
+  // Descanso: una sola instancia a la vez; el id incremental remonta el
+  // componente al registrar otra serie → el timer reinicia con el nuevo valor.
+  const [rest, setRest] = React.useState<{ seconds: number; id: number } | null>(null);
+
+  // Última performance por ejercicio: cache mientras dura la sesión activa
+  // (un Map por montaje de TrainTab; cada hint consulta sin refetch repetido).
+  const perfCache = React.useRef<Map<string, LastPerformanceDTO>>(new Map());
 
   const loadDetail = React.useCallback(async () => {
     try {
@@ -127,6 +139,10 @@ export function TrainTab({
     return detail?.sets.filter((s) => s.exerciseId === exerciseId) ?? [];
   }
 
+  function startRest(seconds: number) {
+    setRest((prev) => ({ seconds, id: (prev?.id ?? 0) + 1 }));
+  }
+
   async function registerSet(exerciseId: string) {
     if (!detail) return;
     const form = forms[exerciseId] ?? { weight: "", reps: "", rpe: "" };
@@ -183,6 +199,10 @@ export function TrainTab({
       }
       updateForm(exerciseId, { weight: "", reps: "", rpe: "" });
       track("zona_log_set", { pr: Boolean(res.isPR) });
+      // Descanso: el del ejercicio planificado (restSec de la rutina) o 90s.
+      const block = blocks.find((b) => b.exerciseId === exerciseId);
+      const restSec = Math.min(300, Math.max(15, Math.round(block?.plannedRest ?? DEFAULT_REST_SECONDS)));
+      startRest(restSec);
     } catch (err) {
       onActionError(err);
     } finally {
@@ -369,6 +389,12 @@ export function TrainTab({
                           placeholder="p. ej. 40"
                           className="h-11"
                         />
+                        <LastPerformanceHint
+                          exerciseId={block.exerciseId}
+                          cache={perfCache}
+                          onFill={(weightKg) => updateForm(block.exerciseId, { weight: String(weightKg) })}
+                          onActionError={onActionError}
+                        />
                       </div>
                       <div className="space-y-1">
                         <Label htmlFor={`${formId}-reps`} className="text-xs">
@@ -428,6 +454,13 @@ export function TrainTab({
       <Button variant="outline" size="lg" className="w-full" onClick={() => setFinishOpen(true)}>
         <Flag aria-hidden /> Finalizar entrenamiento
       </Button>
+
+      {/* ── Temporizador de descanso (chip sticky, no bloqueante) ────────── */}
+      {rest ? (
+        <div className="sticky bottom-4 z-30" aria-label="Temporizador de descanso">
+          <RestTimer key={rest.id} initialSeconds={rest.seconds} onClose={() => setRest(null)} />
+        </div>
+      ) : null}
 
       {/* ── Diálogo de finalización ──────────────────────────────────────── */}
       <Dialog open={finishOpen} onClose={() => (finishing ? null : setFinishOpen(false))} title="¿Finalizar entrenamiento?">
@@ -580,6 +613,84 @@ function SessionTimer({ startedAt, className }: { startedAt: string; className?:
   return (
     <span role="timer" aria-label={`Tiempo transcurrido: ${text}`} className={className}>
       {text}
+    </span>
+  );
+}
+
+/* ── Hint "Última vez" (Task 25-e, inspirado en OptiLifts: progresión) ────── */
+
+/**
+ * Muestra la última performance REAL del ejercicio (su serie más reciente en
+ * sesiones completadas) y rellena el input de peso al tocarla. Best-effort:
+ * - solo datos del API, sin sugerencias de progresión (regla de honestidad);
+ * - cacheado en el Map del TrainTab mientras dura la sesión activa (sin
+ *   refetch del mismo ejercicio);
+ * - si el bloque cambia rápido, la respuesta obsoleta se ignora (flag alive);
+ * - errores de red silenciosos (el hint es un extra); 401 delega al patrón
+ *   de la casa (AuthGate vía onActionError).
+ */
+function LastPerformanceHint({
+  exerciseId,
+  cache,
+  onFill,
+  onActionError,
+}: {
+  exerciseId: string;
+  cache: { current: Map<string, LastPerformanceDTO> };
+  onFill: (weightKg: number) => void;
+  onActionError: (err: unknown) => void;
+}) {
+  // Estado inicial: si ya está cacheado, no hay fetch ni parpadeo.
+  const [perf, setPerf] = React.useState<LastPerformanceDTO | null>(() => cache.current.get(exerciseId) ?? null);
+
+  React.useEffect(() => {
+    let alive = true;
+    const cached = cache.current.get(exerciseId);
+    const pending =
+      cached != null
+        ? Promise.resolve(cached)
+        : zonaApi<LastPerformanceDTO>(`/api/zona/last-performance?exerciseId=${encodeURIComponent(exerciseId)}`).then(
+            (dto) => {
+              cache.current.set(exerciseId, dto);
+              return dto;
+            },
+          );
+    pending
+      .then((dto) => {
+        if (alive) setPerf(dto); // respuesta obsoleta ignorada si el ejercicio cambió
+      })
+      .catch((err: unknown) => {
+        if (!alive) return;
+        if (err instanceof ZonaUnauthorized) onActionError(err);
+        // Resto: silencioso, un hint que no carga no rompe el registro de series.
+      });
+    return () => {
+      alive = false;
+    };
+  }, [exerciseId, cache, onActionError]);
+
+  const last = perf?.last ?? null;
+  if (!last || last.weightKg == null) return null; // sin registro con peso: estado limpio
+  const lastWeightKg = last.weightKg;
+  const prev = perf?.previous ?? null;
+  const droppedKg =
+    prev && prev.weightKg != null && prev.weightKg > lastWeightKg ? prev.weightKg - lastWeightKg : null;
+  const dateLabel = last.date ? shortDate(last.date.slice(0, 10)) : null;
+
+  return (
+    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <button
+        type="button"
+        aria-label="Usar último peso registrado"
+        onClick={() => onFill(lastWeightKg)}
+        className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-primary/30 bg-primary/5 px-2.5 text-xs font-medium text-primary transition-colors hover:bg-primary/15 sm:min-h-9"
+      >
+        Última vez: {fmtKg(lastWeightKg)} kg × {last.reps}
+        {dateLabel ? <span className="font-normal text-muted-foreground">· {dateLabel}</span> : null}
+      </button>
+      {droppedKg != null ? (
+        <span className="text-[11px] text-muted-foreground">↓ bajó {fmtKg(droppedKg)} kg vs. la anterior</span>
+      ) : null}
     </span>
   );
 }

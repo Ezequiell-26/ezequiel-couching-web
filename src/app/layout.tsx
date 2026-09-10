@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { SITE_NAME, SITE_URL, organizationJsonLd } from "@/lib/seo";
+import { RegisterSW } from "@/components/pwa/register-sw";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className={inter.variable}>
       <body className="font-sans">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: orgJsonLd }} />
+        <RegisterSW />
         {children}
       </body>
     </html>

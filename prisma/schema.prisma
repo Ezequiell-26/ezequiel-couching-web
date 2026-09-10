@@ -116,6 +116,7 @@ model ClientProfile {
   weightLogs WeightLog[]
   waterLogs  WaterLog[]
   habitLogs  HabitLog[]
+  weekSlots  WeekSlot[]
 }
 
 model Routine {
@@ -135,6 +136,7 @@ model Routine {
 
   items    RoutineItem[]
   sessions WorkoutSession[]
+  weekSlots WeekSlot[]
 
   @@index([profileId])
 }
@@ -217,5 +219,21 @@ model HabitLog {
   done      Boolean  @default(false)
 
   @@unique([profileId, date, habit])
+  @@index([profileId])
+}
+
+// Plan semanal del cliente (Task 25-b): asignación de rutina/día por día de
+// la semana. SOLO ADITIVO: no modifica ninguna tabla existente.
+model WeekSlot {
+  id        String        @id @default(cuid())
+  profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId Int
+  weekday   Int // 0=Lunes .. 6=Domingo
+  routine   Routine?      @relation(fields: [routineId], references: [id], onDelete: SetNull)
+  routineId Int?
+  day       Int? // día de la rutina asignado (1..daysPerWeek)
+  createdAt DateTime      @default(now())
+
+  @@unique([profileId, weekday])
   @@index([profileId])
 }

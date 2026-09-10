@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Droplets, Flame, Loader2, Scale, Trophy } from "lucide-react";
+import { Check, Download, Droplets, Flame, Loader2, Scale, Trophy } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import { toast } from "@/components/ui/toaster";
 import { EmptyState } from "@/components/site/states";
 import { track } from "@/lib/analytics";
 import { BarChart, LineChart } from "./charts";
-import { HABITS, fmtInt, fmtKg, shortDate, shortWeek, zonaApi, type ProgressDTO } from "./api";
+import { HABITS, ZonaUnauthorized, fmtInt, fmtKg, shortDate, shortWeek, zonaApi, type ProgressDTO } from "./api";
 
 /**
  * Tab Progreso: stats agregadas, peso corporal con curva SVG propia, agua con
@@ -339,6 +339,9 @@ export function ProgressTab({
           )}
         </CardContent>
       </Card>
+
+      {/* ── Exportar mis datos (portabilidad, Task 25-e) ────────────────── */}
+      <ExportCard onActionError={onActionError} />
     </div>
   );
 }
@@ -354,5 +357,71 @@ function StatTile({ label, value, icon, className }: { label: string; value: str
       </p>
       <p className="mt-1 text-xl font-bold tabular-nums sm:text-2xl">{value}</p>
     </div>
+  );
+}
+
+/* ── Exportar mis datos (Task 25-e, inspirado en wger: portabilidad) ──────── */
+
+const EXPORT_FILENAME = "ezequiel-coaching-mis-datos.json";
+
+/**
+ * Descarga el JSON completo del perfil (GET /api/zona/export, que responde con
+ * Content-Disposition attachment): fetch → blob → object URL → click
+ * programático en <a download> → revocar URL. 401 → ZonaUnauthorized → AuthGate.
+ */
+function ExportCard({ onActionError }: { onActionError: (err: unknown) => void }) {
+  const [exporting, setExporting] = React.useState(false);
+
+  async function exportData() {
+    setExporting(true);
+    try {
+      let res: Response;
+      try {
+        res = await fetch("/api/zona/export", { credentials: "same-origin" });
+      } catch {
+        throw new Error("No pudimos conectar con el servidor. Revisá tu conexión e intentá de nuevo.");
+      }
+      if (!res.ok) {
+        const data: unknown = await res.json().catch(() => ({}));
+        const msg =
+          typeof data === "object" && data !== null && "error" in data && typeof (data as { error: unknown }).error === "string"
+            ? (data as { error: string }).error
+            : "No pudimos exportar tus datos. Intentá de nuevo.";
+        if (res.status === 401) throw new ZonaUnauthorized(msg);
+        throw new Error(msg);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = EXPORT_FILENAME;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast({ title: "Descarga lista", description: `Tus datos se descargaron como ${EXPORT_FILENAME}.` });
+      track("zona_export");
+    } catch (err) {
+      onActionError(err);
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold">Tus datos son tuyos</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+            Descargá un archivo JSON con tus rutinas, sesiones, series, pesos, agua y hábitos.
+          </p>
+        </div>
+        <Button variant="outline" className="min-h-11 shrink-0" disabled={exporting} onClick={() => void exportData()}>
+          {exporting ? <Loader2 aria-hidden className="animate-spin" /> : <Download aria-hidden />}
+          {exporting ? "Exportando…" : "Exportar mis datos"}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

@@ -8,6 +8,7 @@
  */
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { Dumbbell, Lightbulb, Search } from "lucide-react";
 import { PageHeader } from "@/components/site/page-header";
 import { Container } from "@/components/site/container";
@@ -30,6 +31,21 @@ import {
   type ExerciseGroup,
   type ExerciseLevel,
 } from "@/lib/content/exercises";
+
+/**
+ * Portada por grupo muscular (Task 25-d): ilustraciones flat/vector con la
+ * identidad de la marca (fondo carbón #0b0b0e + acento verde lima #bdef27),
+ * generadas por IA y servidas desde /public/images/ejercicios.
+ */
+const GROUP_IMAGES: Record<ExerciseGroup, string> = {
+  pecho: "/images/ejercicios/pecho.jpg",
+  espalda: "/images/ejercicios/espalda.jpg",
+  piernas: "/images/ejercicios/piernas.jpg",
+  hombros: "/images/ejercicios/hombros.jpg",
+  brazos: "/images/ejercicios/brazos.jpg",
+  core: "/images/ejercicios/core.jpg",
+  "full-body": "/images/ejercicios/full-body.jpg",
+};
 
 const ANY_GROUP = "todos-los-grupos";
 const ANY_EQUIPMENT = "todo-el-equipo";
@@ -55,6 +71,16 @@ function ExerciseDialogBody({
 }) {
   return (
     <div className="flex flex-col gap-5">
+      <div className="relative aspect-[21/9] overflow-hidden rounded-lg border border-border">
+        <Image
+          src={GROUP_IMAGES[exercise.group]}
+          alt={`Ilustración de ejercicios de ${groupLabel(exercise.group)}`}
+          fill
+          sizes="(max-width: 640px) 100vw, 512px"
+          className="object-cover"
+        />
+      </div>
+
       <div className="flex flex-wrap gap-1.5" aria-label="Músculos implicados">
         {exercise.primaryMuscles.map((m) => (
           <Badge key={m} variant="default">
@@ -263,8 +289,17 @@ export function BibliotecaView() {
                     type="button"
                     onClick={() => openExercise(exercise)}
                     aria-haspopup="dialog"
-                    className="flex h-full w-full flex-col gap-3 rounded-xl p-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    className="group flex h-full w-full flex-col gap-3 rounded-xl p-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
+                    <div className="relative -mx-5 -mt-5 mb-1 aspect-[4/3] overflow-hidden rounded-t-xl border-b border-border bg-muted">
+                      <Image
+                        src={GROUP_IMAGES[exercise.group]}
+                        alt={`Ilustración de ejercicios de ${groupLabel(exercise.group)}`}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                        className="object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-105"
+                      />
+                    </div>
                     <div className="flex items-start justify-between gap-2">
                       <h2 className="text-balance font-semibold leading-snug tracking-tight">
                         {exercise.name}

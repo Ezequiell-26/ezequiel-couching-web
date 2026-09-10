@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ClipboardList, Dumbbell, LogOut, Trophy, TrendingUp } from "lucide-react";
+import { ClipboardList, Dumbbell, History, LogOut, Trophy, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/site/page-header";
 import { Container } from "@/components/site/container";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { RoutinesTab } from "@/components/zona/routines-tab";
 import { TrainEmpty, TrainTab } from "@/components/zona/train-tab";
 import { ProgressTab } from "@/components/zona/progress-tab";
 import { AchievementsTab } from "@/components/zona/achievements-tab";
+import { HistoryTab } from "@/components/zona/history-tab";
 import {
   ZonaUnauthorized,
   fmtInt,
@@ -29,11 +30,11 @@ import {
 
 /**
  * Mi Zona (#/mi-zona): área personal de entrenamiento. AuthGate con nombre+PIN
- * y cuatro tabs (Rutinas · Entrenar · Progreso · Logros) sobre las APIs reales
- * /api/zona/*. Arranca vacío: sin datos demo, estados vacíos honestos.
+ * y cinco tabs (Rutinas · Entrenar · Progreso · Logros · Historial) sobre las
+ * APIs reales /api/zona/*. Arranca vacío: sin datos demo, estados vacíos honestos.
  */
 
-type TabId = "rutinas" | "entrenar" | "progreso" | "logros";
+type TabId = "rutinas" | "entrenar" | "progreso" | "logros" | "historial";
 type FinishedResult = { session: SessionDTO; newPRs: NewPRDTO[] };
 
 const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -41,6 +42,7 @@ const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: 
   { id: "entrenar", label: "Entrenar", icon: Dumbbell },
   { id: "progreso", label: "Progreso", icon: TrendingUp },
   { id: "logros", label: "Logros", icon: Trophy },
+  { id: "historial", label: "Historial", icon: History },
 ];
 
 export function ZonaView() {
@@ -305,7 +307,7 @@ export function ZonaView() {
         ) : (
           <>
             {/* Tabs principales */}
-            <nav role="tablist" aria-label="Secciones de Mi Zona" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <nav role="tablist" aria-label="Secciones de Mi Zona" className="grid grid-cols-2 gap-2 sm:grid-cols-5">
               {TABS.map((t) => {
                 const Icon = t.icon;
                 const active = tab === t.id;
@@ -319,7 +321,7 @@ export function ZonaView() {
                     onClick={() => switchTab(t.id)}
                     className={`relative flex min-h-12 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition-colors ${
                       active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                    }`}
+                    } ${t.id === "historial" ? "col-span-2 sm:col-span-1" : ""}`}
                   >
                     <Icon className="size-4 shrink-0" />
                     {t.label}
@@ -357,6 +359,14 @@ export function ZonaView() {
               ) : null}
 
               {tab === "logros" ? <AchievementsTab achievements={achievements!} /> : null}
+
+              {tab === "historial" ? (
+                <HistoryTab
+                  onGoToRoutines={() => switchTab("rutinas")}
+                  onGoToTrain={() => switchTab("entrenar")}
+                  onActionError={handleActionError}
+                />
+              ) : null}
             </div>
           </>
         )}

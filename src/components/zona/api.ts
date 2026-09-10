@@ -57,6 +57,12 @@ export type SetDTO = {
   reps: number;
   rpe: number | null;
   createdAt: string;
+  /**
+   * Opcional: hoy GET /api/zona/sessions/[id] no lo serializa (isPR solo viene
+   * en la respuesta del POST de series). Queda cableado para que, si el backend
+   * empieza a incluirlo, la UI lo muestre sin cambios extra.
+   */
+  isPR?: boolean;
 };
 
 export type SessionDetailDTO = SessionDTO & { sets: SetDTO[] };
@@ -94,6 +100,35 @@ export type AchievementDTO = {
   desc: string;
   unlocked: boolean;
   progress?: { current: number; target: number };
+};
+
+// ── Plan semanal / export / última performance (Task 25-e) ──────────────────
+
+/**
+ * Slot del plan semanal (GET/PUT /api/zona/schedule): el API devuelve SIEMPRE
+ * un array fijo de 7 posiciones, weekday 0=Lunes .. 6=Domingo, con nulls en
+ * los días sin asignación.
+ */
+export type ScheduleSlotDTO = {
+  weekday: number;
+  routineId: number | null;
+  routineTitle: string | null;
+  day: number | null;
+};
+
+/** Punto de performance real: la serie más reciente de una sesión completada. */
+export type PerformancePointDTO = {
+  weightKg: number | null;
+  reps: number;
+  /** finishedAt ISO de la sesión completada; null si no tiene fecha. */
+  date: string | null;
+};
+
+/** GET /api/zona/last-performance?exerciseId=X → {last, previous} nullables. */
+export type LastPerformanceDTO = {
+  exerciseId: string;
+  last: PerformancePointDTO | null;
+  previous: PerformancePointDTO | null;
 };
 
 // ── Errores ──────────────────────────────────────────────────────────────────

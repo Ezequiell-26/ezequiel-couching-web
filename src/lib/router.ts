@@ -41,6 +41,8 @@ export type ViewId =
   | "dashboard"
   | "coach"
   | "admin"
+  | "biblioteca"
+  | "zona"
   | "not-found";
 
 export interface ViewParams {
@@ -92,6 +94,8 @@ const VALID_VIEWS: ViewId[] = [
   "dashboard",
   "coach",
   "admin",
+  "biblioteca",
+  "zona",
 ];
 
 export function parseHash(hash: string): { view: ViewId; params: ViewParams } {
@@ -145,6 +149,12 @@ export function parseHash(hash: string): { view: ViewId; params: ViewParams } {
       return { view: "calculadoras", params: {} };
     case "contador-de-calorias":
       return { view: "contador", params: {} };
+    // Biblioteca de ejercicios: hash descriptivo (SEO/UX), como "contador".
+    case "ejercicios":
+      return { view: "biblioteca", params: {} };
+    // Mi Zona: área personal de entrenamiento.
+    case "mi-zona":
+      return { view: "zona", params: {} };
     case "contacto":
       return { view: "contacto", params: {} };
     case "faq":
@@ -187,6 +197,11 @@ function toHash(view: ViewId, params: ViewParams): string {
     // Contador: hash descriptivo (SEO/UX) y a la vez idempotente.
     case "contador":
       return "#/contador-de-calorias";
+    // Biblioteca y zona: hashes descriptivos idempotentes con parseHash.
+    case "biblioteca":
+      return "#/ejercicios";
+    case "zona":
+      return "#/mi-zona";
     case "cookies":
       return "#/politica-de-cookies";
     case "not-found":

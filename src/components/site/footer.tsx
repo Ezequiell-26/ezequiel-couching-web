@@ -21,6 +21,8 @@ const COLUMNS: { title: string; links: { label: string; view: Parameters<ReturnT
     links: [
       { label: "Calculadoras", view: "calculadoras" },
       { label: "Contador de calorías", view: "contador" },
+      { label: "Ejercicios", view: "biblioteca" },
+      { label: "Mi Zona", view: "zona" },
       { label: "Mi progreso", view: "progreso" },
       { label: "Mi panel", view: "dashboard" },
     ],

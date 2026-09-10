@@ -96,3 +96,126 @@ model Post {
   published Boolean  @default(true)
   createdAt DateTime @default(now())
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Zona de entrenamiento del cliente (Task 24) — SOLO ADITIVO:
+// no modifica ninguna tabla existente. Persistencia real para
+// rutinas, sesiones, peso, agua, hábitos, PRs y logros.
+// ─────────────────────────────────────────────────────────────────
+
+model ClientProfile {
+  id            Int       @id @default(autoincrement())
+  name          String
+  pinHash       String // scrypt(salt + pin), nunca el PIN en claro
+  sessionToken  String?   @unique
+  sessionExpiry DateTime?
+  createdAt     DateTime  @default(now())
+
+  routines   Routine[]
+  sessions   WorkoutSession[]
+  weightLogs WeightLog[]
+  waterLogs  WaterLog[]
+  habitLogs  HabitLog[]
+}
+
+model Routine {
+  id          Int      @id @default(autoincrement())
+  profileId   Int
+  profile     ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name        String
+  goal        String   @default("general") // general | hipertrofia | fuerza | perder-grasa | resistencia
+  level       String   @default("principiante") // principiante | intermedio | avanzado
+  daysPerWeek Int      @default(3)
+  equipment   String   @default("gimnasio") // gimnasio | mancuernas | casa | peso-corporal
+  source      String   @default("manual") // manual | ia
+  notes       String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items    RoutineItem[]
+  sessions WorkoutSession[]
+
+  @@index([profileId])
+}
+
+model RoutineItem {
+  id         Int     @id @default(autoincrement())
+  routineId  Int
+  routine    Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  day        Int     @default(1) // día 1..N de la rutina
+  orderIdx   Int     @default(0)
+  exerciseId String // id del ejercicio en la biblioteca (src/lib/content/exercises.ts)
+  sets       Int     @default(3)
+  reps       String  @default("10-12")
+  restSec    Int     @default(90)
+  notes      String?
+
+  @@index([routineId])
+}
+
+model WorkoutSession {
+  id         Int       @id @default(autoincrement())
+  profileId  Int
+  profile    ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  routineId  Int?
+  routine    Routine?  @relation(fields: [routineId], references: [id])
+  title      String
+  day        Int?
+  status     String    @default("activa") // activa | completada
+  volumeKg   Float     @default(0)
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+
+  sets SetLog[]
+
+  @@index([profileId])
+}
+
+model SetLog {
+  id         Int            @id @default(autoincrement())
+  sessionId  Int
+  session    WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exerciseId String
+  setNumber  Int
+  weightKg   Float?
+  reps       Int
+  rpe        Int?
+  createdAt  DateTime       @default(now())
+
+  @@index([sessionId])
+}
+
+model WeightLog {
+  id        Int      @id @default(autoincrement())
+  profileId Int
+  profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  date      DateTime // normalizado a medianoche UTC
+  kg        Float
+
+  @@unique([profileId, date])
+  @@index([profileId])
+}
+
+model WaterLog {
+  id        Int      @id @default(autoincrement())
+  profileId Int
+  profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  date      DateTime // normalizado a medianoche UTC
+  ml        Int
+
+  @@unique([profileId, date])
+  @@index([profileId])
+}
+
+model HabitLog {
+  id        Int      @id @default(autoincrement())
+  profileId Int
+  profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  date      DateTime // normalizado a medianoche UTC
+  habit     String // sueno | proteina | agua | pasos | estiramiento | sin-azucar
+  done      Boolean  @default(false)
+
+  @@unique([profileId, date, habit])
+  @@index([profileId])
+}

@@ -38,6 +38,8 @@ const PlanView = dynamic(() => import("@/components/views/plan-view").then((m) =
 const ProgressView = dynamic(() => import("@/components/views/progress-view").then((m) => m.ProgressView), { loading: () => <Loading />, ssr: false });
 const CalculadorasView = dynamic(() => import("@/components/views/calculadoras-view").then((m) => m.CalculadorasView), { loading: () => <Loading />, ssr: false });
 const ContadorView = dynamic(() => import("@/components/views/contador-view").then((m) => m.ContadorView), { loading: () => <Loading />, ssr: false });
+const BibliotecaView = dynamic(() => import("@/components/views/biblioteca-view").then((m) => m.BibliotecaView), { loading: () => <Loading />, ssr: false });
+const ZonaView = dynamic(() => import("@/components/views/zona-view").then((m) => m.ZonaView), { loading: () => <Loading />, ssr: false });
 const ContactoView = dynamic(() => import("@/components/views/contacto-view").then((m) => m.ContactoView), { loading: () => <Loading />, ssr: false });
 const FaqView = dynamic(() => import("@/components/views/faq-view").then((m) => m.FaqView), { loading: () => <Loading />, ssr: false });
 const LegalView = dynamic(() => import("@/components/views/legal-view").then((m) => m.LegalView), { loading: () => <Loading />, ssr: false });
@@ -87,6 +89,10 @@ function CurrentView() {
       return <CalculadorasView />;
     case "contador":
       return <ContadorView />;
+    case "biblioteca":
+      return <BibliotecaView />;
+    case "zona":
+      return <ZonaView />;
     case "contacto":
       return <ContactoView />;
     case "faq":

@@ -1,0 +1,2050 @@
+/**
+ * Biblioteca de ejercicios — dataset completo (Task 24-b).
+ *
+ * ~100 ejercicios reales en español con técnica paso a paso, músculos
+ * implicados y consejos de seguridad. Consumido por la vista de biblioteca
+ * (#/ejercicios), la zona de entrenamiento (#/mi-zona) y las APIs /api/zona/*.
+ * Contrato público estable: ExerciseGroup, ExerciseEquipment, ExerciseLevel,
+ * Exercise, EXERCISE_GROUPS, EXERCISE_EQUIPMENT, EXERCISE_LEVELS,
+ * getExerciseById, exerciseName, filterExercises.
+ *
+ * Módulo isomórfico (sin "use client"): puede importarse en servidor y cliente.
+ */
+
+export type ExerciseGroup =
+  | "pecho"
+  | "espalda"
+  | "piernas"
+  | "hombros"
+  | "brazos"
+  | "core"
+  | "full-body";
+
+export type ExerciseEquipment =
+  | "barra"
+  | "mancuernas"
+  | "maquinas"
+  | "poleas"
+  | "peso-corporal"
+  | "kettlebell"
+  | "banda";
+
+export type ExerciseLevel = "principiante" | "intermedio" | "avanzado";
+
+export interface Exercise {
+  /** Slug kebab-case, único, estable (se referencia desde rutinas). */
+  id: string;
+  name: string;
+  group: ExerciseGroup;
+  equipment: ExerciseEquipment[];
+  level: ExerciseLevel;
+  primaryMuscles: string[];
+  secondaryMuscles: string[];
+  /** Pasos de ejecución, 4-6, en español claro. */
+  instructions: string[];
+  /** Consejos de técnica y seguridad, 1-2. */
+  tips: string[];
+}
+
+export const EXERCISE_GROUPS: { id: ExerciseGroup; label: string }[] = [
+  { id: "pecho", label: "Pecho" },
+  { id: "espalda", label: "Espalda" },
+  { id: "piernas", label: "Piernas" },
+  { id: "hombros", label: "Hombros" },
+  { id: "brazos", label: "Brazos" },
+  { id: "core", label: "Core" },
+  { id: "full-body", label: "Cuerpo completo" },
+];
+
+export const EXERCISE_EQUIPMENT: { id: ExerciseEquipment; label: string }[] = [
+  { id: "barra", label: "Barra" },
+  { id: "mancuernas", label: "Mancuernas" },
+  { id: "maquinas", label: "Máquinas" },
+  { id: "poleas", label: "Poleas" },
+  { id: "peso-corporal", label: "Peso corporal" },
+  { id: "kettlebell", label: "Kettlebell" },
+  { id: "banda", label: "Bandas" },
+];
+
+export const EXERCISE_LEVELS: { id: ExerciseLevel; label: string }[] = [
+  { id: "principiante", label: "Principiante" },
+  { id: "intermedio", label: "Intermedio" },
+  { id: "avanzado", label: "Avanzado" },
+];
+
+// ── PECHO (12) ───────────────────────────────────────────────────────────────
+
+const pecho: Exercise[] = [
+  {
+    id: "press-banca",
+    name: "Press de banca con barra",
+    group: "pecho",
+    equipment: ["barra"],
+    level: "intermedio",
+    primaryMuscles: ["pectoral mayor"],
+    secondaryMuscles: ["deltoide anterior", "tríceps braquial"],
+    instructions: [
+      "Túmbate en el banco con los ojos alineados con la barra y los pies firmes en el suelo.",
+      "Agarra la barra algo más ancho que los hombros, retrae las escápulas y crea un ligero arco en la zona lumbar.",
+      "Desbloquea la barra y bájala con control hasta la parte baja del pecho, con los codos a unos 45-60° del torso.",
+      "Toca el pecho sin botar la barra y empuja hacia arriba hasta extender los codos sin bloquearlos de golpe.",
+      "Mantén el trapecio apoyado en el banco toda la serie: inhala al bajar y exhala al empujar.",
+    ],
+    tips: [
+      "Usa un observador o los pasadores de seguridad cuando entrenes cerca del fallo.",
+      "Si los hombros se molestan, reduce el rango o cambia a mancuernas, que permiten una trayectoria más natural.",
+    ],
+  },
+  {
+    id: "press-banca-mancuernas",
+    name: "Press de banca con mancuernas",
+    group: "pecho",
+    equipment: ["mancuernas"],
+    level: "principiante",
+    primaryMuscles: ["pectoral mayor"],
+    secondaryMuscles: ["deltoide anterior", "tríceps braquial"],
+    instructions: [
+      "Túmbate en un banco plano con una mancuerna en cada mano a la altura del pecho.",
+      "Retrae las escápulas y apoya pies, glúteos y espalda alta en el banco.",
+      "Baja las mancuernas con los codos a unos 45° hasta la altura del pecho.",
+      "Empuja hacia arriba siguiendo una ligera diagonal hacia dentro, sin chocar las mancuernas.",
+      "Controla la bajada en 2-3 segundos: es la mitad importante del ejercicio.",
+    ],
+    tips: [
+      "Las mancuernas permiten un rango más natural del hombro que la barra: ideal si el press con barra no te es cómodo.",
+    ],
+  },
+  {
+    id: "press-inclinado-barra",
+    name: "Press inclinado con barra",
+    group: "pecho",
+    equipment: ["barra"],
+    level: "intermedio",
+    primaryMuscles: ["pectoral mayor (porción clavicular)"],
+    secondaryMuscles: ["deltoide anterior", "tríceps braquial"],
+    instructions: [
+      "Coloca el banco a 30° y la barra sobre los soportes a la altura adecuada.",
+      "Agarra la barra algo más ancha que los hombros y retrae las escápulas.",
+      "Baja la barra con control hasta la parte alta del pecho, cerca de la clavícula.",
+      "Empuja hacia arriba y ligeramente hacia atrás hasta extender los codos.",
+      "Mantén los pies apoyados y no despegues los glúteos del banco durante la serie.",
+    ],
+    tips: [
+      "30° de inclinación es suficiente: un ángulo mayor traslada el trabajo al deltoides.",
+    ],
+  },
+  {
+    id: "press-inclinado-mancuernas",
+    name: "Press inclinado con mancuernas",
+    group: "pecho",
+    equipment: ["mancuernas"],
+    level: "intermedio",
+    primaryMuscles: ["pectoral mayor (porción clavicular)"],
+    secondaryMuscles: ["deltoide anterior", "tríceps braquial"],
+    instructions: [
+      "Ajusta el banco a 30-45° y siéntate con una mancuerna en cada mano sobre los muslos.",
+      "Impulsa las mancuernas a la altura del pecho y recuéstate apoyando la espalda completa.",
+      "Baja con control hasta sentir estiramiento en el pecho, con los codos a unos 45°.",
+      "Empuja hacia arriba y ligeramente hacia dentro hasta acercar las mancuernas sin chocarlas.",
+      "Mantén los pies apoyados y la zona lumbar en contacto con el banco.",
+    ],
+    tips: [
+      "No subas el banco por encima de 45°: convertirías el ejercicio en un press de hombros.",
+    ],
+  },
+  {
+    id: "press-declinado-barra",
+    name: "Press declinado con barra",
+    group: "pecho",
+    equipment: ["barra"],
+    level: "intermedio",
+    primaryMuscles: ["pectoral mayor (porción esternal)"],
+    secondaryMuscles: ["tríceps braquial", "deltoide anterior"],
+    instructions: [
+      "Coloca el banco en ligera declinación (unos -15°) y fija bien los pies en los soportes.",
+      "Agarra la barra algo más ancha que los hombros y desbloquéala con ayuda si es necesario.",
+      "Baja con control hasta la parte baja del pecho.",
+      "Empuja hacia arriba hasta extender los codos sin bloquearlos bruscamente.",
+      "Mantén la cabeza y los hombros apoyados en el banco durante toda la serie.",
+    ],
+    tips: [
+      "Al estar por debajo de la horizontal, pide siempre ayuda para desbloquear y guardar la barra.",
+    ],
+  },
+  {
+    id: "press-maquina-pecho",
+    name: "Press de pecho en máquina",
+    group: "pecho",
+    equipment: ["maquinas"],
+    level: "principiante",
+    primaryMuscles: ["pectoral mayor"],
+    secondaryMuscles: ["deltoide anterior", "tríceps braquial"],
+    instructions: [
+      "Ajusta el asiento para que los manuales queden a la altura del centro del pecho.",
+      "Apoya espalda y cabeza en el respaldo y los pies firmes en el suelo.",
+      "Empuja los manuales hacia delante hasta casi extender los codos.",
+      "Vuelve con control sin dejar que el peso descanse entre repeticiones.",
+      "Mantén los codos ligeramente por debajo de la línea de los hombros.",
+    ],
+    tips: [
+      "La trayectoria guiada la hace perfecta para aprender el patrón de empuje antes de pasar a la barra.",
+    ],
+  },
+  {
+    id: "flexiones",
+    name: "Flexiones (push-ups)",
+    group: "pecho",
+    equipment: ["peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["pectoral mayor"],
+    secondaryMuscles: ["tríceps braquial", "deltoide anterior", "core"],
+    instructions: [
+      "Apoya las manos algo más anchas que los hombros y mantén el cuerpo en línea recta de cabeza a talones.",
+      "Contrae abdomen y glúteos para evitar hundir la cadera.",
+      "Baja con los codos a unos 45° del torso hasta que el pecho quede a 3-5 cm del suelo.",
+      "Empuja el suelo hasta extender los brazos manteniendo el cuerpo firme.",
+      "Mira ligeramente por delante de las manos para mantener el cuello neutro.",
+    ],
+    tips: [
+      "Si te cuestan, apoya las rodillas o eleva las manos; si te sobran, añade pausa abajo o eleva los pies.",
+    ],
+  },
+  {
+    id: "flexiones-diamante",
+    name: "Flexiones diamante",
+    group: "pecho",
+    equipment: ["peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["pectoral mayor"],
+    secondaryMuscles: ["tríceps braquial", "deltoide anterior"],
+    instructions: [
+      "Coloca las manos bajo el pecho formando un rombo con pulgares e índices.",
+      "Mantén el cuerpo en línea recta con el core activado.",
+      "Baja controlando hasta que el pecho roce las manos, con los codos pegados al torso.",
+      "Empuja hasta extender los codos a los lados del cuerpo.",
+      "Si hay molestia en la muñeca, usa puños o asas de flexiones.",
+    ],
+    tips: [
+      "Baja los codos pegados al cuerpo, nunca en abanico: proteges muñeca y hombro.",
+    ],
+  },
+  {
+    id: "fondos-paralelas",
+    name: "Fondos en paralelas",
+    group: "pecho",
+    equipment: ["peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["pectoral mayor (porción esternal)"],
+    secondaryMuscles: ["tríceps braquial", "deltoide anterior"],
+    instructions: [
+      "Sube a las paralelas con los brazos extendidos y los hombros deprimidos.",
+      "Inclina el torso hacia delante unos 20-30° para enfatizar el pecho.",
+      "Baja con control hasta que los hombros queden aproximadamente a la altura de los codos.",
+      "Empuja hacia arriba hasta extender los codos sin bloquearlos de golpe.",
+      "Si notas presión en la parte frontal del hombro, no bajes más profundo.",
+    ],
+    tips: [
+      "Si no alcanzas 5 repeticiones limpias, usa una banda elástica de asistencia o la máquina de fondos asistidos.",
+    ],
+  },
+  {
+    id: "aperturas-mancuernas",
+    name: "Aperturas con mancuernas",
+    group: "pecho",
+    equipment: ["mancuernas"],
+    level: "intermedio",
+    primaryMuscles: ["pectoral mayor"],
+    secondaryMuscles: ["deltoide anterior"],
+    instructions: [
+      "Túmbate en un banco plano con las mancuernas extendidas sobre el pecho y los codos ligeramente flexionados.",
+      "Abre los brazos en arco amplio hasta sentir el estiramiento del pecho.",
+      "Mantén el ángulo del codo fijo durante todo el recorrido.",
+      "Junta las mancuernas imaginando que abrazas un árbol, no que levantas peso.",
+      "Trabaja con peso moderado: la palanca es desfavorable en el punto de estiramiento.",
+    ],
+    tips: [
+      "Detente donde el estiramiento sea cómodo; no fuerces el hombro más abajo del nivel del banco.",
+    ],
+  },
+  {
+    id: "aperturas-polea",
+    name: "Aperturas en polea",
+    group: "pecho",
+    equipment: ["poleas"],
+    level: "principiante",
+    primaryMuscles: ["pectoral mayor"],
+    secondaryMuscles: ["deltoide anterior"],
+    instructions: [
+      "Coloca las poleas a la altura del pecho y agarra un maneral en cada mano, con un pie adelantado para estabilizar.",
+      "Con los codos ligeramente flexionados y fijos, junta las manos frente al pecho.",
+      "Mantén los hombros lejos de las orejas y las costillas abajo.",
+      "Abre los brazos con control hasta sentir el estiramiento, sin dejar que la polea tire de los hombros.",
+      "Contrae el pecho 1 segundo en el punto de máxima contracción.",
+    ],
+    tips: [
+      "El movimiento debe salir del hombro: el ángulo del codo no cambia en todo el recorrido.",
+    ],
+  },
+  {
+    id: "cruzamiento-poleas",
+    name: "Cruzamiento de poleas",
+    group: "pecho",
+    equipment: ["poleas"],
+    level: "intermedio",
+    primaryMuscles: ["pectoral mayor"],
+    secondaryMuscles: ["deltoide anterior", "bíceps braquial (isométrico)"],
+    instructions: [
+      "Coloca las poleas en posición alta y agarra un maneral en cada mano.",
+      "Da un paso adelante y adopta una postura estable con el torso ligeramente inclinado.",
+      "Con los codos semiflexionados y fijos, lleva las manos hacia abajo y delante hasta cruzarlas o casi.",
+      "Contrae el pecho 1 segundo y abre de nuevo con control.",
+      "Mantén los hombros deprimidos en todo el recorrido.",
+    ],
+    tips: [
+      "Alterna qué mano cruza por delante en cada serie para equilibrar los dos lados.",
+    ],
+  },
+];
+
+// ── ESPALDA (16) ─────────────────────────────────────────────────────────────
+
+const espalda: Exercise[] = [
+  {
+    id: "dominadas",
+    name: "Dominadas",
+    group: "espalda",
+    equipment: ["peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["dorsal ancho"],
+    secondaryMuscles: ["bíceps braquial", "trapecio inferior", "redondo mayor"],
+    instructions: [
+      "Cuelga de la barra con agarre prono algo más ancho que los hombros.",
+      "Deprime las escápulas (hombros lejos de las orejas) antes de flexionar los brazos.",
+      "Tira llevando los codos hacia las costillas hasta que la barbilla supere la barra.",
+      "Baja con control hasta la extensión completa, sin balancearte.",
+      "Mantén el core firme para que el cuerpo no gire durante la serie.",
+    ],
+    tips: [
+      "Si no llegas a 5 repeticiones, usa banda de asistencia o negativas controladas de 3-5 segundos.",
+    ],
+  },
+  {
+    id: "dominadas-asistidas-banda",
+    name: "Dominadas asistidas con banda",
+    group: "espalda",
+    equipment: ["banda", "peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["dorsal ancho"],
+    secondaryMuscles: ["bíceps braquial", "trapecio inferior"],
+    instructions: [
+      "Engancha una banda elástica a la barra y apoya una rodilla o el pie en ella.",
+      "Agarra la barra con prono algo más ancho que los hombros.",
+      "Deprime las escápulas y tira hasta que la barbilla pase la barra.",
+      "Baja con control durante 2-3 segundos hasta extensión completa.",
+      "Progresiona usando bandas cada vez más finas.",
+    ],
+    tips: [
+      "El objetivo es reducir la asistencia con el tiempo, no acumular repeticiones con la misma banda.",
+    ],
+  },
+  {
+    id: "dominadas-supinas",
+    name: "Dominadas agarre supino",
+    group: "espalda",
+    equipment: ["peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["dorsal ancho", "bíceps braquial"],
+    secondaryMuscles: ["redondo mayor", "trapecio inferior"],
+    instructions: [
+      "Cuelga de la barra con agarre supino a la anchura de los hombros.",
+      "Deprime las escápulas y activa el core.",
+      "Tira hasta que la barbilla supere la barra, con los codos hacia las costillas.",
+      "Baja con control hasta la extensión completa de brazos.",
+      "Evita balancearte o impulsarte con las piernas.",
+    ],
+    tips: [
+      "Al implicar más el bíceps que la versión prona, suele ser la primera progresión hacia la dominada estricta.",
+    ],
+  },
+  {
+    id: "remo-barra",
+    name: "Remo con barra",
+    group: "espalda",
+    equipment: ["barra"],
+    level: "intermedio",
+    primaryMuscles: ["dorsal ancho", "romboides"],
+    secondaryMuscles: ["bíceps braquial", "trapecio medio", "erectores espinales"],
+    instructions: [
+      "Con la barra a la altura de las espinillas, flexiona ligeramente las rodillas.",
+      "Inclina el torso unos 45° o más, con la espalda recta y el core activado.",
+      "Tira de la barra hacia el ombligo llevando los codos hacia atrás.",
+      "Aprieta las escápulas al final del recorrido.",
+      "Baja con control sin redondear la espalda ni usar impulso del torso.",
+    ],
+    tips: [
+      "Si la zona lumbar se redondea, reduce el peso o mejora la movilidad de cadera antes de cargar más.",
+    ],
+  },
+  {
+    id: "remo-mancuerna",
+    name: "Remo con mancuerna a una mano",
+    group: "espalda",
+    equipment: ["mancuernas"],
+    level: "principiante",
+    primaryMuscles: ["dorsal ancho"],
+    secondaryMuscles: ["romboides", "bíceps braquial", "trapecio medio"],
+    instructions: [
+      "Apoya una rodilla y una mano en el banco, con la espalda paralela al suelo y recta.",
+      "Sujeta la mancuerna con el brazo colgando y el hombro activo (sin colgar relajado).",
+      "Tira del codo hacia arriba y atrás, pegado al cuerpo.",
+      "Aprieta el dorsal al final del recorrido y baja con control.",
+      "Evita rotar el torso para subir más peso.",
+    ],
+    tips: [
+      "Imagina que te están apilando un libro en la espalda: movimiento limpio, sin torsión.",
+    ],
+  },
+  {
+    id: "jalon-polea",
+    name: "Jalón al pecho en polea",
+    group: "espalda",
+    equipment: ["poleas"],
+    level: "principiante",
+    primaryMuscles: ["dorsal ancho"],
+    secondaryMuscles: ["bíceps braquial", "redondo mayor", "trapecio inferior"],
+    instructions: [
+      "Ajusta el rodillo de muslos y agarra la barra ancha con prono.",
+      "Inclina el torso unos 10-15° hacia atrás manteniendo la espalda recta.",
+      "Lleva la barra a la parte alta del pecho con los codos hacia abajo y atrás.",
+      "Controla la subida hasta la extensión completa de brazos.",
+      "No uses impulso del torso ni jales por detrás de la nuca.",
+    ],
+    tips: [
+      "Piensa en 'meter los codos en los bolsillos del pantalón' para sentir el dorsal y no los brazos.",
+    ],
+  },
+  {
+    id: "remo-polea-baja",
+    name: "Remo en polea baja",
+    group: "espalda",
+    equipment: ["poleas"],
+    level: "principiante",
+    primaryMuscles: ["dorsal ancho", "romboides"],
+    secondaryMuscles: ["bíceps braquial", "trapecio medio"],
+    instructions: [
+      "Siéntate con los pies apoyados, rodillas ligeramente flexionadas y espalda recta.",
+      "Agarra el maneral y tira hacia el abdomen llevando los codos hacia atrás.",
+      "Aprieta las escápulas al final del recorrido.",
+      "Extiende los brazos con control sin dejar que el torso se balancee.",
+      "Mantén los hombros lejos de las orejas durante toda la serie.",
+    ],
+    tips: [
+      "El torso no debe moverse más de unos grados: si te balanceas, baja el peso.",
+    ],
+  },
+  {
+    id: "remo-maquina",
+    name: "Remo en máquina",
+    group: "espalda",
+    equipment: ["maquinas"],
+    level: "principiante",
+    primaryMuscles: ["dorsal ancho", "romboides"],
+    secondaryMuscles: ["bíceps braquial", "trapecio medio"],
+    instructions: [
+      "Ajusta el asiento y apoya el pecho contra el soporte.",
+      "Agarra los manuales y tira hacia atrás llevando los codos pegados al torso.",
+      "Aprieta la espalda 1 segundo al final del recorrido.",
+      "Vuelve con control hasta estirar el dorsal.",
+      "No despegues el pecho del soporte en ningún momento.",
+    ],
+    tips: [
+      "El apoyo del pecho elimina el impulso: perfecto para aprender a sentir la espalda.",
+    ],
+  },
+  {
+    id: "remo-T-barra",
+    name: "Remo en T",
+    group: "espalda",
+    equipment: ["barra", "maquinas"],
+    level: "intermedio",
+    primaryMuscles: ["dorsal ancho", "romboides"],
+    secondaryMuscles: ["erectores espinales", "bíceps braquial"],
+    instructions: [
+      "Colócate a horcajadas sobre la barra con rodillas semiflexionadas y torso inclinado unos 45°.",
+      "Mantén la espalda recta y el core firme.",
+      "Tira de la barra hacia el pecho bajo con los codos hacia arriba y atrás.",
+      "Aprieta las escápulas y baja con control.",
+      "No cambies el ángulo del torso durante la serie.",
+    ],
+    tips: [
+      "Si tu gimnasio tiene la versión con apoyo de pecho, priorízala para proteger la zona lumbar.",
+    ],
+  },
+  {
+    id: "remo-invertido",
+    name: "Remo invertido",
+    group: "espalda",
+    equipment: ["peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["dorsal ancho", "romboides"],
+    secondaryMuscles: ["bíceps braquial", "core", "trapecio medio"],
+    instructions: [
+      "Coloca una barra a la altura de la cadera en el rack o usa anillas.",
+      "Cuelga por debajo con el cuerpo recto y los talones apoyados en el suelo.",
+      "Tira del pecho hacia la barra llevando los codos hacia atrás.",
+      "Aprieta las escápulas al final y baja con control.",
+      "Mantén las caderas extendidas durante toda la serie.",
+    ],
+    tips: [
+      "Cuanto más horizontal estés, más difícil: ajusta la posición de los pies para progresar.",
+    ],
+  },
+  {
+    id: "pullover-polea",
+    name: "Pullover en polea alta",
+    group: "espalda",
+    equipment: ["poleas"],
+    level: "intermedio",
+    primaryMuscles: ["dorsal ancho"],
+    secondaryMuscles: ["tríceps braquial (isométrico)", "pectoral mayor"],
+    instructions: [
+      "Coloca la polea alta con barra recta o cuerda y agarra con los brazos extendidos.",
+      "Inclina el torso unos 30° y lleva la cadera atrás para estabilizar.",
+      "Con los codos casi fijos, lleva la barra hacia los muslos en un arco amplio.",
+      "Contrae el dorsal al final y vuelve con control hasta el estiramiento completo.",
+      "Mantén las costillas abajo para evitar arquear la zona lumbar.",
+    ],
+    tips: [
+      "Si notas el tríceps más que la espalda, reduce el peso y piensa en codos fijos.",
+    ],
+  },
+  {
+    id: "pullover-mancuerna",
+    name: "Pullover con mancuerna",
+    group: "espalda",
+    equipment: ["mancuernas"],
+    level: "intermedio",
+    primaryMuscles: ["dorsal ancho"],
+    secondaryMuscles: ["pectoral mayor", "tríceps braquial"],
+    instructions: [
+      "Túmbate en un banco plano con una mancuerna sujetada con ambas manos sobre el pecho.",
+      "Con los codos ligeramente flexionados, baja la mancuerna por encima de la cabeza en un arco.",
+      "Llega hasta un estiramiento cómodo de dorsal y pecho.",
+      "Vuelve por el mismo arco contrayendo dorsal y abdomen.",
+      "Mantén la zona lumbar neutra: no arquees la espalda al bajar.",
+    ],
+    tips: [
+      "Respira de forma continua; el estiramiento con los pulmones llenos resulta incómodo y desestabiliza.",
+    ],
+  },
+  {
+    id: "peso-muerto",
+    name: "Peso muerto convencional",
+    group: "espalda",
+    equipment: ["barra"],
+    level: "avanzado",
+    primaryMuscles: ["erectores espinales", "glúteo mayor"],
+    secondaryMuscles: ["isquiotibiales", "cuádriceps", "trapecio"],
+    instructions: [
+      "Con la barra sobre el medio del pie, flexiona caderas y rodillas para agarrarla algo más ancho que las piernas.",
+      "Barra pegada a la espinilla, espalda recta, pecho alto y escápulas sobre la barra.",
+      "Empuja el suelo con las piernas manteniendo la barra pegada al cuerpo.",
+      "Extiende cadera y rodillas hasta estar de pie, con los hombros hacia atrás.",
+      "Baja la barra articulando primero la cadera y luego las rodillas, con control.",
+    ],
+    tips: [
+      "Nunca redondees la zona lumbar: si la técnica se rompe, termina la serie.",
+      "Empieza ligero y progresa despacio; el límite es la técnica, no el ego.",
+    ],
+  },
+  {
+    id: "face-pull",
+    name: "Face pull en polea",
+    group: "espalda",
+    equipment: ["poleas"],
+    level: "principiante",
+    primaryMuscles: ["deltoide posterior"],
+    secondaryMuscles: ["trapecio medio", "trapecio inferior", "romboides"],
+    instructions: [
+      "Coloca la polea a la altura de la cara con cuerda y agarra los extremos con las palmas hacia dentro.",
+      "Da un paso atrás para crear tensión con los brazos extendidos.",
+      "Tira de la cuerda hacia la cara separando las manos hacia las orejas.",
+      "Al final, los codos quedan altos y las manos por encima de ellos (rotación externa).",
+      "Vuelve con control sin dejar que el peso arrastre los hombros.",
+    ],
+    tips: [
+      "Es un ejercicio de salud del hombro: peso moderado y repeticiones altas (12-20).",
+    ],
+  },
+  {
+    id: "encogimiento-trapecio",
+    name: "Encogimientos de trapecio",
+    group: "espalda",
+    equipment: ["mancuernas", "barra"],
+    level: "principiante",
+    primaryMuscles: ["trapecio superior"],
+    secondaryMuscles: ["elevador de la escápula", "antebrazos"],
+    instructions: [
+      "De pie con mancuernas a los lados, brazos extendidos y hombros atrás.",
+      "Sube los hombros directamente hacia las orejas.",
+      "Pausa 1 segundo arriba sin rotar los hombros.",
+      "Baja con control hasta sentir el estiramiento del trapecio.",
+      "Mantén los brazos relajados: solo suben y bajan los hombros.",
+    ],
+    tips: [
+      "No hagas círculos con los hombros: la subida y bajada rectas protegen el cuello.",
+    ],
+  },
+  {
+    id: "hiperextensiones",
+    name: "Hiperextensiones lumbares",
+    group: "espalda",
+    equipment: ["peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["erectores espinales", "glúteo mayor"],
+    secondaryMuscles: ["isquiotibiales"],
+    instructions: [
+      "Colócate en el banco romano con las caderas apoyadas y los pies fijos.",
+      "Cruza los brazos sobre el pecho o llévalos a los templos.",
+      "Baja el torso con control hasta sentir estiramiento en isquios y zona lumbar.",
+      "Sube hasta alinear espalda y piernas contrayendo los glúteos.",
+      "No subas por encima de la línea del cuerpo ni hagas rebotes arriba.",
+    ],
+    tips: [
+      "El movimiento sale de la cadera, no de 'mirar hacia arriba': cuello neutro siempre.",
+    ],
+  },
+];
+
+// ── PIERNAS (20) ─────────────────────────────────────────────────────────────
+
+const piernas: Exercise[] = [
+  {
+    id: "sentadilla-barra",
+    name: "Sentadilla con barra",
+    group: "piernas",
+    equipment: ["barra"],
+    level: "intermedio",
+    primaryMuscles: ["cuádriceps", "glúteo mayor"],
+    secondaryMuscles: ["isquiotibiales", "erectores espinales", "aductores"],
+    instructions: [
+      "Coloca la barra sobre el trapecio (no sobre el cuello) y los pies a la anchura de los hombros.",
+      "Inhala, activa el core y desciende flexionando cadera y rodillas a la vez.",
+      "Baja hasta donde mantengas la espalda recta y el pecho alto (idealmente muslos paralelos o más abajo).",
+      "Empuja el suelo con todo el pie para subir, con las rodillas en línea con los pies.",
+      "Exhala al final del recorrido y repite sin perder tensión.",
+    ],
+    tips: [
+      "Las rodillas pueden pasar la punta de los pies si el talón sigue apoyado: lo importante es que viajen en la dirección de los pies.",
+      "Usa calzado plano o de halterofilia, nunca zapatillas blandas.",
+    ],
+  },
+  {
+    id: "sentadilla-goblet",
+    name: "Sentadilla goblet",
+    group: "piernas",
+    equipment: ["mancuernas", "kettlebell"],
+    level: "principiante",
+    primaryMuscles: ["cuádriceps", "glúteo mayor"],
+    secondaryMuscles: ["core", "erectores espinales", "aductores"],
+    instructions: [
+      "Sujeta una mancuerna o kettlebell contra el pecho con ambas manos.",
+      "Pies a la anchura de los hombros con las puntas ligeramente abiertas.",
+      "Baja entre las rodillas manteniendo el peso pegado al pecho y el pecho alto.",
+      "Llega a paralelo o más abajo y empuja el suelo para subir.",
+      "Mantén los codos dentro de la trayectoria de las rodillas.",
+    ],
+    tips: [
+      "Es la mejor sentadilla para aprender el patrón: el peso delante te obliga a mantener el torso erguido.",
+    ],
+  },
+  {
+    id: "sentadilla-frontal",
+    name: "Sentadilla frontal",
+    group: "piernas",
+    equipment: ["barra"],
+    level: "avanzado",
+    primaryMuscles: ["cuádriceps"],
+    secondaryMuscles: ["glúteo mayor", "erectores espinales", "core"],
+    instructions: [
+      "Coloca la barra sobre los deltoides anteriores con los codos altos (o agarre cruzado).",
+      "Pies a la anchura de los hombros y core activado.",
+      "Baja manteniendo el torso vertical y los codos apuntando al frente.",
+      "Llega a paralelo o más abajo sin que la barra ruede hacia delante.",
+      "Empuja el suelo para subir sin dejar caer los codos.",
+    ],
+    tips: [
+      "La posición vertical del torso la convierte en la sentadilla más exigente para cuádriceps y core.",
+    ],
+  },
+  {
+    id: "sentadilla-hack",
+    name: "Sentadilla hack",
+    group: "piernas",
+    equipment: ["maquinas"],
+    level: "intermedio",
+    primaryMuscles: ["cuádriceps"],
+    secondaryMuscles: ["glúteo mayor", "isquiotibiales", "aductores"],
+    instructions: [
+      "Coloca hombros y espalda contra los soportes y los pies en el centro de la plataforma.",
+      "Desbloquea y baja flexionando rodillas y caderas a la vez.",
+      "Llega a 90° o algo más manteniendo la zona lumbar pegada al soporte.",
+      "Empuja con todo el pie hasta casi extender las rodillas.",
+      "No bloquees de golpe arriba: mantén la tensión continua.",
+    ],
+    tips: [
+      "La trayectoria guiada descarga la lumbar: útil para volúmenes altos de cuádriceps.",
+    ],
+  },
+  {
+    id: "sentadilla-bulgara",
+    name: "Sentadilla búlgara",
+    group: "piernas",
+    equipment: ["mancuernas", "peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["cuádriceps", "glúteo mayor"],
+    secondaryMuscles: ["isquiotibiales", "aductores", "core"],
+    instructions: [
+      "Apoya el empeine de un pie en un banco detrás de ti y adelanta la otra pierna.",
+      "Con mancuernas a los lados, baja controlando hasta que el muslo adelantado llegue a paralelo.",
+      "El torso puede inclinarse ligeramente hacia delante para implicar más el glúteo.",
+      "Empuja con la pierna adelantada hasta extender, sin apoyar la trasera.",
+      "Termina todas las repeticiones de un lado antes de cambiar.",
+    ],
+    tips: [
+      "La distancia al banco manda: más cerca trabaja cuádriceps, más lejos glúteo e isquios.",
+    ],
+  },
+  {
+    id: "sentadilla-banda",
+    name: "Sentadilla con banda",
+    group: "piernas",
+    equipment: ["banda"],
+    level: "principiante",
+    primaryMuscles: ["cuádriceps", "glúteo mayor"],
+    secondaryMuscles: ["aductores", "core", "erectores espinales"],
+    instructions: [
+      "Coloca la banda bajo los pies y sobre los hombros (o sujeta los extremos a la altura del pecho).",
+      "Pies a la anchura de los hombros.",
+      "Baja a sentadilla completa con el pecho alto y la banda tensa.",
+      "Sube empujando el suelo manteniendo la tensión en la banda.",
+      "La tensión máxima llega de pie: controla también la parte final de la subida.",
+    ],
+    tips: [
+      "Ideal para entrenar en casa: cambia a una banda más gruesa cuando la actual se quede corta.",
+    ],
+  },
+  {
+    id: "prensa-piernas",
+    name: "Prensa de piernas",
+    group: "piernas",
+    equipment: ["maquinas"],
+    level: "principiante",
+    primaryMuscles: ["cuádriceps", "glúteo mayor"],
+    secondaryMuscles: ["isquiotibiales", "aductores"],
+    instructions: [
+      "Coloca los pies en la plataforma a la anchura de los hombros.",
+      "Desbloquea la máquina y baja las rodillas hacia el pecho sin despegar la cadera del asiento.",
+      "Detente cuando las rodillas lleguen a 90° o cuando el glúteo empiece a despegarse.",
+      "Empuja con todo el pie sin bloquear las rodillas de golpe.",
+      "Mantén la zona lumbar pegada al respaldo en todo momento.",
+    ],
+    tips: [
+      "Si la cadera se despega al bajar, has superado el rango útil: acórtalo un poco.",
+    ],
+  },
+  {
+    id: "zancadas-mancuernas",
+    name: "Zancadas con mancuernas",
+    group: "piernas",
+    equipment: ["mancuernas", "peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["cuádriceps", "glúteo mayor"],
+    secondaryMuscles: ["isquiotibiales", "aductores", "core"],
+    instructions: [
+      "De pie con una mancuerna en cada mano, da un paso adelante amplio.",
+      "Baja verticalmente hasta que la rodilla trasera roce casi el suelo.",
+      "El torso se mantiene vertical y el peso se reparte entre ambas piernas.",
+      "Empuja con la pierna adelantada para volver a la posición inicial.",
+      "Alterna piernas manteniendo el core activo.",
+    ],
+    tips: [
+      "Paso corto trabaja más cuádriceps; paso largo, más glúteo e isquios.",
+    ],
+  },
+  {
+    id: "peso-muerto-rumano",
+    name: "Peso muerto rumano",
+    group: "piernas",
+    equipment: ["barra", "mancuernas"],
+    level: "intermedio",
+    primaryMuscles: ["isquiotibiales", "glúteo mayor"],
+    secondaryMuscles: ["erectores espinales", "aductores", "antebrazos"],
+    instructions: [
+      "De pie con la barra frente a los muslos y los pies a la anchura de las caderas.",
+      "Con rodillas ligeramente flexionadas y fijas, articula la cadera hacia atrás.",
+      "Baja la barra pegada a las piernas hasta el máximo estiramiento de isquios.",
+      "Vuelve arriba contrayendo los glúteos, sin hiperextender la cadera.",
+      "La espalda permanece recta durante todo el recorrido.",
+    ],
+    tips: [
+      "El rango lo marca tu movilidad, no el suelo: detente donde la lumbar no se redondee.",
+    ],
+  },
+  {
+    id: "peso-muerto-sumo",
+    name: "Peso muerto sumo",
+    group: "piernas",
+    equipment: ["barra"],
+    level: "avanzado",
+    primaryMuscles: ["glúteo mayor", "aductores"],
+    secondaryMuscles: ["cuádriceps", "isquiotibiales", "erectores espinales"],
+    instructions: [
+      "Pies más anchos que los hombros con las puntas abiertas y espinillas cerca de la barra.",
+      "Agarra la barra por dentro de las rodillas y baja la cadera.",
+      "Con el pecho alto y la espalda recta, empuja el suelo con las piernas.",
+      "Extiende cadera y rodillas a la vez hasta estar de pie.",
+      "Baja articulando la cadera con la barra pegada al cuerpo.",
+    ],
+    tips: [
+      "Las rodillas deben viajar en la dirección de las puntas de los pies, nunca hacia dentro.",
+    ],
+  },
+  {
+    id: "hip-thrust",
+    name: "Hip thrust con barra",
+    group: "piernas",
+    equipment: ["barra", "peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["glúteo mayor"],
+    secondaryMuscles: ["isquiotibiales", "erectores espinales", "cuádriceps"],
+    instructions: [
+      "Apoya la parte alta de la espalda en un banco y coloca la barra sobre las caderas con almohadilla.",
+      "Pies apoyados a la anchura de los hombros, de forma que las espinillas queden casi verticales arriba.",
+      "Empuja con los pies y extiende la cadera hasta que el torso quede paralelo al suelo.",
+      "Contrae los glúteos 1-2 segundos arriba con las costillas hacia abajo.",
+      "Baja con control sin perder el contacto de la espalda con el banco.",
+    ],
+    tips: [
+      "Barbilla metida y costillas abajo evitan que el trabajo se vaya a la zona lumbar.",
+    ],
+  },
+  {
+    id: "puente-gluteo",
+    name: "Puente de glúteo",
+    group: "piernas",
+    equipment: ["peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["glúteo mayor"],
+    secondaryMuscles: ["isquiotibiales", "erectores espinales", "core"],
+    instructions: [
+      "Túmbate boca arriba con las rodillas flexionadas y los pies apoyados.",
+      "Empuja con los talones y eleva la cadera hasta alinear cadera, rodilla y hombro.",
+      "Contrae los glúteos 2 segundos arriba.",
+      "Baja con control tocando el suelo sin descansar del todo.",
+      "Mantén las costillas abajo para no arquear la zona lumbar.",
+    ],
+    tips: [
+      "Si notas la parte baja de la espalda, reduce la elevación y aprieta más el abdomen.",
+    ],
+  },
+  {
+    id: "step-up",
+    name: "Step-up con mancuernas",
+    group: "piernas",
+    equipment: ["mancuernas", "peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["cuádriceps", "glúteo mayor"],
+    secondaryMuscles: ["isquiotibiales", "gastrocnemio (gemelo)", "core"],
+    instructions: [
+      "Colócate frente a un cajón o banco de altura tal que la rodilla quede a 90° al apoyar el pie.",
+      "Con mancuernas a los lados, sube un pie completo al cajón.",
+      "Empuja con la pierna de arriba sin impulsarte con la de abajo.",
+      "Sube hasta estar de pie con la cadera extendida.",
+      "Baja con control y repite con la misma pierna antes de cambiar.",
+    ],
+    tips: [
+      "La pierna de abajo no empuja: si lo hace, el cajón está demasiado alto.",
+    ],
+  },
+  {
+    id: "extension-cuadriceps",
+    name: "Extensión de cuádriceps",
+    group: "piernas",
+    equipment: ["maquinas"],
+    level: "principiante",
+    primaryMuscles: ["cuádriceps"],
+    secondaryMuscles: ["core (estabilización)"],
+    instructions: [
+      "Ajusta el respaldo para que la rodilla quede alineada con el eje de la máquina.",
+      "Coloca el rodillo justo sobre el tobillo, no en la espinilla.",
+      "Extiende las rodillas hasta casi bloquearlas, sin golpear.",
+      "Contrae el cuádriceps 1 segundo arriba.",
+      "Baja con control sin dejar caer el peso.",
+    ],
+    tips: [
+      "Agarra las asas y mantén los glúteos apoyados para no levantar la cadera.",
+    ],
+  },
+  {
+    id: "curl-femoral-tumbado",
+    name: "Curl femoral tumbado",
+    group: "piernas",
+    equipment: ["maquinas"],
+    level: "principiante",
+    primaryMuscles: ["isquiotibiales"],
+    secondaryMuscles: ["gastrocnemio (gemelo)", "glúteo mayor"],
+    instructions: [
+      "Túmbate boca abajo con el rodillo justo por encima del talón.",
+      "Agarra las asas y pega la cadera al banco.",
+      "Flexiona las rodillas llevando los talones hacia los glúteos.",
+      "Contrae 1 segundo arriba y baja con control.",
+      "Mantén las puntas de los pies hacia la espinilla para más trabajo de isquios.",
+    ],
+    tips: [
+      "Si la cadera se levanta, el peso es excesivo o el rodillo está mal colocado.",
+    ],
+  },
+  {
+    id: "curl-femoral-sentado",
+    name: "Curl femoral sentado",
+    group: "piernas",
+    equipment: ["maquinas"],
+    level: "principiante",
+    primaryMuscles: ["isquiotibiales"],
+    secondaryMuscles: ["gastrocnemio (gemelo)", "glúteo mayor"],
+    instructions: [
+      "Ajusta el respaldo y coloca el rodillo sobre la parte baja de la pantorrilla.",
+      "Pega la espalda al respaldo y agarra las asas.",
+      "Flexiona las rodillas llevando los manuales hacia abajo y atrás.",
+      "Pausa 1 segundo en máxima contracción.",
+      "Vuelve con control hasta casi extender, sin descansar el peso.",
+    ],
+    tips: [
+      "Con la cadera flexionada, los isquios trabajan en mayor estiramiento que en la versión tumbada: ideal para un desarrollo completo.",
+    ],
+  },
+  {
+    id: "gemelos-pie",
+    name: "Elevación de gemelos de pie",
+    group: "piernas",
+    equipment: ["maquinas", "peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["gastrocnemio (gemelo)"],
+    secondaryMuscles: ["sóleo", "tibial anterior"],
+    instructions: [
+      "Coloca los metatarsos en el escalón con los talones libres.",
+      "Baja los talones hasta el máximo estiramiento del gemelo.",
+      "Sube hasta la máxima elevación contrayendo el gemelo.",
+      "Pausa 1 segundo arriba y baja lento, en 2-3 segundos.",
+      "Mantén las rodillas extendidas: es la única forma de que el gemelo trabaje completo.",
+    ],
+    tips: [
+      "Rango completo sin rebotes: estiramiento abajo, contracción arriba.",
+    ],
+  },
+  {
+    id: "gemelos-sentado",
+    name: "Elevación de gemelos sentado",
+    group: "piernas",
+    equipment: ["maquinas"],
+    level: "principiante",
+    primaryMuscles: ["sóleo"],
+    secondaryMuscles: ["gastrocnemio (gemelo)"],
+    instructions: [
+      "Siéntate con el rodillo sobre los muslos y los metatarsos en la plataforma.",
+      "Baja los talones hasta el máximo estiramiento.",
+      "Empuja con la punta del pie hasta la máxima elevación.",
+      "Pausa 1 segundo arriba.",
+      "Baja con control en 2-3 segundos.",
+    ],
+    tips: [
+      "Con la rodilla flexionada el gemelo queda parcialmente desactivado: aquí el protagonista es el sóleo.",
+    ],
+  },
+  {
+    id: "gemelos-prensa",
+    name: "Gemelo en prensa",
+    group: "piernas",
+    equipment: ["maquinas"],
+    level: "intermedio",
+    primaryMuscles: ["gastrocnemio (gemelo)"],
+    secondaryMuscles: ["sóleo"],
+    instructions: [
+      "Coloca solo los metatarsos en el borde inferior de la plataforma de la prensa.",
+      "Extiende las rodillas sin bloquearlas y suelta el seguro.",
+      "Deja bajar los talones hasta el máximo estiramiento.",
+      "Empuja con la punta del pie hasta la máxima contracción.",
+      "Trabaja con rango completo y sin rebotes.",
+    ],
+    tips: [
+      "Con las rodillas extendidas, el gemelo trabaja en su longitud completa: gran opción para cargarlo con seguridad.",
+    ],
+  },
+  {
+    id: "abduccion-cadera",
+    name: "Abducción de cadera en máquina",
+    group: "piernas",
+    equipment: ["maquinas"],
+    level: "principiante",
+    primaryMuscles: ["glúteo medio"],
+    secondaryMuscles: ["glúteo menor", "tensor de la fascia lata"],
+    instructions: [
+      "Siéntate con la espalda pegada al respaldo y las rodillas contra las almohadillas.",
+      "Abre las piernas hacia fuera con control.",
+      "Pausa 1 segundo en la máxima apertura.",
+      "Vuelve lentamente sin dejar que el peso choque.",
+      "Mantén el torso quieto: sin agarrarte y empujar con la espalda.",
+    ],
+    tips: [
+      "Inclinar ligeramente el torso hacia delante traslada más trabajo al glúteo medio.",
+    ],
+  },
+];
+
+// ── HOMBROS (12) ─────────────────────────────────────────────────────────────
+
+const hombros: Exercise[] = [
+  {
+    id: "press-militar",
+    name: "Press militar con barra",
+    group: "hombros",
+    equipment: ["barra"],
+    level: "intermedio",
+    primaryMuscles: ["deltoide anterior", "deltoide lateral"],
+    secondaryMuscles: ["tríceps braquial", "trapecio superior", "core"],
+    instructions: [
+      "De pie, coloca la barra sobre la clavícula con los codos ligeramente por delante.",
+      "Aprieta glúteos y abdomen para crear una base estable.",
+      "Empuja la barra verticalmente llevando la cabeza ligeramente atrás para dejarle paso.",
+      "Extiende los brazos con la barra sobre el medio de la cabeza.",
+      "Baja con control hasta la clavícula sin perder tensión en el core.",
+    ],
+    tips: [
+      "Si la zona lumbar se arquea mucho, aprieta más los glúteos o usa la versión sentado con respaldo.",
+    ],
+  },
+  {
+    id: "press-mancuernas-hombros",
+    name: "Press de hombros con mancuernas",
+    group: "hombros",
+    equipment: ["mancuernas"],
+    level: "principiante",
+    primaryMuscles: ["deltoide anterior", "deltoide lateral"],
+    secondaryMuscles: ["tríceps braquial", "trapecio superior"],
+    instructions: [
+      "Sentado con respaldo, eleva las mancuernas a la altura de las orejas con las palmas al frente.",
+      "Empuja hacia arriba acercando ligeramente las mancuernas.",
+      "Baja con control hasta que los codos queden a la altura de los hombros o algo más abajo.",
+      "Mantén la espalda y la cabeza apoyadas en el respaldo.",
+      "No choques las mancuernas arriba: controla también la bajada.",
+    ],
+    tips: [
+      "No bajes por debajo del punto donde el hombro se sienta incómodo: el rango debe ser indoloro.",
+    ],
+  },
+  {
+    id: "press-arnold",
+    name: "Press Arnold",
+    group: "hombros",
+    equipment: ["mancuernas"],
+    level: "intermedio",
+    primaryMuscles: ["deltoide anterior", "deltoide lateral"],
+    secondaryMuscles: ["tríceps braquial", "trapecio superior"],
+    instructions: [
+      "Sentado con respaldo, sujeta las mancuernas frente a los hombros con las palmas hacia ti.",
+      "Empuja girando las muñecas hasta que las palmas miren al frente.",
+      "Extiende los brazos por completo.",
+      "Baja invirtiendo la rotación hasta la posición inicial.",
+      "Mantén el movimiento fluido y controlado en todo el arco.",
+    ],
+    tips: [
+      "El giro añade rango y tiempo bajo tensión: usa algo menos de peso que en el press normal.",
+    ],
+  },
+  {
+    id: "press-hombros-maquina",
+    name: "Press de hombros en máquina",
+    group: "hombros",
+    equipment: ["maquinas"],
+    level: "principiante",
+    primaryMuscles: ["deltoide anterior", "deltoide lateral"],
+    secondaryMuscles: ["tríceps braquial", "trapecio superior"],
+    instructions: [
+      "Ajusta el asiento para que los manuales queden a la altura de las orejas al sentarte.",
+      "Apoya la espalda y los pies firmes.",
+      "Empuja hacia arriba hasta casi extender los codos.",
+      "Baja con control hasta la altura de los hombros.",
+      "No despegues la cabeza ni la espalda del respaldo.",
+    ],
+    tips: [
+      "La trayectoria fija la hace segura para fatigar el hombro sin compromiso técnico.",
+    ],
+  },
+  {
+    id: "elevaciones-laterales",
+    name: "Elevaciones laterales",
+    group: "hombros",
+    equipment: ["mancuernas", "poleas", "banda"],
+    level: "principiante",
+    primaryMuscles: ["deltoide lateral"],
+    secondaryMuscles: ["deltoide anterior", "trapecio superior"],
+    instructions: [
+      "De pie con mancuernas a los lados y los codos ligeramente flexionados.",
+      "Eleva los brazos lateralmente hasta la altura de los hombros.",
+      "Guía con los codos, no con las manos, como si sirvieras dos vasos de agua.",
+      "Pausa breve arriba y baja en 2-3 segundos.",
+      "Evita encoger los hombros o balancear el torso.",
+    ],
+    tips: [
+      "Peso ligero y técnica limpia: aquí el impulso roba casi todo el estímulo.",
+    ],
+  },
+  {
+    id: "elevaciones-frontales",
+    name: "Elevaciones frontales",
+    group: "hombros",
+    equipment: ["mancuernas", "poleas", "banda"],
+    level: "principiante",
+    primaryMuscles: ["deltoide anterior"],
+    secondaryMuscles: ["pectoral mayor (porción clavicular)", "serrato anterior"],
+    instructions: [
+      "De pie con mancuernas frente a los muslos y las palmas hacia atrás.",
+      "Eleva un brazo (o ambos) hasta la altura de los hombros.",
+      "Codo casi extendido, sin balanceo del torso.",
+      "Baja con control y alterna el brazo si trabajas unilateral.",
+      "Mantén el core activo para estabilizar la columna.",
+    ],
+    tips: [
+      "Al ser un músculo pequeño, menos peso y más control rinde más que impulso y rebote.",
+    ],
+  },
+  {
+    id: "elevacion-lateral-maquina",
+    name: "Elevación lateral en máquina",
+    group: "hombros",
+    equipment: ["maquinas"],
+    level: "principiante",
+    primaryMuscles: ["deltoide lateral"],
+    secondaryMuscles: ["deltoide anterior", "trapecio superior"],
+    instructions: [
+      "Ajusta el asiento para que los codos queden alineados con el eje de la máquina.",
+      "Apoya los brazos en las almohadillas.",
+      "Eleva los brazos hasta la altura de los hombros.",
+      "Pausa breve arriba y baja en 2-3 segundos.",
+      "No despegues la espalda del respaldo.",
+    ],
+    tips: [
+      "Perfecta para sobrecargar el deltoides lateral con menos estrés articular que las mancuernas.",
+    ],
+  },
+  {
+    id: "pajaros-mancuernas",
+    name: "Pájaros con mancuernas",
+    group: "hombros",
+    equipment: ["mancuernas"],
+    level: "principiante",
+    primaryMuscles: ["deltoide posterior"],
+    secondaryMuscles: ["trapecio medio", "romboides"],
+    instructions: [
+      "Inclina el torso unos 45° o más con la espalda recta y las mancuernas colgando.",
+      "Con los codos ligeramente flexionados, eleva los brazos hacia los lados.",
+      "Llega a la altura de los hombros guiando con los codos.",
+      "Aprieta la espalda alta 1 segundo.",
+      "Baja con control sin usar impulso del torso.",
+    ],
+    tips: [
+      "Apoya la frente en un banco inclinado para eliminar el balanceo.",
+    ],
+  },
+  {
+    id: "apertura-inversa-polea",
+    name: "Apertura inversa en polea",
+    group: "hombros",
+    equipment: ["poleas"],
+    level: "intermedio",
+    primaryMuscles: ["deltoide posterior"],
+    secondaryMuscles: ["romboides", "trapecio medio"],
+    instructions: [
+      "Coloca las poleas altas cruzadas y agarra el maneral opuesto con cada mano.",
+      "Con los codos casi extendidos, abre los brazos hacia atrás y a los lados.",
+      "Llega a la línea de los hombros apretando la espalda alta.",
+      "Vuelve con control sin dejar que las poleas jalen los brazos.",
+      "Mantén el torso quieto y los hombros deprimidos.",
+    ],
+    tips: [
+      "Piensa en abrir con los codos, no con las manos, para aislar el deltoides posterior.",
+    ],
+  },
+  {
+    id: "apertura-inversa-maquina",
+    name: "Apertura inversa en máquina",
+    group: "hombros",
+    equipment: ["maquinas"],
+    level: "intermedio",
+    primaryMuscles: ["deltoide posterior"],
+    secondaryMuscles: ["romboides", "trapecio medio"],
+    instructions: [
+      "Siéntate mirando a la máquina con el pecho contra el soporte.",
+      "Agarra los manuales con los brazos al frente.",
+      "Abre los brazos hacia atrás a la altura de los hombros.",
+      "Aprieta la espalda alta 1 segundo.",
+      "Vuelve con control sin dejar caer el peso.",
+    ],
+    tips: [
+      "Ajusta el asiento para que los brazos trabajen a la altura del hombro, no por debajo.",
+    ],
+  },
+  {
+    id: "remo-menton",
+    name: "Remo al mentón",
+    group: "hombros",
+    equipment: ["barra", "mancuernas"],
+    level: "intermedio",
+    primaryMuscles: ["deltoide lateral"],
+    secondaryMuscles: ["trapecio superior", "trapecio medio", "bíceps braquial"],
+    instructions: [
+      "De pie con la barra frente a los muslos y agarre algo más ancho que los hombros.",
+      "Tira de la barra hacia arriba llevando los codos por encima de las manos.",
+      "Detente a la altura del pecho alto o del mentón.",
+      "Baja con control.",
+      "Mantén los hombros hacia atrás y abajo, sin encogerte.",
+    ],
+    tips: [
+      "Agarre ancho y subir menos alto son más amables con el hombro: deja de subir si notas pinzamiento.",
+    ],
+  },
+  {
+    id: "flexiones-pike",
+    name: "Flexiones pike",
+    group: "hombros",
+    equipment: ["peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["deltoide anterior"],
+    secondaryMuscles: ["tríceps braquial", "trapecio superior", "pectoral mayor"],
+    instructions: [
+      "Desde posición de flexión, camina los pies hacia las manos elevando la cadera en V invertida.",
+      "Manos algo más anchas que los hombros, cabeza entre los brazos.",
+      "Baja la coronilla hacia el suelo flexionando los codos.",
+      "Empuja hasta extender los brazos manteniendo la cadera alta.",
+      "Core activado para no arquear la espalda.",
+    ],
+    tips: [
+      "Eleva los pies en un cajón para progresar hacia el press vertical.",
+    ],
+  },
+];
+
+// ── BRAZOS (14) ──────────────────────────────────────────────────────────────
+
+const brazos: Exercise[] = [
+  {
+    id: "curl-barra",
+    name: "Curl de bíceps con barra",
+    group: "brazos",
+    equipment: ["barra"],
+    level: "principiante",
+    primaryMuscles: ["bíceps braquial"],
+    secondaryMuscles: ["braquial anterior", "braquiorradial"],
+    instructions: [
+      "De pie con la barra en las manos a la anchura de los hombros y los codos pegados al torso.",
+      "Flexiona los codos llevando la barra hacia los hombros.",
+      "Contrae el bíceps 1 segundo arriba.",
+      "Baja en 2-3 segundos hasta la extensión completa.",
+      "Evita balancear el torso o adelantar los codos.",
+    ],
+    tips: [
+      "La barra Z es más amable con las muñecas que la recta si notas molestia.",
+    ],
+  },
+  {
+    id: "curl-mancuernas",
+    name: "Curl de bíceps con mancuernas",
+    group: "brazos",
+    equipment: ["mancuernas"],
+    level: "principiante",
+    primaryMuscles: ["bíceps braquial"],
+    secondaryMuscles: ["braquial anterior", "braquiorradial"],
+    instructions: [
+      "De pie con mancuernas a los lados y las palmas hacia delante.",
+      "Flexiona un codo (o ambos) sin mover el hombro.",
+      "Gira ligeramente la muñeca hacia fuera al subir (supinación) para más contracción.",
+      "Baja con control hasta la extensión completa.",
+      "Mantén los codos pegados al torso todo el recorrido.",
+    ],
+    tips: [
+      "Trabajar alternando los brazos permite concentrarte en cada lado con más control.",
+    ],
+  },
+  {
+    id: "curl-inclinado",
+    name: "Curl inclinado en banco",
+    group: "brazos",
+    equipment: ["mancuernas"],
+    level: "intermedio",
+    primaryMuscles: ["bíceps braquial (cabeza larga)"],
+    secondaryMuscles: ["braquial anterior", "deltoide anterior"],
+    instructions: [
+      "Túmbate en un banco inclinado a 45-60° con los brazos colgando.",
+      "Palmas hacia delante y brazos ligeramente por detrás del torso.",
+      "Flexiona los codos llevando las mancuernas a la altura del hombro.",
+      "Baja lentamente hasta el estiramiento completo del bíceps.",
+      "No adelantes los codos al subir.",
+    ],
+    tips: [
+      "Es la posición de mayor estiramiento del bíceps: peso moderado y bajada lenta son clave.",
+    ],
+  },
+  {
+    id: "curl-martillo",
+    name: "Curl martillo",
+    group: "brazos",
+    equipment: ["mancuernas"],
+    level: "principiante",
+    primaryMuscles: ["braquial anterior", "braquiorradial"],
+    secondaryMuscles: ["bíceps braquial"],
+    instructions: [
+      "De pie con mancuernas a los lados en agarre neutro (palmas enfrentadas).",
+      "Flexiona los codos sin rotar la muñeca.",
+      "Sube hasta que la mancuerna quede cerca del hombro.",
+      "Baja con control.",
+      "Codos quietos y pegados al torso.",
+    ],
+    tips: [
+      "El agarre neutro carga el braquial, que añade grosor al brazo por debajo del bíceps.",
+    ],
+  },
+  {
+    id: "curl-polea",
+    name: "Curl en polea baja",
+    group: "brazos",
+    equipment: ["poleas"],
+    level: "principiante",
+    primaryMuscles: ["bíceps braquial"],
+    secondaryMuscles: ["braquial anterior", "braquiorradial"],
+    instructions: [
+      "Agarra el maneral de la polea baja con los codos pegados al torso.",
+      "Da un paso atrás para crear tensión constante.",
+      "Flexiona hasta máxima contracción y aprieta 1 segundo.",
+      "Extiende con control sin que el peso descanse.",
+      "Mantén el torso quieto.",
+    ],
+    tips: [
+      "La polea mantiene tensión en todo el rango, incluso abajo: perfecta para series de volumen.",
+    ],
+  },
+  {
+    id: "curl-predicador",
+    name: "Curl predicador",
+    group: "brazos",
+    equipment: ["mancuernas", "maquinas"],
+    level: "intermedio",
+    primaryMuscles: ["bíceps braquial"],
+    secondaryMuscles: ["braquial anterior"],
+    instructions: [
+      "Coloca la parte alta de los brazos sobre la almohadilla, con las axilas por encima del borde.",
+      "Brazos casi extendidos y muñecas alineadas con el antebrazo.",
+      "Flexiona hasta máxima contracción sin despegar los brazos del soporte.",
+      "Baja en 2-3 segundos hasta casi extender.",
+      "No dejes que el codo avance al final del recorrido.",
+    ],
+    tips: [
+      "Elimina todo impulso: si no puedes controlar la bajada, baja el peso.",
+    ],
+  },
+  {
+    id: "curl-concentrado",
+    name: "Curl concentrado",
+    group: "brazos",
+    equipment: ["mancuernas"],
+    level: "intermedio",
+    primaryMuscles: ["bíceps braquial"],
+    secondaryMuscles: ["braquial anterior", "braquiorradial"],
+    instructions: [
+      "Sentado, apoya el codo de un brazo en el interior del muslo.",
+      "Flexiona llevando la mancuerna hacia el hombro.",
+      "Aprieta el bíceps 1-2 segundos arriba.",
+      "Baja en 3 segundos hasta la extensión total.",
+      "El torso se mantiene quieto, sin rotar.",
+    ],
+    tips: [
+      "Aislamiento máximo: ideal como último ejercicio del día de brazos.",
+    ],
+  },
+  {
+    id: "extension-triceps-polea",
+    name: "Extensión de tríceps en polea",
+    group: "brazos",
+    equipment: ["poleas"],
+    level: "principiante",
+    primaryMuscles: ["tríceps braquial"],
+    secondaryMuscles: ["anconeo", "antebrazos"],
+    instructions: [
+      "Colócate frente a la polea alta con el maneral o la cuerda.",
+      "Codos pegados al torso y ligeramente por delante del cuerpo.",
+      "Extiende los codos llevando el maneral hacia los muslos.",
+      "Contrae el tríceps 1 segundo abajo.",
+      "Sube con control hasta 90° o algo más, sin mover los codos.",
+    ],
+    tips: [
+      "Los codos son bisagras fijas: si se separan del cuerpo, el peso es excesivo.",
+    ],
+  },
+  {
+    id: "press-frances",
+    name: "Press francés",
+    group: "brazos",
+    equipment: ["barra", "mancuernas"],
+    level: "intermedio",
+    primaryMuscles: ["tríceps braquial"],
+    secondaryMuscles: ["anconeo", "antebrazos"],
+    instructions: [
+      "Túmbate en un banco plano con la barra o mancuernas extendidos sobre el pecho.",
+      "Flexiona solo los codos bajando el peso hacia la frente o detrás de la cabeza.",
+      "Mantén los brazos (húmero) verticales y fijos.",
+      "Extiende los codos hasta bloquear sin arquear la espalda.",
+      "Codos estables, sin abrirse en abanico.",
+    ],
+    tips: [
+      "Llevar el peso por detrás de la cabeza trabaja el tríceps en mayor estiramiento.",
+    ],
+  },
+  {
+    id: "fondos-banco",
+    name: "Fondos entre bancos",
+    group: "brazos",
+    equipment: ["peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["tríceps braquial"],
+    secondaryMuscles: ["pectoral mayor", "deltoide anterior"],
+    instructions: [
+      "Apoya las manos en el borde de un banco o silla estable, a la anchura de los hombros.",
+      "Extiende las piernas al frente apoyando los talones.",
+      "Baja flexionando los codos hasta unos 90°.",
+      "Empuja hasta extender los brazos.",
+      "Mantén la espalda cerca del banco: no te alejes del apoyo.",
+    ],
+    tips: [
+      "Cuanto más vertical el torso, más tríceps; si lo inclinas, entra más pecho.",
+    ],
+  },
+  {
+    id: "extension-triceps-sobrecabeza",
+    name: "Extensión de tríceps sobre la cabeza",
+    group: "brazos",
+    equipment: ["mancuernas", "poleas"],
+    level: "intermedio",
+    primaryMuscles: ["tríceps braquial (cabeza larga)"],
+    secondaryMuscles: ["anconeo", "core (estabilización)"],
+    instructions: [
+      "De pie o sentado, sujeta la mancuerna con ambas manos por encima de la cabeza.",
+      "Baja el peso detrás de la cabeza flexionando solo los codos.",
+      "Llega al máximo estiramiento del tríceps.",
+      "Extiende los codos sin mover los húmeros.",
+      "Core firme para evitar arquear la zona lumbar.",
+    ],
+    tips: [
+      "La posición sobre la cabeza pone la cabeza larga del tríceps en estiramiento: clave para su desarrollo.",
+    ],
+  },
+  {
+    id: "patada-triceps",
+    name: "Patada de tríceps",
+    group: "brazos",
+    equipment: ["mancuernas", "poleas"],
+    level: "principiante",
+    primaryMuscles: ["tríceps braquial"],
+    secondaryMuscles: ["deltoide posterior", "romboides (estabilización)"],
+    instructions: [
+      "Inclina el torso con la espalda recta y el brazo pegado al costado.",
+      "Codo flexionado a 90°, con el húmero paralelo al suelo.",
+      "Extiende el codo hasta alinear el brazo con el torso.",
+      "Contrae 1 segundo y vuelve a 90° con control.",
+      "Sin balanceo: el único movimiento es el codo.",
+    ],
+    tips: [
+      "Peso ligero y pausa arriba: es un ejercicio de precisión, no de carga.",
+    ],
+  },
+  {
+    id: "extension-triceps-maquina",
+    name: "Extensión de tríceps en máquina",
+    group: "brazos",
+    equipment: ["maquinas"],
+    level: "principiante",
+    primaryMuscles: ["tríceps braquial"],
+    secondaryMuscles: ["anconeo"],
+    instructions: [
+      "Ajusta el asiento para que los codos queden alineados con el eje de la máquina.",
+      "Apoya los codos en la almohadilla.",
+      "Empuja los manuales hasta extender los brazos.",
+      "Contrae 1 segundo y vuelve con control.",
+      "Hombros relajados, sin encogerse.",
+    ],
+    tips: [
+      "La máquina aísla el tríceps sin demandar estabilidad: buena para volúmenes altos.",
+    ],
+  },
+  {
+    id: "press-cerrado-banca",
+    name: "Press de banca agarre cerrado",
+    group: "brazos",
+    equipment: ["barra"],
+    level: "intermedio",
+    primaryMuscles: ["tríceps braquial"],
+    secondaryMuscles: ["pectoral mayor", "deltoide anterior"],
+    instructions: [
+      "Agarra la barra a la anchura de los hombros (más estrecho que el press normal).",
+      "Desbloquea y baja la barra al esternón con los codos pegados al torso.",
+      "Toca el pecho con control.",
+      "Empuja hacia arriba extendiendo los codos.",
+      "Muñecas rectas: si duelen, usa barra Z o mancuernas.",
+    ],
+    tips: [
+      "El agarre cerrado aumenta el recorrido del codo: mejor cargador de tríceps que las extensiones.",
+    ],
+  },
+];
+
+// ── CORE (14) ────────────────────────────────────────────────────────────────
+
+const core: Exercise[] = [
+  {
+    id: "plancha",
+    name: "Plancha abdominal",
+    group: "core",
+    equipment: ["peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["recto abdominal", "transverso abdominal"],
+    secondaryMuscles: ["glúteo mayor", "deltoides", "cuádriceps"],
+    instructions: [
+      "Apoya antebrazos y puntas de los pies, con los codos bajo los hombros.",
+      "Cuerpo en línea recta de cabeza a talones.",
+      "Contrae abdomen y glúteos metiendo ligeramente la pelvis (retroversión).",
+      "Respira de forma continua sin perder la posición.",
+      "Mantén el tiempo previsto sin hundir la cadera ni levantarla.",
+    ],
+    tips: [
+      "Mejor 30 segundos perfectos que 2 minutos con la cadera hundida.",
+    ],
+  },
+  {
+    id: "plancha-lateral",
+    name: "Plancha lateral",
+    group: "core",
+    equipment: ["peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["oblicuos"],
+    secondaryMuscles: ["transverso abdominal", "glúteo medio", "deltoides"],
+    instructions: [
+      "Apoya un antebrazo con el codo justo bajo el hombro.",
+      "Apila los pies o apoya el de arriba delante del otro.",
+      "Eleva la cadera hasta alinear cabeza, cadera y talones.",
+      "Mantén el hombro lejos de la oreja.",
+      "Sostén el tiempo previsto y cambia de lado.",
+    ],
+    tips: [
+      "Si la cadera cae, apoya la rodilla de abajo para reducir la palanca.",
+    ],
+  },
+  {
+    id: "crunch",
+    name: "Crunch",
+    group: "core",
+    equipment: ["peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["recto abdominal"],
+    secondaryMuscles: ["oblicuos"],
+    instructions: [
+      "Túmbate boca arriba con las rodillas flexionadas y las manos a los templos, sin tirar del cuello.",
+      "Flexiona la columna llevando las costillas hacia la cadera.",
+      "Sube solo hasta despegar los hombros: rango corto.",
+      "Contrae 1 segundo arriba.",
+      "Baja con control sin descansar del todo.",
+    ],
+    tips: [
+      "No tires de la nuca con las manos: la fuerza debe salir del abdomen.",
+    ],
+  },
+  {
+    id: "crunch-bicicleta",
+    name: "Crunch bicicleta",
+    group: "core",
+    equipment: ["peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["oblicuos", "recto abdominal"],
+    secondaryMuscles: ["ilíaco", "transverso abdominal"],
+    instructions: [
+      "Túmbate con las manos a los templos y las piernas elevadas y flexionadas a 90°.",
+      "Lleva el codo derecho hacia la rodilla izquierda rotando el torso.",
+      "Extiende la pierna derecha mientras la izquierda sigue flexionada.",
+      "Alterna en un ritmo continuo y controlado.",
+      "No tires del cuello: la rotación sale del tronco.",
+    ],
+    tips: [
+      "Importa más el giro del torso que acercar el codo: si obligas el cuello, baja el ritmo.",
+    ],
+  },
+  {
+    id: "crunch-polea",
+    name: "Crunch en polea",
+    group: "core",
+    equipment: ["poleas"],
+    level: "intermedio",
+    primaryMuscles: ["recto abdominal"],
+    secondaryMuscles: ["oblicuos"],
+    instructions: [
+      "Colócate de rodillas frente a la polea alta con la cuerda junto a la cabeza.",
+      "Agarra la cuerda a los lados de la cabeza.",
+      "Flexiona la columna llevando los codos hacia los muslos.",
+      "La cadera se mantiene quieta: solo se curva la espalda.",
+      "Vuelve con control hasta casi extender, sin perder tensión.",
+    ],
+    tips: [
+      "Piensa en 'enrollarte' vértebra a vértebra, no en bajar con la cadera.",
+    ],
+  },
+  {
+    id: "elevacion-piernas-tumbado",
+    name: "Elevación de piernas tumbado",
+    group: "core",
+    equipment: ["peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["recto abdominal"],
+    secondaryMuscles: ["ilíaco", "recto femoral", "transverso abdominal"],
+    instructions: [
+      "Túmbate boca arriba con las manos bajo los glúteos o a los lados.",
+      "Pega la zona lumbar al suelo activando el abdomen.",
+      "Eleva las piernas extendidas hasta 90°.",
+      "Baja lentamente hasta justo antes de que la lumbar se despegue.",
+      "Repite sin tocar el suelo con los talones.",
+    ],
+    tips: [
+      "El rango lo manda la lumbar: en cuanto se arquee, sube las piernas de nuevo.",
+    ],
+  },
+  {
+    id: "elevacion-rodillas-colgado",
+    name: "Elevación de rodillas colgado",
+    group: "core",
+    equipment: ["peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["recto abdominal"],
+    secondaryMuscles: ["ilíaco", "recto femoral", "antebrazos (agarre)"],
+    instructions: [
+      "Cuelga de la barra con los hombros activos, no relajados.",
+      "Flexiona las rodillas y eleva hacia el pecho.",
+      "Al final, lleva la pelvis hacia arriba (retroversión) para implicar el abdomen.",
+      "Baja con control hasta la extensión completa.",
+      "Evita el balanceo manteniendo el core activo.",
+    ],
+    tips: [
+      "Progresión perfecta hacia la elevación de piernas extendidas.",
+    ],
+  },
+  {
+    id: "elevacion-piernas-colgado",
+    name: "Elevación de piernas colgado",
+    group: "core",
+    equipment: ["peso-corporal"],
+    level: "avanzado",
+    primaryMuscles: ["recto abdominal (porción inferior)"],
+    secondaryMuscles: ["ilíaco", "recto femoral", "oblicuos"],
+    instructions: [
+      "Cuelga de la barra con los hombros activos.",
+      "Contrae el abdomen antes de mover.",
+      "Eleva las piernas extendidas (o flexionadas como progresión) hasta la altura de la cadera o más.",
+      "Lleva la pelvis en retroversión al final para trabajar el abdomen, no solo la cadera.",
+      "Baja con control sin balancearte.",
+    ],
+    tips: [
+      "Si te balanceas, empieza con rodillas flexionadas y pausa 1 segundo arriba.",
+    ],
+  },
+  {
+    id: "rueda-abdominal",
+    name: "Rueda abdominal",
+    group: "core",
+    equipment: ["peso-corporal"],
+    level: "avanzado",
+    primaryMuscles: ["recto abdominal", "transverso abdominal"],
+    secondaryMuscles: ["dorsal ancho", "deltoide anterior"],
+    instructions: [
+      "De rodillas, agarra la rueda con los brazos extendidos bajo los hombros.",
+      "Con el core firme, rueda hacia delante desplazando brazos y cadera a la vez.",
+      "Llega hasta donde mantengas la zona lumbar neutra, sin arquear.",
+      "Tira de vuelta contrayendo el abdomen.",
+      "Exhala al volver e inhala al extender.",
+    ],
+    tips: [
+      "Empieza con recorrido corto y progresa la amplitud semana a semana: si la lumbar se arquea, has llegado demasiado lejos.",
+    ],
+  },
+  {
+    id: "russian-twist",
+    name: "Russian twist",
+    group: "core",
+    equipment: ["peso-corporal", "mancuernas"],
+    level: "intermedio",
+    primaryMuscles: ["oblicuos"],
+    secondaryMuscles: ["recto abdominal", "transverso abdominal"],
+    instructions: [
+      "Siéntate con las rodillas flexionadas y los talones apoyados (o elevados para más dificultad).",
+      "Inclina el torso unos 45° con la espalda recta.",
+      "Gira el torso llevando las manos (con o sin peso) a un lado de la cadera.",
+      "Gira al otro lado controlando, sin soltar el core.",
+      "El giro sale del torso, no solo de los brazos.",
+    ],
+    tips: [
+      "Gira con el tronco completo: mover solo los brazos no trabaja los oblicuos.",
+    ],
+  },
+  {
+    id: "dead-bug",
+    name: "Dead bug",
+    group: "core",
+    equipment: ["peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["transverso abdominal"],
+    secondaryMuscles: ["recto abdominal", "oblicuos", "ilíaco"],
+    instructions: [
+      "Túmbate boca arriba con los brazos al frente y caderas y rodillas a 90°.",
+      "Pega la zona lumbar al suelo: no dejes hueco.",
+      "Extiende lentamente un brazo por encima de la cabeza y la pierna contraria.",
+      "Vuelve a 90° sin perder el contacto lumbar.",
+      "Alterna lados respirando de forma continua.",
+    ],
+    tips: [
+      "Coloca una toalla entre la lumbar y el suelo: si la sueltas, has perdido la posición.",
+    ],
+  },
+  {
+    id: "hollow-hold",
+    name: "Hollow hold",
+    group: "core",
+    equipment: ["peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["recto abdominal", "transverso abdominal"],
+    secondaryMuscles: ["cuádriceps", "ilíaco"],
+    instructions: [
+      "Túmbate boca arriba con los brazos junto a las orejas y las piernas juntas.",
+      "Eleva brazos y piernas formando un cuerpo cóncavo suave, como una banana.",
+      "Pega la zona lumbar al suelo sin dejar hueco.",
+      "Mantén la posición respirando corto y controlado.",
+      "Reduce la elevación si la zona lumbar se despega.",
+    ],
+    tips: [
+      "Es la posición base de la gimnasia: domina 3×20 segundos estrictos antes de añadir balanceos.",
+    ],
+  },
+  {
+    id: "pallof-press",
+    name: "Pallof press",
+    group: "core",
+    equipment: ["poleas", "banda"],
+    level: "intermedio",
+    primaryMuscles: ["oblicuos", "transverso abdominal"],
+    secondaryMuscles: ["glúteo medio", "erectores espinales"],
+    instructions: [
+      "Colócate de lado frente a la polea (o banda anclada) a la altura del pecho.",
+      "Agarra el maneral con ambas manos y da un paso lateral para crear tensión.",
+      "Extiende los brazos al frente sin que el torso rote.",
+      "Aguanta 2 segundos con los brazos extendidos.",
+      "Vuelve con control y completa todas las repeticiones del lado antes de cambiar.",
+    ],
+    tips: [
+      "Es antirrotación: el trabajo está en no girar, no en empujar fuerte.",
+    ],
+  },
+  {
+    id: "bird-dog",
+    name: "Bird dog",
+    group: "core",
+    equipment: ["peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["erectores espinales", "transverso abdominal"],
+    secondaryMuscles: ["glúteo mayor", "deltoides", "isquiotibiales"],
+    instructions: [
+      "En cuadrupedia, manos bajo los hombros y rodillas bajo la cadera.",
+      "Extiende el brazo derecho y la pierna izquierda hasta alinearlos con el torso.",
+      "Pausa 2-3 segundos sin rotar la cadera.",
+      "Vuelve con control y alterna lados.",
+      "Imagina un vaso de agua sobre la zona lumbar: no se derrama.",
+    ],
+    tips: [
+      "Calidad sobre amplitud: mejor alinear bien que levantar alto.",
+    ],
+  },
+];
+
+// ── CUERPO COMPLETO (12) ─────────────────────────────────────────────────────
+
+const fullBody: Exercise[] = [
+  {
+    id: "burpees",
+    name: "Burpees",
+    group: "full-body",
+    equipment: ["peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["cuádriceps", "pectoral mayor"],
+    secondaryMuscles: ["tríceps braquial", "deltoides", "core"],
+    instructions: [
+      "De pie, flexiona cadera y rodillas y apoya las manos en el suelo.",
+      "Salta con los pies atrás hasta posición de flexión.",
+      "Haz una flexión completa (opcional según nivel).",
+      "Vuelve con los pies a las manos.",
+      "Salta verticalmente con los brazos arriba y aterriza suave.",
+    ],
+    tips: [
+      "Aterriza con las rodillas flexionadas y sin ruido: el impacto se controla, no se aguanta.",
+    ],
+  },
+  {
+    id: "thruster",
+    name: "Thruster",
+    group: "full-body",
+    equipment: ["barra", "mancuernas"],
+    level: "avanzado",
+    primaryMuscles: ["cuádriceps", "deltoides"],
+    secondaryMuscles: ["glúteo mayor", "isquiotibiales", "core"],
+    instructions: [
+      "Coloca la barra en los hombros (front rack) con los codos altos.",
+      "Baja a sentadilla completa o paralela manteniendo el pecho alto.",
+      "En la subida, aprovecha el impulso de las piernas para empujar la barra verticalmente.",
+      "Extiende los brazos con la barra sobre la cabeza al terminar la extensión de cadera.",
+      "Baja la barra a los hombros con control y encadena la siguiente repetición.",
+    ],
+    tips: [
+      "El ritmo es continuo: sentadilla y press son un solo movimiento fluido.",
+    ],
+  },
+  {
+    id: "push-press",
+    name: "Push press",
+    group: "full-body",
+    equipment: ["barra", "mancuernas"],
+    level: "intermedio",
+    primaryMuscles: ["deltoides", "cuádriceps"],
+    secondaryMuscles: ["tríceps braquial", "glúteo mayor", "trapecio superior"],
+    instructions: [
+      "Barra en los hombros con agarre firme y codos al frente.",
+      "Cuarto de sentadilla corto y explosivo (dip).",
+      "Cambia de dirección empujando la barra arriba con las piernas.",
+      "Termina de extender los brazos con la cabeza 'entre' los brazos.",
+      "Baja la barra a los hombros con control.",
+    ],
+    tips: [
+      "Las piernas inician el movimiento: si empujas solo con los brazos, es un press estricto.",
+    ],
+  },
+  {
+    id: "swing-kettlebell",
+    name: "Swing con kettlebell",
+    group: "full-body",
+    equipment: ["kettlebell"],
+    level: "intermedio",
+    primaryMuscles: ["glúteo mayor", "isquiotibiales"],
+    secondaryMuscles: ["erectores espinales", "deltoides", "core"],
+    instructions: [
+      "Con la kettlebell un paso delante, articula la cadera y agarra con ambas manos.",
+      "Lleva la kettlebell entre las piernas como un 'hike' de fútbol americano.",
+      "Extiende la cadera de forma explosiva: la kettlebell vuela hasta la altura del pecho.",
+      "El brazo es una cuerda: no levantes con los hombros.",
+      "Deja caer la kettlebell entre las piernas y encadena la siguiente.",
+    ],
+    tips: [
+      "Es una bisagra de cadera explosiva, no una sentadilla: piernas fijas, la cadera manda.",
+    ],
+  },
+  {
+    id: "clean-press-kettlebell",
+    name: "Clean & press con kettlebell",
+    group: "full-body",
+    equipment: ["kettlebell"],
+    level: "avanzado",
+    primaryMuscles: ["glúteo mayor", "deltoides"],
+    secondaryMuscles: ["isquiotibiales", "erectores espinales", "core"],
+    instructions: [
+      "Con la kettlebell entre los pies, articula la cadera y agarra con una mano.",
+      "Conduce la cadera para 'limpiar' la kettlebell hasta el hombro (rack), con la muñeca neutra.",
+      "Deja que la esfera rodee la muñeca al llegar, sin chocar contra el antebrazo.",
+      "Empuja con las piernas y extiende el brazo hasta el press sobre la cabeza.",
+      "Baja controlando al hombro y de ahí al suelo.",
+    ],
+    tips: [
+      "Domina el clean a una mano antes de encadenar el press: la recepción limpia es la mitad del ejercicio.",
+    ],
+  },
+  {
+    id: "snatch-kettlebell",
+    name: "Snatch con kettlebell",
+    group: "full-body",
+    equipment: ["kettlebell"],
+    level: "avanzado",
+    primaryMuscles: ["glúteo mayor", "deltoides"],
+    secondaryMuscles: ["dorsal ancho", "isquiotibiales", "core"],
+    instructions: [
+      "Empieza como en el swing, con una mano.",
+      "Impulsa la kettlebell de forma explosiva por encima de la cabeza.",
+      "Encaja la mano en el asa con el brazo bloqueado y vertical.",
+      "Recepción suave absorbiendo con cadera y rodilla.",
+      "Baja al swing y repite, cambiando de mano cuando descanses.",
+    ],
+    tips: [
+      "Domina el swing y el press antes del snatch: es el movimiento técnico más exigente de kettlebell.",
+    ],
+  },
+  {
+    id: "turkish-get-up",
+    name: "Levantamiento turco (Turkish get-up)",
+    group: "full-body",
+    equipment: ["kettlebell"],
+    level: "avanzado",
+    primaryMuscles: ["recto abdominal", "deltoides"],
+    secondaryMuscles: ["oblicuos", "glúteo mayor", "erectores espinales"],
+    instructions: [
+      "Túmbate con la kettlebell en una mano, brazo vertical y rodilla del mismo lado flexionada.",
+      "Mantén la vista en la carga y empújala hacia el techo mientras te apoyas en el codo contrario.",
+      "Sube a la mano y luego a cuadrupedia.",
+      "Lleva la pierna por debajo del cuerpo y levántate hasta de pie con el brazo vertical.",
+      "Invierte todos los pasos con el mismo control hasta tumbarte de nuevo.",
+    ],
+    tips: [
+      "Practícalo primero sin peso (el 'get-up desnudo'): la seguridad manda sobre la carga.",
+    ],
+  },
+  {
+    id: "farmer-walk",
+    name: "Caminata del granjero",
+    group: "full-body",
+    equipment: ["mancuernas", "kettlebell"],
+    level: "intermedio",
+    primaryMuscles: ["antebrazos", "trapecio superior"],
+    secondaryMuscles: ["core", "oblicuos", "erectores espinales"],
+    instructions: [
+      "Levanta una carga pesada en cada mano (mancuernas o kettlebells).",
+      "De pie, hombros atrás y core apretado.",
+      "Camina con pasos cortos y firmes manteniendo el torso vertical.",
+      "No te inclines ni dejes caer los hombros.",
+      "Deja las cargas en el suelo con técnica, no las sueltes.",
+    ],
+    tips: [
+      "Respira por el abdomen con el core en tensión: es un entrenamiento de tronco disfrazado de paseo.",
+    ],
+  },
+  {
+    id: "mountain-climbers",
+    name: "Mountain climbers",
+    group: "full-body",
+    equipment: ["peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["recto abdominal", "cuádriceps"],
+    secondaryMuscles: ["deltoides", "oblicuos", "pectoral mayor (isométrico)"],
+    instructions: [
+      "Desde posición de flexión, muñecas bajo los hombros y cuerpo en línea.",
+      "Lleva una rodilla al pecho sin elevar la cadera.",
+      "Cambia de pierna con un salto corto alternando rápido.",
+      "Mantén los hombros estables, sin balancear el torso.",
+      "Ritmo constante con respiración controlada.",
+    ],
+    tips: [
+      "Si la cadera sube, baja el ritmo: la posición de flexión no se negocia.",
+    ],
+  },
+  {
+    id: "remo-renegado",
+    name: "Remo renegado",
+    group: "full-body",
+    equipment: ["mancuernas"],
+    level: "avanzado",
+    primaryMuscles: ["dorsal ancho", "recto abdominal"],
+    secondaryMuscles: ["oblicuos", "deltoides", "tríceps braquial (isométrico)"],
+    instructions: [
+      "En posición de flexión con una mancuerna en cada mano y los pies algo más anchos.",
+      "Aprieta glúteos y abdomen: la cadera no puede rotar.",
+      "Rema una mancuerna hacia la cadera sin girar el torso.",
+      "Baja con control y cambia de brazo.",
+      "Mantén los hombros cuadrados todo el tiempo.",
+    ],
+    tips: [
+      "Pies anchos y core a tope: el reto es estabilizar, no remar pesado.",
+    ],
+  },
+  {
+    id: "salto-al-cajon",
+    name: "Salto al cajón",
+    group: "full-body",
+    equipment: ["peso-corporal"],
+    level: "intermedio",
+    primaryMuscles: ["cuádriceps", "glúteo mayor"],
+    secondaryMuscles: ["gastrocnemio (gemelo)", "isquiotibiales", "core"],
+    instructions: [
+      "Colócate a un paso del cajón con los pies a la anchura de las caderas.",
+      "Cuarto de sentadilla rápido y salto explosivo.",
+      "Aterriza sobre el cajón con los dos pies a la vez y las rodillas flexionadas.",
+      "Baja caminando o saltando suave, siempre de frente.",
+      "Reinicia la posición entre saltos.",
+    ],
+    tips: [
+      "Calidad antes que altura: si el aterrizaje suena, el cajón está demasiado alto.",
+    ],
+  },
+  {
+    id: "salto-de-tijera",
+    name: "Salto de tijera (jumping jacks)",
+    group: "full-body",
+    equipment: ["peso-corporal"],
+    level: "principiante",
+    primaryMuscles: ["deltoides", "cuádriceps"],
+    secondaryMuscles: ["gastrocnemio (gemelo)", "aductores", "glúteo mayor"],
+    instructions: [
+      "De pie con los pies juntos y los brazos a los lados.",
+      "Salta abriendo las piernas y subiendo los brazos sobre la cabeza a la vez.",
+      "Vuelve a la posición inicial con otro salto.",
+      "Mantén el ritmo constante y la respiración continua.",
+      "Aterriza con las rodillas flexionadas para amortiguar.",
+    ],
+    tips: [
+      "Perfecto como calentamiento o cardio entre series: rodillas suaves al aterrizar.",
+    ],
+  },
+];
+
+// ── Dataset final ────────────────────────────────────────────────────────────
+
+export const EXERCISES: Exercise[] = [
+  ...pecho,
+  ...espalda,
+  ...piernas,
+  ...hombros,
+  ...brazos,
+  ...core,
+  ...fullBody,
+];
+
+export function getExerciseById(id: string): Exercise | undefined {
+  return EXERCISES.find((e) => e.id === id);
+}
+
+export function exerciseName(id: string): string {
+  return getExerciseById(id)?.name ?? id;
+}
+
+export function filterExercises(opts: {
+  q?: string;
+  group?: ExerciseGroup;
+  equipment?: ExerciseEquipment;
+  level?: ExerciseLevel;
+}): Exercise[] {
+  const q = opts.q?.trim().toLowerCase();
+  return EXERCISES.filter((e) => {
+    if (opts.group && e.group !== opts.group) return false;
+    if (opts.level && e.level !== opts.level) return false;
+    if (opts.equipment && !e.equipment.includes(opts.equipment)) return false;
+    if (q) {
+      const haystack = `${e.name} ${e.primaryMuscles.join(" ")} ${e.secondaryMuscles.join(" ")}`.toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+}

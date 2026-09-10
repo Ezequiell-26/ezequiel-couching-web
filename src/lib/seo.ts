@@ -86,6 +86,16 @@ const VIEW_META: Record<ViewId, Meta> = {
     title: "Contador de calorías — Ezequiel Coaching",
     description: "Registra tus comidas del día, controla kcal y macronutrientes. Datos guardados en tu dispositivo.",
   },
+  biblioteca: {
+    title: "Biblioteca de ejercicios — Ezequiel Coaching",
+    description:
+      "Biblioteca de ejercicios con técnica paso a paso: músculos implicados, ejecución y consejos para pecho, espalda, piernas, hombros, brazos y core.",
+  },
+  zona: {
+    title: "Mi Zona de entrenamiento — Ezequiel Coaching",
+    description:
+      "Tu zona de entrenamiento personal: rutinas, sesiones guiadas y seguimiento adaptadas a tu objetivo y material.",
+  },
   contacto: {
     title: "Contacto — Ezequiel Coaching",
     description: "Escríbeme para dudas, propuestas o colaboración.",

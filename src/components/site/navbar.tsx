@@ -14,16 +14,22 @@ interface NavItem {
   label: string;
   view: ViewId;
   anchor?: string;
+  /** Elemento destacado de zona: se muestra como botón volt en desktop, no en la lista. */
+  zone?: boolean;
+  /** Clase extra para el <li> del menú de escritorio (p. ej. mostrarlo solo en lg). */
+  desktopClassName?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Inicio", view: "home" },
   { label: "Coaching", view: "coaching" },
   { label: "Tienda", view: "tienda" },
+  { label: "Ejercicios", view: "biblioteca", desktopClassName: "hidden lg:block" },
   { label: "Método", view: "metodo" },
   { label: "Resultados", view: "resultados" },
   { label: "Blog", view: "blog" },
   { label: "Contacto", view: "contacto" },
+  { label: "Mi Zona", view: "zona", zone: true },
 ];
 
 const SCROLL_THRESHOLD = 24;
@@ -95,10 +101,10 @@ export function Navbar() {
           )}
         />
 
-        {/* Desktop */}
+        {/* Desktop (los elementos "zone" van al área de acciones como botón destacado) */}
         <ul className="hidden items-center gap-1 md:flex">
-          {NAV_ITEMS.map((item) => (
-            <li key={item.label}>
+          {NAV_ITEMS.filter((item) => !item.zone).map((item) => (
+            <li key={item.label} className={item.desktopClassName}>
               <button
                 type="button"
                 onClick={() => go(item)}
@@ -123,6 +129,17 @@ export function Navbar() {
         </ul>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
+          <CTAButton
+            view="zona"
+            event="cta_click"
+            eventProps={{ label: "navbar-mi-zona" }}
+            source="navbar"
+            size="sm"
+            className="hidden lg:inline-flex"
+          >
+            Mi Zona
+          </CTAButton>
+
           <CTAButton
             view="cuestionario"
             event="cta_click"

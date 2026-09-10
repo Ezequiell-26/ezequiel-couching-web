@@ -12,6 +12,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/resultados",
     "/calculadoras",
     "/contador-de-calorias",
+    "/ejercicios",
+    "/mi-zona",
     "/progreso",
     "/blog",
     "/faq",

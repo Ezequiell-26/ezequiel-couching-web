@@ -1,12 +1,13 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { CTAButton } from "@/components/site/cta-button";
 import { Container } from "@/components/site/container";
+import { useReducedMotionSafe } from "@/hooks/use-reduced-motion-safe";
 import { site } from "@/lib/content/site";
 
 export function Hero() {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
 
   return (
     <section className="bg-brand-halo relative overflow-hidden" aria-labelledby="hero-title">

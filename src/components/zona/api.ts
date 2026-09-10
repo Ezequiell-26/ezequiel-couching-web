@@ -9,6 +9,28 @@
 
 export type ZonaProfile = { id: number; name: string };
 
+/**
+ * Metas personales (Task 26-a): GET /api/zona/profile las devuelve y
+ * PATCH /api/zona/profile las actualiza (null = sin meta). Ambas opcionales
+ * e independientes; rangos del backend: peso 30-300 kg, agua 500-5000 ml.
+ */
+export type ZonaProfileGoals = { weightGoalKg: number | null; waterGoalMl: number | null };
+export type ZonaProfileWithGoals = ZonaProfile & ZonaProfileGoals;
+
+/**
+ * Item para POST /api/zona/routines (crear) y PATCH /api/zona/routines/[id]
+ * (editar, reemplaza todos los items): el backend valida exerciseId contra la
+ * biblioteca, day ≤ daysPerWeek, sets 1-10, reps texto 1-12, restSec 0-600.
+ */
+export type RoutineItemPayload = {
+  day: number;
+  exerciseId: string;
+  sets: number;
+  reps: string;
+  restSec: number;
+  notes?: string;
+};
+
 export type RoutineItemDTO = {
   id: number;
   day: number;
@@ -91,6 +113,8 @@ export type ProgressDTO = {
     daysTrainedLast30: number;
   };
   streak: { days: number; lastActiveDate: string | null };
+  /** Fechas YYYY-MM-DD (UTC) con cualquier actividad, últimos 90 días (Task 26-a). */
+  activityDays: string[];
   activeSession: SessionDTO | null;
 };
 

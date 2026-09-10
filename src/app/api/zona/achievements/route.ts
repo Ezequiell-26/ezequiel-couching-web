@@ -15,11 +15,14 @@ interface AchievementDef {
 const DEFINITIONS: AchievementDef[] = [
   { id: "primera-sesion", title: "Primer entrenamiento", desc: "Completa tu primera sesión" },
   { id: "racha-7", title: "Racha de 7 días", desc: "Mantente activo 7 días seguidos" },
+  { id: "racha-14", title: "Racha de 14 días", desc: "Mantente activo 14 días seguidos" },
   { id: "sesiones-10", title: "10 sesiones", desc: "Completa 10 sesiones de entrenamiento" },
   { id: "sesiones-25", title: "25 sesiones", desc: "Completa 25 sesiones de entrenamiento" },
+  { id: "sesiones-50", title: "50 sesiones", desc: "Completa 50 sesiones de entrenamiento" },
   { id: "primer-pr", title: "Nuevo récord personal", desc: "Logra tu primer PR con peso" },
   { id: "prs-5", title: "5 récords personales", desc: "Consigue PRs en 5 ejercicios distintos" },
   { id: "volumen-10t", title: "10.000 kg acumulados", desc: "Suma 10 toneladas de volumen total" },
+  { id: "volumen-50t", title: "50.000 kg acumulados", desc: "Suma 50 toneladas de volumen total" },
   { id: "agua-7", title: "Hidratado 7 días seguidos", desc: "Registra ≥1,5 L de agua durante 7 días seguidos" },
   { id: "peso-4", title: "4 registros de peso corporal", desc: "Pesa tu progreso en 4 días distintos" },
   { id: "rutina-ia", title: "Tu primera rutina con IA", desc: "Genera una rutina con el entrenador IA" },
@@ -88,13 +91,24 @@ export async function GET() {
     const values: Record<string, { unlocked: boolean; progress?: { current: number; target: number } }> = {
       "primera-sesion": { unlocked: sessionsCompleted >= 1 },
       "racha-7": { unlocked: streak.days >= 7 },
+      // Decisión (Task 26-a): racha-14 sí incluye progreso días/14 (el frontend
+      // pinta progressbar solo si viene) — racha-7 se deja intacto.
+      "racha-14": {
+        unlocked: streak.days >= 14,
+        progress: { current: Math.min(streak.days, 14), target: 14 },
+      },
       "sesiones-10": { unlocked: sessionsCompleted >= 10, progress: { current: sessionsCompleted, target: 10 } },
       "sesiones-25": { unlocked: sessionsCompleted >= 25, progress: { current: sessionsCompleted, target: 25 } },
+      "sesiones-50": { unlocked: sessionsCompleted >= 50, progress: { current: sessionsCompleted, target: 50 } },
       "primer-pr": { unlocked: prExercises.size >= 1 },
       "prs-5": { unlocked: prExercises.size >= 5 },
       "volumen-10t": {
         unlocked: totalVolumeKg >= 10_000,
         progress: { current: Math.round(totalVolumeKg), target: 10_000 },
+      },
+      "volumen-50t": {
+        unlocked: totalVolumeKg >= 50_000,
+        progress: { current: Math.round(totalVolumeKg), target: 50_000 },
       },
       "agua-7": {
         unlocked: waterStreak.days >= 7,

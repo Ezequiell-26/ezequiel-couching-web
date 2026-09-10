@@ -111,6 +111,10 @@ model ClientProfile {
   sessionExpiry DateTime?
   createdAt     DateTime  @default(now())
 
+  // Metas personales opcionales (Task 26-a): null = sin meta definida.
+  weightGoalKg Float?
+  waterGoalMl  Int?
+
   routines   Routine[]
   sessions   WorkoutSession[]
   weightLogs WeightLog[]

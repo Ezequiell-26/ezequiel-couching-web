@@ -1,10 +1,19 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { useRouter } from "@/lib/router";
 import { track } from "@/lib/analytics";
 import { site } from "@/lib/content/site";
 import { Logo } from "./logo";
 import { Container } from "./container";
+
+/** Año capturado una vez por runtime: idéntico en SSR y en el primer render cliente. */
+const CURRENT_YEAR = new Date().getFullYear();
+
+// El año no cambia en vivo: el “store” no emite. La corrección post-hidratación
+// la hace React solo (useSyncExternalStore re-chequea getSnapshot al montar).
+const subscribeYear = () => () => {};
+const getSnapshotYear = () => new Date().getFullYear();
 
 const COLUMNS: { title: string; links: { label: string; view: Parameters<ReturnType<typeof useRouter.getState>["navigate"]>[0] }[] }[] = [
   {
@@ -50,6 +59,12 @@ const COLUMNS: { title: string; links: { label: string; view: Parameters<ReturnT
 
 export function Footer() {
   const navigate = useRouter((s) => s.navigate);
+
+  // Hidratación segura: durante SSR y la primera pasada cliente se usa el
+  // snapshot de servidor (CURRENT_YEAR → HTML estable, sin mismatch) y React
+  // corrige solo si el año real difiere una vez montado. Igual patrón que el
+  // estado de scroll del navbar (sin setState en efectos).
+  const year = useSyncExternalStore(subscribeYear, getSnapshotYear, () => CURRENT_YEAR);
 
   return (
     <footer className="mt-auto border-t border-border/70 bg-background" role="contentinfo">
@@ -105,7 +120,7 @@ export function Footer() {
 
         <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-border/60 pt-6 sm:flex-row sm:items-center">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} {site.name}. Todos los derechos reservados.
+            © {year} {site.name}. Todos los derechos reservados.
           </p>
           <button
             type="button"

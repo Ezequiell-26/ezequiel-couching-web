@@ -1,21 +1,35 @@
 "use client";
 
 import * as React from "react";
-import { Check, Download, Droplets, Flame, Loader2, Scale, Trophy } from "lucide-react";
+import { Activity, Check, Download, Droplets, Flame, Loader2, Scale, Target, Trophy } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input, Label } from "@/components/ui/input";
 import { toast } from "@/components/ui/toaster";
 import { EmptyState } from "@/components/site/states";
+import { cn } from "@/lib/utils";
 import { track } from "@/lib/analytics";
 import { BarChart, LineChart } from "./charts";
-import { HABITS, ZonaUnauthorized, fmtInt, fmtKg, shortDate, shortWeek, zonaApi, type ProgressDTO } from "./api";
+import {
+  HABITS,
+  ZonaUnauthorized,
+  fmtInt,
+  fmtKg,
+  shortDate,
+  shortWeek,
+  zonaApi,
+  type ProgressDTO,
+  type ZonaProfileGoals,
+  type ZonaProfileWithGoals,
+} from "./api";
 
 /**
- * Tab Progreso: stats agregadas, peso corporal con curva SVG propia, agua con
- * objetivo sugerido fijo (2000 ml), hábitos del día + semana, volumen semanal
- * y tabla de PRs. Todo honesto: sin datos, estados vacíos explicados.
+ * Tab Progreso: stats agregadas, peso corporal con curva SVG propia y meta
+ * propia (Task 26-b), agua con meta configurable (null = objetivo sugerido
+ * 2000 ml), hábitos del día + semana, volumen semanal, heatmap de actividad de
+ * los últimos 90 días (activityDays) y tabla de PRs. Todo honesto: sin datos,
+ * estados vacíos explicados.
  */
 export function ProgressTab({
   progress,
@@ -35,6 +49,83 @@ export function ProgressTab({
   const [savingWeight, setSavingWeight] = React.useState(false);
   const [waterBusy, setWaterBusy] = React.useState(false);
   const [habitBusy, setHabitBusy] = React.useState<string | null>(null);
+
+  // ── Metas propias (Task 26-b): GET /api/zona/profile al montar el tab ─────
+  const [goals, setGoals] = React.useState<ZonaProfileGoals | null>(null);
+  const [goalBusy, setGoalBusy] = React.useState<"peso" | "agua" | null>(null);
+  const [weightGoalInput, setWeightGoalInput] = React.useState("");
+  const [waterGoalInput, setWaterGoalInput] = React.useState("");
+  const [weightGoalOpen, setWeightGoalOpen] = React.useState(false);
+  const [waterGoalOpen, setWaterGoalOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    let alive = true;
+    zonaApi<ZonaProfileWithGoals>("/api/zona/profile")
+      .then((p) => {
+        if (!alive) return;
+        setGoals({ weightGoalKg: p.weightGoalKg, waterGoalMl: p.waterGoalMl });
+      })
+      .catch((err: unknown) => {
+        if (!alive) return;
+        onActionError(err); // 401 → AuthGate (patrón de la casa); resto → toast
+      });
+    return () => {
+      alive = false;
+    };
+  }, [onActionError]);
+
+  async function saveGoal(kind: "peso" | "agua", value: number | null) {
+    setGoalBusy(kind);
+    try {
+      const res = await zonaApi<ZonaProfileWithGoals>("/api/zona/profile", {
+        method: "PATCH",
+        body: JSON.stringify(kind === "peso" ? { weightGoalKg: value } : { waterGoalMl: value }),
+      });
+      setGoals({ weightGoalKg: res.weightGoalKg, waterGoalMl: res.waterGoalMl });
+      if (kind === "peso") {
+        setWeightGoalOpen(false);
+        setWeightGoalInput("");
+      } else {
+        setWaterGoalOpen(false);
+        setWaterGoalInput("");
+      }
+      toast({
+        title: value === null ? "Meta quitada" : "Meta guardada",
+        description:
+          kind === "peso"
+            ? value === null
+              ? "Se quitó tu meta de peso."
+              : `Objetivo: ${fmtKg(value)} kg.`
+            : value === null
+              ? "Se quitó tu meta de agua."
+              : `Objetivo: ${fmtInt(value)} ml al día.`,
+      });
+      track("zona_goal_save", { kind, value });
+    } catch (err) {
+      // 400 (fuera de rango) → toast con el mensaje del API; 401 → AuthGate.
+      onActionError(err);
+    } finally {
+      setGoalBusy(null);
+    }
+  }
+
+  function submitWeightGoal() {
+    const n = Number(weightGoalInput.replace(",", "."));
+    if (!Number.isFinite(n) || n < 30 || n > 300) {
+      toast({ title: "Revisá la meta", description: "Ingresá un valor entre 30 y 300 kg.", variant: "error" });
+      return;
+    }
+    void saveGoal("peso", Math.round(n * 10) / 10);
+  }
+
+  function submitWaterGoal() {
+    const n = Number(waterGoalInput);
+    if (!Number.isInteger(n) || n < 500 || n > 5000) {
+      toast({ title: "Revisá la meta", description: "Ingresá un valor entero entre 500 y 5000 ml.", variant: "error" });
+      return;
+    }
+    void saveGoal("agua", n);
+  }
 
   async function saveWeight() {
     const kg = Number(kgInput.replace(",", "."));
@@ -116,7 +207,9 @@ export function ProgressTab({
     }
   }
 
-  const waterTarget = 2000;
+  const weightGoal = goals?.weightGoalKg ?? null;
+  const waterGoal = goals?.waterGoalMl ?? null;
+  const waterTarget = waterGoal ?? 2000;
   const waterMl = progress.waterToday.ml;
   const waterPct = Math.min(Math.round((waterMl / waterTarget) * 100), 100);
   const volumeBars = progress.volumeByWeek.map((w) => ({ label: shortWeek(w.week), value: w.volumeKg }));
@@ -165,6 +258,52 @@ export function ProgressTab({
               </Button>
             </div>
 
+            {/* Meta propia de peso (Task 26-b): datos reales del perfil. */}
+            {goals !== null ? (
+              <div className="rounded-lg border border-border/70 bg-background/40 px-3 py-2.5">
+                {weightGoal != null ? (
+                  <div className="space-y-2">
+                    <p className="text-sm">
+                      <span className="font-semibold">Meta: {fmtKg(weightGoal)} kg</span>
+                      <span className="text-muted-foreground"> · {weightGoalText(weightGoal, lastWeight)}</span>
+                    </p>
+                    <GoalEditor
+                      id="zona-weight-goal"
+                      label="Cambiar meta de peso (kg)"
+                      placeholder="Nueva meta (kg)"
+                      value={weightGoalInput}
+                      onValueChange={setWeightGoalInput}
+                      onSave={submitWeightGoal}
+                      onCancel={() => void saveGoal("peso", null)}
+                      cancelLabel="Limpiar"
+                      busy={goalBusy !== null}
+                      step={0.1}
+                    />
+                  </div>
+                ) : weightGoalOpen ? (
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold">Definí tu meta de peso</p>
+                    <GoalEditor
+                      id="zona-weight-goal"
+                      label="Meta de peso (kg)"
+                      placeholder="p. ej. 75"
+                      value={weightGoalInput}
+                      onValueChange={setWeightGoalInput}
+                      onSave={submitWeightGoal}
+                      onCancel={() => setWeightGoalOpen(false)}
+                      cancelLabel="Cancelar"
+                      busy={goalBusy !== null}
+                      step={0.1}
+                    />
+                  </div>
+                ) : (
+                  <Button variant="ghost" size="sm" className="min-h-11" onClick={() => setWeightGoalOpen(true)}>
+                    <Target aria-hidden className="size-4" /> Definir meta de peso
+                  </Button>
+                )}
+              </div>
+            ) : null}
+
             {progress.weights.length > 0 ? (
               <div className="rounded-lg border border-border/70 bg-background/40 p-2">
                 <LineChart
@@ -188,7 +327,11 @@ export function ProgressTab({
             <CardTitle className="flex items-center gap-2 text-base">
               <Droplets aria-hidden className="size-4 text-primary" /> Agua de hoy
             </CardTitle>
-            <CardDescription>Objetivo sugerido: 2000 ml al día. Cada toque suma al registro.</CardDescription>
+            <CardDescription>
+              {waterGoal != null
+                ? `Tu meta: ${fmtInt(waterGoal)} ml al día. Cada toque suma al registro.`
+                : "Objetivo sugerido: 2000 ml al día. Cada toque suma al registro."}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -217,6 +360,51 @@ export function ProgressTab({
                 +500 ml
               </Button>
             </div>
+
+            {/* Meta propia de agua (Task 26-b): si no hay, se mantiene el objetivo sugerido. */}
+            {goals !== null ? (
+              <div className="border-t border-border/60 pt-3">
+                {waterGoal != null ? (
+                  <div className="space-y-2">
+                    <p className="text-sm">
+                      <span className="font-semibold">Meta: {fmtInt(waterGoal)} ml</span>
+                    </p>
+                    <GoalEditor
+                      id="zona-water-goal"
+                      label="Cambiar meta de agua (ml)"
+                      placeholder="Nueva meta (ml)"
+                      value={waterGoalInput}
+                      onValueChange={setWaterGoalInput}
+                      onSave={submitWaterGoal}
+                      onCancel={() => void saveGoal("agua", null)}
+                      cancelLabel="Limpiar"
+                      busy={goalBusy !== null}
+                      step={50}
+                    />
+                  </div>
+                ) : waterGoalOpen ? (
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold">Definí tu meta de agua</p>
+                    <GoalEditor
+                      id="zona-water-goal"
+                      label="Meta de agua (ml)"
+                      placeholder="p. ej. 2500"
+                      value={waterGoalInput}
+                      onValueChange={setWaterGoalInput}
+                      onSave={submitWaterGoal}
+                      onCancel={() => setWaterGoalOpen(false)}
+                      cancelLabel="Cancelar"
+                      busy={goalBusy !== null}
+                      step={50}
+                    />
+                  </div>
+                ) : (
+                  <Button variant="ghost" size="sm" className="min-h-11" onClick={() => setWaterGoalOpen(true)}>
+                    <Target aria-hidden className="size-4" /> Definir meta de agua
+                  </Button>
+                )}
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -299,6 +487,9 @@ export function ProgressTab({
         </Card>
       </div>
 
+      {/* ── Heatmap de actividad (Task 26-b, inspirado en LiftShift/openGym) ─ */}
+      <ActivityHeatmap activityDays={progress.activityDays} />
+
       {/* ── Récords personales ──────────────────────────────────────────── */}
       <Card>
         <CardHeader className="gap-1">
@@ -357,6 +548,170 @@ function StatTile({ label, value, icon, className }: { label: string; value: str
       </p>
       <p className="mt-1 text-xl font-bold tabular-nums sm:text-2xl">{value}</p>
     </div>
+  );
+}
+
+/* ── Metas propias (Task 26-b) ────────────────────────────────────────────── */
+
+/**
+ * Texto honesto de avance contra la meta de peso según el ÚLTIMO peso real
+ * registrado (sin proyecciones): falta, excedente o meta alcanzada.
+ */
+function weightGoalText(goalKg: number, last: { kg: number } | null): string {
+  if (!last) return "registrá tu peso para ver cuánto falta";
+  const diff = last.kg - goalKg;
+  if (Math.abs(diff) < 0.05) return "llegaste a tu meta";
+  return diff > 0 ? `estás ${fmtKg(diff)} kg por encima` : `te faltan ${fmtKg(-diff)} kg`;
+}
+
+/** Editor compacto de meta: input + Guardar + Limpiar/Cancelar (PATCH perfil). */
+function GoalEditor({
+  id,
+  label,
+  placeholder,
+  value,
+  onValueChange,
+  onSave,
+  onCancel,
+  cancelLabel,
+  busy,
+  step,
+}: {
+  id: string;
+  label: string;
+  placeholder: string;
+  value: string;
+  onValueChange: (v: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  cancelLabel: "Limpiar" | "Cancelar";
+  busy: boolean;
+  step: number;
+}) {
+  return (
+    <div className="flex items-end gap-2">
+      <div className="min-w-0 flex-1">
+        <Label htmlFor={id} className="sr-only">
+          {label}
+        </Label>
+        <Input
+          id={id}
+          type="number"
+          inputMode="decimal"
+          step={step}
+          value={value}
+          onChange={(e) => onValueChange(e.target.value)}
+          placeholder={placeholder}
+          className="h-11"
+        />
+      </div>
+      <Button variant="outline" className="min-h-11 shrink-0" disabled={busy || value.trim() === ""} onClick={onSave}>
+        Guardar
+      </Button>
+      <Button
+        variant="ghost"
+        className="min-h-11 shrink-0 text-muted-foreground hover:text-destructive"
+        disabled={busy}
+        onClick={onCancel}
+      >
+        {cancelLabel}
+      </Button>
+    </div>
+  );
+}
+
+/* ── Heatmap de actividad 90 días (Task 26-b, inspirado en LiftShift/openGym) ── */
+
+type HeatCell = { key: string; active: boolean; isToday: boolean; future: boolean };
+
+const HEAT_WEEKS = 13;
+const HEAT_WEEKDAY_INITIALS = ["L", "M", "X", "J", "V", "S", "D"];
+
+/**
+ * Grilla 13 semanas × 7 días (columnas = semanas, lunes primero, UTC para
+ * coincidir con las claves YYYY-MM-DD de activityDays). La última columna es
+ * la semana en curso; los días futuros quedan como celdas transparentes.
+ * SIN datos simulados: active sale únicamente del Set real del API.
+ */
+function buildHeatGrid(todayKey: string, activeSet: Set<string>): HeatCell[][] {
+  const today = new Date(`${todayKey}T00:00:00Z`);
+  const sinceMonday = (today.getUTCDay() + 6) % 7;
+  const start = new Date(today);
+  start.setUTCDate(start.getUTCDate() - sinceMonday - (HEAT_WEEKS - 1) * 7);
+  return Array.from({ length: HEAT_WEEKS }, (_, w) =>
+    Array.from({ length: 7 }, (_, d) => {
+      const cellDate = new Date(start);
+      cellDate.setUTCDate(start.getUTCDate() + w * 7 + d);
+      const key = cellDate.toISOString().slice(0, 10);
+      return { key, active: activeSet.has(key), isToday: key === todayKey, future: key > todayKey };
+    }),
+  );
+}
+
+function ActivityHeatmap({ activityDays }: { activityDays: string[] }) {
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const activeSet = React.useMemo(() => new Set(activityDays), [activityDays]);
+  const weeks = React.useMemo(() => buildHeatGrid(todayKey, activeSet), [todayKey, activeSet]);
+  const activeCount = activityDays.length;
+
+  return (
+    <Card>
+      <CardHeader className="gap-1">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Activity aria-hidden className="size-4 text-primary" /> Actividad (últimos 90 días)
+        </CardTitle>
+        <CardDescription>
+          Cada cuadrado es un día: cuenta como actividad registrar series, peso, agua o hábitos.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="overflow-x-auto pb-1">
+          <div
+            role="img"
+            aria-label={`Heatmap: ${activeCount} ${activeCount === 1 ? "día activo" : "días activos"} de los últimos 90`}
+            className="flex w-max gap-[3px]"
+          >
+            <div aria-hidden className="mr-0.5 flex flex-col gap-[3px]">
+              {HEAT_WEEKDAY_INITIALS.map((ini) => (
+                <span key={ini} className="flex size-3 items-center justify-center text-[8px] leading-none text-muted-foreground">
+                  {ini}
+                </span>
+              ))}
+            </div>
+            {weeks.map((week, wi) => (
+              <div key={wi} aria-hidden className="flex flex-col gap-[3px]">
+                {week.map((cell) => (
+                  <div
+                    key={cell.key}
+                    title={`${shortDate(cell.key)}${cell.isToday ? " · hoy" : cell.active ? " · día activo" : ""}`}
+                    className={cn(
+                      "size-3 rounded-[3px] border",
+                      cell.future ? "border-transparent bg-transparent" : cell.active ? "border-primary bg-primary" : "border-border/60 bg-muted",
+                      cell.isToday ? "ring-2 ring-foreground/70" : "",
+                    )}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {activeCount === 0 ? <p className="text-sm text-muted-foreground">Tus días de actividad van a aparecer acá.</p> : null}
+
+        <div aria-hidden className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            Menos
+            <span className="size-2.5 rounded-[2px] border border-border/60 bg-muted" />
+            <span className="size-2.5 rounded-[2px] border border-primary bg-primary" />
+            Más
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="size-2.5 rounded-[2px] border border-border/60 bg-muted ring-2 ring-foreground/70" />
+            hoy
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

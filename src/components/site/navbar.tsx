@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import { useReducedMotionSafe } from "@/hooks/use-reduced-motion-safe";
 import { cn } from "@/lib/utils";
 import { useRouter, type ViewId } from "@/lib/router";
 import { track } from "@/lib/analytics";
@@ -47,7 +48,7 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const view = useRouter((s) => s.view);
   const navigate = useRouter((s) => s.navigate);
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
 
   // Estado de scroll sin setState en efectos (react-hooks/set-state-in-effect)
   const scrolled = useSyncExternalStore(subscribeScroll, getScrollState, () => false);

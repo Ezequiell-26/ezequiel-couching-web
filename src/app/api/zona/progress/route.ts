@@ -175,6 +175,13 @@ export async function GET(req: Request) {
     for (const h of habitDays400) activityDays.add(dateKey(h.date));
     const streak = computeStreak(activityDays, now);
 
+    // ── Heatmap de actividad (últimos 90 días, hoy incluido) ─────────────
+    // Mismo criterio de actividad que la racha: serie registrada, peso, agua
+    // ≥500 ml o hábito done. Derivado de las MISMAS queries ya realizadas
+    // (cero consultas extra): filtro por clave "YYYY-MM-DD" UTC ≥ hace 90 días.
+    const since90Key = dateKey(since90);
+    const heatmapDays = [...activityDays].filter((k) => k >= since90Key).sort();
+
     return NextResponse.json({
       weights: weights.map((w) => ({ date: dateKey(w.date), kg: w.kg })),
       waterToday: { ml: waterTodayMl },
@@ -191,6 +198,7 @@ export async function GET(req: Request) {
         daysTrainedLast30,
       },
       streak,
+      activityDays: heatmapDays,
       activeSession: active
         ? serializeSession(active, active._count.sets, active.routine?.name ?? null)
         : null,

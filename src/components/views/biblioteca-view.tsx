@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * Biblioteca de ejercicios (#/ejercicios, Task 24-b).
- * Búsqueda + filtros por grupo/equipo/nivel sobre el dataset estático de
- * src/lib/content/exercises.ts (todo client-side, sin API). Cada tarjeta abre
- * un diálogo con músculos, ejecución paso a paso, consejos y CTA a Mi Zona.
+ * Biblioteca de ejercicios (#/ejercicios, Task 24-b; filtro por músculo en Task 26-c).
+ * Búsqueda + filtros por grupo/equipo/nivel/músculo primario sobre el dataset
+ * estático de src/lib/content/exercises.ts (todo client-side, sin API). Cada
+ * tarjeta abre un diálogo con músculos, ejecución paso a paso, consejos y CTA a Mi Zona.
  */
 
 import { useMemo, useState } from "react";
@@ -50,6 +50,7 @@ const GROUP_IMAGES: Record<ExerciseGroup, string> = {
 const ANY_GROUP = "todos-los-grupos";
 const ANY_EQUIPMENT = "todo-el-equipo";
 const ANY_LEVEL = "todos-los-niveles";
+const ANY_MUSCLE = "todos-los-musculos";
 
 const groupLabel = (id: ExerciseGroup) =>
   EXERCISE_GROUPS.find((g) => g.id === id)?.label ?? id;
@@ -133,34 +134,53 @@ export function BibliotecaView() {
   const [group, setGroup] = useState<ExerciseGroup | typeof ANY_GROUP>(ANY_GROUP);
   const [equipment, setEquipment] = useState<ExerciseEquipment | typeof ANY_EQUIPMENT>(ANY_EQUIPMENT);
   const [level, setLevel] = useState<ExerciseLevel | typeof ANY_LEVEL>(ANY_LEVEL);
+  const [muscle, setMuscle] = useState<string | typeof ANY_MUSCLE>(ANY_MUSCLE);
   const [selected, setSelected] = useState<Exercise | null>(null);
   const navigate = useRouter((s) => s.navigate);
 
-  const results = useMemo(
+  /**
+   * Opciones del filtro por músculo derivadas de los primaryMuscles REALES del
+   * dataset (unique + sort): nunca hardcodeado, escala si el dataset crece.
+   */
+  const muscleOptions = useMemo(
     () =>
-      filterExercises({
-        q,
-        group: group === ANY_GROUP ? undefined : group,
-        equipment: equipment === ANY_EQUIPMENT ? undefined : equipment,
-        level: level === ANY_LEVEL ? undefined : level,
-      }),
-    [q, group, equipment, level],
+      [...new Set(EXERCISES.flatMap((e) => e.primaryMuscles))].sort((a, b) =>
+        a.localeCompare(b, "es"),
+      ),
+    [],
   );
 
+  const results = useMemo(() => {
+    const base = filterExercises({
+      q,
+      group: group === ANY_GROUP ? undefined : group,
+      equipment: equipment === ANY_EQUIPMENT ? undefined : equipment,
+      level: level === ANY_LEVEL ? undefined : level,
+    });
+    // El filtro por músculo primario se aplica encima del helper (aditivo, sin tocar exercises.ts).
+    return muscle === ANY_MUSCLE ? base : base.filter((e) => e.primaryMuscles.includes(muscle));
+  }, [q, group, equipment, level, muscle]);
+
   const hasFilters =
-    q.trim() !== "" || group !== ANY_GROUP || equipment !== ANY_EQUIPMENT || level !== ANY_LEVEL;
+    q.trim() !== "" ||
+    group !== ANY_GROUP ||
+    equipment !== ANY_EQUIPMENT ||
+    level !== ANY_LEVEL ||
+    muscle !== ANY_MUSCLE;
 
   const onFilter = (next: {
     q?: string;
     group?: string;
     equipment?: string;
     level?: string;
+    muscle?: string;
   }) => {
     track("biblioteca_filter", {
       q: next.q ?? q,
       group: next.group ?? group,
       equipment: next.equipment ?? equipment,
       level: next.level ?? level,
+      muscle: next.muscle ?? muscle,
     });
   };
 
@@ -180,7 +200,7 @@ export function BibliotecaView() {
       <PageHeader
         eyebrow="Recursos"
         title="Biblioteca de ejercicios"
-        description="Más de 100 ejercicios con ejecución paso a paso, músculos implicados y consejos de técnica. Filtra por grupo muscular, material disponible o nivel y aprende a entrenar bien."
+        description="Más de 150 ejercicios con ejecución paso a paso, músculos implicados y consejos de técnica. Filtra por grupo muscular, músculo, material disponible o nivel y aprende a entrenar bien."
       >
         <p className="mt-4 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
           {EXERCISES.length} ejercicios · {EXERCISE_GROUPS.length} grupos musculares
@@ -190,7 +210,7 @@ export function BibliotecaView() {
       <Container className="pb-16 pt-8 sm:pb-20">
         {/* Buscador + filtros */}
         <Card className="p-4 sm:p-6">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" role="search" aria-label="Buscar ejercicios">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="search" aria-label="Buscar ejercicios">
             <div className="sm:col-span-2">
               <Label htmlFor="biblioteca-q">Buscar ejercicio o músculo</Label>
               <div className="relative mt-2">
@@ -250,7 +270,7 @@ export function BibliotecaView() {
               </Select>
             </div>
 
-            <div className="sm:col-span-2">
+            <div>
               <Label htmlFor="biblioteca-nivel">Nivel</Label>
               <Select
                 id="biblioteca-nivel"
@@ -265,6 +285,26 @@ export function BibliotecaView() {
                 {EXERCISE_LEVELS.map((l) => (
                   <option key={l.id} value={l.id}>
                     {l.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="biblioteca-musculo">Músculo primario</Label>
+              <Select
+                id="biblioteca-musculo"
+                value={muscle}
+                onChange={(e) => {
+                  setMuscle(e.target.value);
+                  onFilter({ muscle: e.target.value });
+                }}
+                className="mt-2"
+              >
+                <option value={ANY_MUSCLE}>Cualquier músculo</option>
+                {muscleOptions.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
                   </option>
                 ))}
               </Select>
@@ -342,6 +382,7 @@ export function BibliotecaView() {
                       setGroup(ANY_GROUP);
                       setEquipment(ANY_EQUIPMENT);
                       setLevel(ANY_LEVEL);
+                      setMuscle(ANY_MUSCLE);
                     }}
                   >
                     Limpiar filtros

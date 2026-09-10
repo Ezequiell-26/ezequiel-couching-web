@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useReducedMotionSafe } from "@/hooks/use-reduced-motion-safe";
 import type { ReactNode } from "react";
 
 /** Reveal sutil al entrar en viewport; respeta prefers-reduced-motion. */
@@ -13,7 +14,7 @@ export function Reveal({
   delay?: number;
   className?: string;
 }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   return (
     <motion.div
       initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16 }}

@@ -52,7 +52,14 @@ export async function GET() {
       exportedAt: new Date().toISOString(),
       // Solo campos no sensibles del perfil (ClientProfile no guarda
       // goal/level/equipment/daysPerWeek: esos viven en cada Routine).
-      profile: { id: profile.id, name: profile.name, createdAt: profile.createdAt.toISOString() },
+      // Aditivo (Task 26-a): metas personales opcionales (null = sin meta).
+      profile: {
+        id: profile.id,
+        name: profile.name,
+        createdAt: profile.createdAt.toISOString(),
+        weightGoalKg: profile.weightGoalKg,
+        waterGoalMl: profile.waterGoalMl,
+      },
       routines: routines.map(serializeRoutine),
       sessions: sessions.map((s) => ({
         ...serializeSession(s, s.sets.length, s.routine?.name ?? null),

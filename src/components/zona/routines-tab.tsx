@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CalendarDays, ChevronDown, Loader2, Plus, Sparkles, Trash2, X } from "lucide-react";
+import { CalendarDays, ChevronDown, Copy, Loader2, Pencil, Plus, Sparkles, SquarePen, Trash2, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Label, Select } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/toaster";
 import { EmptyState, ErrorState } from "@/components/site/states";
+import { RoutineForm } from "@/components/zona/routine-form";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/analytics";
 import {
@@ -22,9 +23,10 @@ import {
 } from "./api";
 
 /**
- * Tab Rutinas: plan semanal (asignar rutinas a los 7 días), lista desplegable
- * de rutinas (con "Entrenar día N" y borrado con confirmación) + generador IA
- * con carga honesta (tarda varios segundos).
+ * Tab Rutinas: creación manual (Task 26-b), plan semanal (asignar rutinas a los
+ * 7 días), lista desplegable de rutinas (con "Entrenar día N", editar, duplicar
+ * y borrado con confirmación) + generador IA con carga honesta (tarda varios
+ * segundos).
  */
 export function RoutinesTab({
   routines,
@@ -41,6 +43,50 @@ export function RoutinesTab({
   const [startingKey, setStartingKey] = React.useState<string | null>(null);
   const [deleting, setDeleting] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<RoutineDTO | null>(null);
+  const [dupId, setDupId] = React.useState<number | null>(null);
+  // Formulario manual: open + rutina en edición (null = crear). formEpoch
+  // remonta RoutineForm en cada apertura para que el borrador arranque fresco.
+  const [formOpen, setFormOpen] = React.useState(false);
+  const [editTarget, setEditTarget] = React.useState<RoutineDTO | null>(null);
+  const [formEpoch, setFormEpoch] = React.useState(0);
+
+  function openCreate() {
+    setEditTarget(null);
+    setFormEpoch((n) => n + 1);
+    setFormOpen(true);
+  }
+
+  function openEdit(routine: RoutineDTO) {
+    setEditTarget(routine);
+    setFormEpoch((n) => n + 1);
+    setFormOpen(true);
+  }
+
+  function closeForm() {
+    setFormOpen(false);
+    setEditTarget(null);
+  }
+
+  async function handleFormSaved(saved: RoutineDTO) {
+    closeForm();
+    if (saved.active) setOpenId(saved.id); // crea/edita: la dejamos abierta
+    await onRefresh();
+  }
+
+  async function handleDuplicate(routine: RoutineDTO) {
+    setDupId(routine.id);
+    try {
+      const copy = await zonaApi<RoutineDTO>(`/api/zona/routines/${routine.id}/duplicate`, { method: "POST" });
+      toast({ title: "Rutina duplicada", description: `«${copy.name}» se agregó a tu lista.` });
+      track("zona_routine_duplicate");
+      await onRefresh();
+    } catch (err) {
+      // 429 (rate-limit) y otros: mensaje del API vía toast; 401 → AuthGate.
+      onActionError(err);
+    } finally {
+      setDupId(null);
+    }
+  }
 
   async function handleStartDay(routine: RoutineDTO, day: number) {
     const key = `${routine.id}:${day}`;
@@ -160,14 +206,32 @@ export function RoutinesTab({
                           </div>
                         );
                       })}
-                      <div className="flex justify-end">
+                      <div className="flex flex-wrap justify-end gap-1 sm:gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="min-h-11 sm:min-h-9"
+                          onClick={() => openEdit(routine)}
+                        >
+                          <Pencil aria-hidden /> Editar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="min-h-11 sm:min-h-9"
+                          disabled={dupId !== null}
+                          onClick={() => void handleDuplicate(routine)}
+                        >
+                          {dupId === routine.id ? <Loader2 aria-hidden className="animate-spin" /> : <Copy aria-hidden />}
+                          Duplicar
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           className="min-h-11 text-destructive hover:text-destructive sm:min-h-9"
                           onClick={() => setDeleteTarget(routine)}
                         >
-                          <Trash2 aria-hidden /> Eliminar rutina
+                          <Trash2 aria-hidden /> Eliminar
                         </Button>
                       </div>
                     </div>
@@ -179,8 +243,34 @@ export function RoutinesTab({
         </ul>
       )}
 
-      {/* ── Generador IA ─────────────────────────────────────────────────── */}
+      {/* ── Creación manual (Task 26-b) + generador IA, ambos accesibles ──── */}
+      <Card>
+        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h3 className="flex items-center gap-2 text-sm font-semibold sm:text-base">
+              <SquarePen aria-hidden className="size-4 text-primary" /> Crear manualmente
+            </h3>
+            <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+              Elegí cada ejercicio de la biblioteca con sus series, reps y descansos.
+            </p>
+          </div>
+          <Button variant="outline" className="min-h-11 shrink-0" onClick={openCreate}>
+            <Pencil aria-hidden /> Crear rutina manualmente
+          </Button>
+        </CardContent>
+      </Card>
+
       <GeneratorCard onGenerated={async (created) => { setOpenId(created.id); await onRefresh(); }} />
+
+      {/* ── Formulario manual: crear o editar (Dialog dentro del componente) ── */}
+      <RoutineForm
+        key={`${editTarget?.id ?? "nueva"}-${formEpoch}`}
+        open={formOpen}
+        routine={editTarget}
+        onClose={closeForm}
+        onSaved={handleFormSaved}
+        onActionError={onActionError}
+      />
 
       {/* ── Confirmación de borrado ──────────────────────────────────────── */}
       <Dialog
@@ -540,7 +630,7 @@ function GeneratorCard({
           <div>
             <h3 className="text-base font-semibold sm:text-lg">Generar con IA</h3>
             <p className="text-xs text-muted-foreground sm:text-sm">
-              El entrenador IA arma tu rutina con los 100 ejercicios de la biblioteca.
+              El entrenador IA arma tu rutina con ejercicios de la biblioteca.
             </p>
           </div>
         </div>

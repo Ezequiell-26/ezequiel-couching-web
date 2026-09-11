@@ -387,6 +387,23 @@ export function ContadorView() {
 
 /* Diálogo añadir alimento -------------------------------------------------- */
 
+/** Resultado de /api/food-search (valores por 100 g). */
+type FoodSearchResult = {
+  id: string;
+  name: string;
+  brand: string;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+};
+
+type SearchState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "results"; items: FoodSearchResult[] };
+
 function AddFoodDialog({
   open,
   onClose,
@@ -407,6 +424,13 @@ function AddFoodDialog({
   const [grams, setGrams] = React.useState("100");
   const [meal, setMeal] = React.useState<MealKey>("desayuno");
 
+  // Búsqueda en Open Food Facts: debounce 450 ms, estados idle/loading/error/results.
+  const [query, setQuery] = React.useState("");
+  const [search, setSearch] = React.useState<SearchState>({ status: "idle" });
+  const [off, setOff] = React.useState<FoodSearchResult | null>(null);
+  const searchTimer = React.useRef<number | null>(null);
+  const latestQuery = React.useRef(""); // descarta respuestas obsoletas
+
   // Al (re)abrir el diálogo se restablecen los campos: ajuste durante el render,
   // sin effect (patrón "estado previo" de la documentación de React).
   const [prevOpen, setPrevOpen] = React.useState(open);
@@ -421,8 +445,21 @@ function AddFoodDialog({
       setCFat("");
       setGrams("100");
       setMeal("desayuno");
+      // Reset del estado de búsqueda (refs pendientes se limpian en el effect de abajo).
+      setQuery("");
+      setSearch({ status: "idle" });
+      setOff(null);
     }
   }
+
+  // Al cerrar: cancela el debounce pendiente. Al reabrir: descarta respuestas viejas.
+  React.useEffect(() => {
+    if (!open) {
+      if (searchTimer.current) window.clearTimeout(searchTimer.current);
+    } else {
+      latestQuery.current = "";
+    }
+  }, [open]);
 
   const selected = foodId.startsWith("db:") ? FOOD_DB.find((f) => `db:${f.id}` === foodId) ?? null : null;
   const isCustom = foodId === "custom";
@@ -430,6 +467,50 @@ function AddFoodDialog({
   function num(v: string): number {
     const n = Number(String(v).trim().replace(",", "."));
     return Number.isFinite(n) ? n : NaN;
+  }
+
+  // Dispara la búsqueda con debounce al escribir (mínimo 2 caracteres).
+  function onQueryChange(value: string) {
+    setQuery(value);
+    latestQuery.current = value.trim();
+    if (searchTimer.current) window.clearTimeout(searchTimer.current);
+    const q = value.trim();
+    if (q.length < 2) {
+      setSearch({ status: "idle" });
+      return;
+    }
+    searchTimer.current = window.setTimeout(() => void runSearch(q), 450);
+  }
+
+  // Limpia el debounce pendiente al desmontar.
+  React.useEffect(() => {
+    return () => {
+      if (searchTimer.current) window.clearTimeout(searchTimer.current);
+    };
+  }, []);
+
+  async function runSearch(q: string) {
+    setSearch({ status: "loading" });
+    try {
+      const res = await fetch(`/api/food-search?q=${encodeURIComponent(q)}`);
+      const json = (await res.json()) as { results?: FoodSearchResult[]; error?: string };
+      if (latestQuery.current !== q) return; // el usuario ya escribió otra cosa
+      if (!res.ok) {
+        setSearch({ status: "error", message: json.error ?? "No se pudo buscar. Intentá de nuevo." });
+        return;
+      }
+      const items = Array.isArray(json.results) ? json.results : [];
+      setSearch({ status: "results", items });
+      track("diary_food_search", { q, n: items.length });
+    } catch {
+      if (latestQuery.current !== q) return;
+      setSearch({ status: "error", message: "Sin conexión con el buscador. Revisá tu red e intentá de nuevo." });
+    }
+  }
+
+  function selectOff(item: FoodSearchResult) {
+    setOff(item);
+    setFoodId(""); // el select vuelve a "Elige de la base de datos…"
   }
 
   function submit(e: React.FormEvent) {
@@ -453,6 +534,20 @@ function AddFoodDialog({
         protein: Math.round(selected.protein * f * 10) / 10,
         carbs: Math.round(selected.carbs * f * 10) / 10,
         fat: Math.round(selected.fat * f * 10) / 10,
+      };
+    } else if (off) {
+      // Resultado de Open Food Facts: macros ya vienen por 100 g.
+      const factor = g / 100;
+      entry = {
+        id: newId(),
+        date,
+        meal,
+        name: off.brand ? `${off.name} (${off.brand})` : off.name,
+        grams: g,
+        kcal: Math.round(off.kcal * factor),
+        protein: Math.round(off.protein * factor * 10) / 10,
+        carbs: Math.round(off.carbs * factor * 10) / 10,
+        fat: Math.round(off.fat * factor * 10) / 10,
       };
     } else if (isCustom) {
       const name = customName.trim();
@@ -503,9 +598,100 @@ function AddFoodDialog({
           </Select>
         </div>
 
+        {/* Búsqueda en Open Food Facts */}
+        <div className="space-y-1.5">
+          <Label htmlFor="diary-off-search">Buscar en Open Food Facts</Label>
+          <Input
+            id="diary-off-search"
+            type="text"
+            value={query}
+            onChange={(e) => onQueryChange(e.target.value)}
+            placeholder="Ej.: yogur griego, alfajores, avena…"
+            autoComplete="off"
+            className="h-10"
+          />
+          <div aria-busy={search.status === "loading"} className="space-y-2 pt-1">
+            {search.status === "loading" ? (
+              <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span aria-hidden className="size-3.5 animate-spin rounded-full border-2 border-border border-t-primary" />
+                Buscando «{query.trim()}»…
+              </p>
+            ) : null}
+            {search.status === "error" ? (
+              <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                {search.message}
+              </p>
+            ) : null}
+            {search.status === "results" ? (
+              <>
+                <p aria-live="polite" className="text-xs text-muted-foreground">
+                  {search.items.length > 0
+                    ? `${search.items.length} resultados para «${query.trim()}»`
+                    : `Sin resultados para «${query.trim()}». Probá con otro término.`}
+                </p>
+                {search.items.length > 0 ? (
+                  <ul aria-label="Resultados de Open Food Facts" className="max-h-72 space-y-1 overflow-y-auto pr-1">
+                    {search.items.map((item) => (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          onClick={() => selectOff(item)}
+                          className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent"
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-medium">{item.name}</span>
+                            {item.brand ? (
+                              <span className="block truncate text-xs text-muted-foreground">{item.brand}</span>
+                            ) : null}
+                          </span>
+                          <span className="shrink-0 text-right">
+                            <span className="block text-sm font-semibold">{item.kcal} kcal</span>
+                            <span className="block text-xs text-muted-foreground">
+                              P {fmt1(item.protein)} · C {fmt1(item.carbs)} · G {fmt1(item.fat)} /100 g
+                            </span>
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </>
+            ) : null}
+            <p className="text-[11px] text-muted-foreground">Datos de Open Food Facts (base abierta colaborativa).</p>
+          </div>
+          {off ? (
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">
+                  {off.name}
+                  {off.brand ? ` · ${off.brand}` : ""}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {off.kcal} kcal · P {fmt1(off.protein)} · C {fmt1(off.carbs)} · G {fmt1(off.fat)} por 100 g
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOff(null)}
+                className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                Quitar
+              </button>
+            </div>
+          ) : null}
+        </div>
+
         <div className="space-y-1.5">
           <Label htmlFor="diary-food">Alimento</Label>
-          <Select id="diary-food" value={foodId} onChange={(e) => setFoodId(e.target.value)} className="h-11">
+          <Select
+            id="diary-food"
+            value={foodId}
+            onChange={(e) => {
+              setFoodId(e.target.value);
+              setOff(null); // mutuamente excluyente con la búsqueda
+            }}
+            className="h-11"
+          >
             <option value="">Elige de la base de datos…</option>
             {FOOD_DB.map((f) => (
               <option key={f.id} value={`db:${f.id}`}>

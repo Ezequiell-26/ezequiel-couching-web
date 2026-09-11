@@ -31,11 +31,15 @@ import {
   type ExerciseGroup,
   type ExerciseLevel,
 } from "@/lib/content/exercises";
+import { EXERCISE_IMAGES } from "@/lib/content/exercise-images";
 
 /**
  * Portada por grupo muscular (Task 25-d): ilustraciones flat/vector con la
  * identidad de la marca (fondo teal oscuro + acento esmeralda #3ddc97),
  * generadas por IA y servidas desde /public/images/ejercicios.
+ *
+ * Task 33: los ejercicios con imagen demo real (EXERCISE_IMAGES, dataset
+ * libre free-exercise-db) la usan por delante de la portada del grupo.
  */
 const GROUP_IMAGES: Record<ExerciseGroup, string> = {
   pecho: "/images/ejercicios/pecho-v3.jpg",
@@ -46,6 +50,12 @@ const GROUP_IMAGES: Record<ExerciseGroup, string> = {
   core: "/images/ejercicios/core-v3.jpg",
   "full-body": "/images/ejercicios/full-body-v3.jpg",
 };
+
+/** Imagen demo real del ejercicio, o la portada del grupo como fallback. */
+function imageFor(exercise: Exercise): { src: string; isDemo: boolean } {
+  const demo = EXERCISE_IMAGES[exercise.id];
+  return demo ? { src: demo, isDemo: true } : { src: GROUP_IMAGES[exercise.group], isDemo: false };
+}
 
 const ANY_GROUP = "todos-los-grupos";
 const ANY_EQUIPMENT = "todo-el-equipo";
@@ -74,8 +84,8 @@ function ExerciseDialogBody({
     <div className="flex flex-col gap-5">
       <div className="relative aspect-[21/9] overflow-hidden rounded-lg border border-border">
         <Image
-          src={GROUP_IMAGES[exercise.group]}
-          alt={`Ilustración de ejercicios de ${groupLabel(exercise.group)}`}
+          src={imageFor(exercise).src}
+          alt={imageFor(exercise).isDemo ? `Demo de ${exercise.name}` : `Ilustración de ejercicios de ${groupLabel(exercise.group)}`}
           fill
           sizes="(max-width: 640px) 100vw, 512px"
           className="object-cover"
@@ -105,6 +115,10 @@ function ExerciseDialogBody({
           ))}
         </ol>
       </section>
+
+      {imageFor(exercise).isDemo ? (
+        <p className="text-xs text-muted-foreground">Demo técnica: free-exercise-db (dominio público).</p>
+      ) : null}
 
       <section aria-label="Consejos de técnica">
         <h3 className="mb-2 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
@@ -333,8 +347,8 @@ export function BibliotecaView() {
                   >
                     <div className="relative -mx-5 -mt-5 mb-1 aspect-[4/3] overflow-hidden rounded-t-xl border-b border-border bg-muted">
                       <Image
-                        src={GROUP_IMAGES[exercise.group]}
-                        alt={`Ilustración de ejercicios de ${groupLabel(exercise.group)}`}
+                        src={imageFor(exercise).src}
+                        alt={imageFor(exercise).isDemo ? `Demo de ${exercise.name}` : `Ilustración de ejercicios de ${groupLabel(exercise.group)}`}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                         className="object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-105"

@@ -12,6 +12,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/site/states";
 import { EXERCISES, EXERCISE_GROUPS, getExerciseById, exerciseName } from "@/lib/content/exercises";
 import { track } from "@/lib/analytics";
 import { ZonaUnauthorized, fmtInt, fmtKg, shortDate, zonaApi, type LastPerformanceDTO, type NewPRDTO, type RoutineDTO, type SessionDTO, type SessionDetailDTO, type SetDTO } from "./api";
+import { celebratePR } from "@/lib/celebrate";
 import { RestTimer } from "./rest-timer";
 
 /** Descanso por defecto cuando la serie no viene de una rutina planificada. */
@@ -189,6 +190,7 @@ export function TrainTab({
       );
       if (res.isPR) {
         setPrSetIds((prev) => new Set(prev).add(res.set.id));
+        void celebratePR();
         toast({
           title: "¡Nuevo PR!",
           description:
@@ -250,6 +252,9 @@ export function TrainTab({
         method: "POST",
       });
       track("zona_finish_session", { sets: detail.setsCount, volumeKg: Math.round(detail.volumeKg), prs: res.newPRs.length });
+      if (res.newPRs.length > 0) {
+        void celebratePR();
+      }
       onFinished(res);
     } catch (err) {
       onActionError(err);

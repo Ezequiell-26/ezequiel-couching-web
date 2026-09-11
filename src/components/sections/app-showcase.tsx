@@ -178,7 +178,7 @@ function PanelDesktop() {
           <span className="size-1.5 rounded-full bg-foreground/20" />
         </span>
         <span className="min-w-0 flex-1 truncate text-center font-mono text-[9px] text-muted-foreground">
-          fitsync.app/mi-zona
+          kinetixfitt.app/mi-zona
         </span>
         <span className="shrink-0 font-mono text-[9px] font-bold text-muted-foreground">FS</span>
       </div>

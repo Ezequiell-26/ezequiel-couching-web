@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: `%s`,
   },
   description:
-    "FITSYNC: entrenamiento online premium con planes personalizados, registro de cada sesión y métricas reales de progreso en Mi Zona.",
+    "KinetixFitt: entrenamiento online premium con planes personalizados, registro de cada sesión y métricas reales de progreso en Mi Zona.",
   applicationName: SITE_NAME,
   appleWebApp: {
     capable: true,

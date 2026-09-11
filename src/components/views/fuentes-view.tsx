@@ -2,7 +2,7 @@
 
 /**
  * Fuentes (#/fuentes, Task 35-e): página de transparencia con los créditos
- * técnicos de FITSYNC. Documenta las APIs y bases de datos abiertas que
+ * técnicos de KinetixFitt. Documenta las APIs y bases de datos abiertas que
  * alimentan cada función, el software open source del stack con su licencia
  * y las alternativas evaluadas pero no integradas. Es estática a propósito:
  * sin fetching ni estado, los datos van declarados como constantes de
@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 
 type Source = {
   name: string;
-  /** Qué alimenta en FITSYNC. */
+  /** Qué alimenta en KinetixFitt. */
   role: string;
   /** Licencia verificada de los datos o del proyecto. */
   license: string;
@@ -211,7 +211,7 @@ export function FuentesView() {
       <PageHeader
         eyebrow="Transparencia"
         title="Fuentes de datos y open source"
-        description="FITSYNC funciona con bases de datos abiertas y software libre. Esta página documenta qué usa cada función y bajo qué licencia."
+        description="KinetixFitt funciona con bases de datos abiertas y software libre. Esta página documenta qué usa cada función y bajo qué licencia."
       />
 
       <Container className="pb-16 pt-10 sm:pb-20 sm:pt-12">
@@ -255,7 +255,7 @@ export function FuentesView() {
             <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">Nota</p>
             <p className="mt-2 max-w-3xl text-xs leading-relaxed text-muted-foreground">
               Los datos mostrados provienen de estas fuentes en tiempo real o están empaquetados
-              con su licencia original. FITSYNC no altera los datos; las estimaciones (calorías,
+              con su licencia original. KinetixFitt no altera los datos; las estimaciones (calorías,
               zonas de FC, DOTS) se calculan con fórmulas publicadas y son de cribado, nunca un
               diagnóstico.
             </p>

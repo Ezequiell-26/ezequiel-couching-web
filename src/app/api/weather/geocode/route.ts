@@ -106,7 +106,7 @@ export async function GET(req: Request) {
     const res = await fetch(
       `https://geocoding-api.open-meteo.com/v1/search?name=${qEnc}&count=5&language=es&format=json`,
       {
-        headers: { "User-Agent": "FITSYNC/1.0" },
+        headers: { "User-Agent": "KinetixFitt/1.0" },
         signal: AbortSignal.timeout(7000),
       },
     );

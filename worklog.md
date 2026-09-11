@@ -1002,3 +1002,22 @@ Stage Summary:
 - FITSYNC suma dos integraciones de datos reales: (1) "Gimnasios cerca" en Mi Zona — POIs leisure=fitness_centre de OpenStreetMap vía Photon (repo MIT, datos ODbL) con distancia haversine real, link por gimnasio a OpenStreetMap y atribución visible, fila 25 en #/fuentes; (2) "Sorprendeme" en #/recetas — receta aleatoria de TheMealDB con dedupe anti-repetición, sin nueva fila en #/fuentes (mismo upstream ya documentado).
 - Archivos: +src/app/api/gyms/route.ts, +src/components/zona/gyms-card.tsx; ~src/app/api/recipes/route.ts, ~recetas-view, ~zona-view, ~weather-card (export WEATHER_CITY_EVENT), ~fuentes-view (fila 25). Cero dependencias nuevas, cero emojis, clases semánticas.
 - Desbloqueado: GitHub sincronizado con Tasks 35/36 (push bb30e90..f6f3110 + 2ffc84d). Pendiente heredado: placeholders de contacto y PDF de guía gratuita (auditoría final).
+
+---
+Task ID: 38
+Agent: main (Z.ai Code)
+Task: Rebrand completo con el logo oficial KinetixFitt (subido por el usuario)
+
+Work Log:
+- El usuario subió el logo oficial: PNG 1774x887 con fondo casi negro en degradado sutil (no uniforme) y wordmark "KinetixFitt" (K degradado esmeralda + "Kinetix" blanco + "Fitt" esmeralda). La paleta coincide con el tema existente (esmeralda #3DDC97 aprox).
+- Procesamiento con sharp: luminance-key alpha por pixel (alpha = max(r,g,b) con umbral T=60 para matar el degradado del fondo — BR llegaba a 51 — y un-premultiply de color) -> PNG transparente real. Histograma de alpha verificado: binario 0/255, sin halo. Bbox real del contenido 184,292-1587,546 (1404x255). Corte del isotipo K detectado por scanning de columnas vacías: K termina en x=590, hueco desde 591 (la primera pasada con cut al 35% dejaba una rebaba del wordmark; corregida).
+- Assets sobrescritos MISMONOS NOMBRES (cero referencias rotas): public/brand/logo-full.png (900w lockup transparente), logo-mark.png (256w), icon-512.png (K contenida 460px en canvas 512), icon-192.png, icon-512-rounded.png (rx 96), apple-touch-icon.png (180 OPACO bg #060F0C, iOS no soporta alpha), og.png (1440x720 bg #060F0C + lockup 1080w centrado, coincide con las dims declaradas en layout), y src/app/icon.png (96) + src/app/apple-icon.png (180). Servidos 200 con content-length = archivo nuevo verificado.
+- Rebrand de texto (sed + revision): FITSYNC -> KinetixFitt y fitsync -> kinetixfitt en 21 archivos de src/ + public/sw.js (titulo offline). Incluye: seo.ts (SITE_NAME, 35 refs, titles, JSON-LD), site.ts, manifest.ts (name + short_name "KinetixFitt"), layout.tsx (description/OG), hero, final-cta, problem-section, app-showcase (fitsync.app -> kinetixfitt.app), zona-view ("FITSYNC · Training System" y filename del PNG exportado), fuentes-view, globals.css (comentario), UA "FITSYNC/1.0" -> "KinetixFitt/1.0" en las 7 rutas API.
+- ICS rebrandeado: kinetixfitt-plan-semanal.ics, PRODID "-//KinetixFitt//Plan semanal//ES", X-WR-CALNAME "KinetixFitt — Plan semanal", DESCRIPTION "Planificado con KinetixFitt · Mi Zona", CATEGORIES, UID seed + @kinetixfitt. Sanity bun -e: 2 VEVENTs, UID d6cafaf8-...@kinetixfitt (NOTA: cambia el dominio UID -> si alguien ya hubiese exportado, re-exportar crea eventos nuevos en vez de actualizar; sin usuarios reales, aceptado).
+- logo.tsx reescrito: next/image con logo-full.png (h-8, >=360px) / logo-mark.png (h-9, <360px), variant="full" muestra lockup siempre (navbar drawer + footer), aria-label "KinetixFitt — ir al inicio", track("nav_click") y navegación intactos. priority en ambos.
+- Se mantienen identificadores internos sin marca (localStorage ec_weather_city_v1, eventos de analytics, rutas API) para no romper nada funcional.
+- Verificación: bun run lint 0/0 · tsc --noEmit 0 · curl / 200 y los 9 assets 200 · title del browser "KinetixFitt — ..." · navbar: logo-full h-32px renderizado + aria correcto · 320px: sw==cw==320, isotipo h-36 visible, drawer y footer con lockup h-32, sin overflow · consola 0 errores.
+
+Stage Summary:
+- La web entera queda bajo la marca real KinetixFitt: logo oficial (transparente, procesado del PNG subido) en navbar/footer, favicon y apple-icon con el isotipo K, iconos PWA + manifest + OG image regenerados, y todo texto visible (SEO, ICS del calendario, UA de las APIs, export PNG) renombrado. Cero datos inventados: el único cambio visual es el logo real del usuario.
+- Archivos: +9 assets de marca regenerados (public/brand/*, src/app/icon.png, src/app/apple-icon.png); ~logo.tsx (rewrite image-based); sed de marca en 21 archivos src/ + public/sw.js. Sin dependencias nuevas.

@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "FITSYNC",
-    short_name: "FS",
+    name: "KinetixFitt",
+    short_name: "KinetixFitt",
     description:
       "Entrenamiento online: planes, seguimiento, calculadoras y contador de calorías.",
     start_url: "/",

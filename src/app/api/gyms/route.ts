@@ -196,7 +196,7 @@ async function searchPhoton(
     `&lat=${lat}&lon=${lon}&limit=12` +
     `&osm_tag=leisure:fitness_centre&bbox=${bbox}`;
   const res = await fetch(url, {
-    headers: { "User-Agent": "FITSYNC/1.0" },
+    headers: { "User-Agent": "KinetixFitt/1.0" },
     signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) throw new Error(`Photon → HTTP ${res.status}`);

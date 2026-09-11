@@ -1,13 +1,13 @@
 "use client";
 
-import { Zap } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "@/lib/router";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 /**
- * Marca FITSYNC: tile con bolt esmeralda + wordmark.
- * <360px solo monograma para no chocar con la CTA del navbar.
+ * Marca KinetixFitt: isotipo K + wordmark (PNG transparente generado del logo oficial).
+ * <360px solo isotipo para no chocar con la CTA del navbar.
  */
 export function Logo({
   variant = "lockup",
@@ -25,28 +25,35 @@ export function Logo({
         track("nav_click", { label: "logo" });
         navigate("home");
       }}
-      aria-label="FITSYNC — ir al inicio"
-      className={cn("group flex items-center gap-2.5", className)}
+      aria-label="KinetixFitt — ir al inicio"
+      className={cn(
+        "group flex items-center transition-transform duration-200 hover:scale-[1.02]",
+        className,
+      )}
     >
-      <span
+      <Image
+        src="/brand/logo-mark.png"
+        alt=""
         aria-hidden
-        className="grid size-9 place-items-center rounded-md border border-border bg-card transition-transform duration-200 group-hover:scale-105"
-      >
-        <Zap className="size-4 fill-primary text-primary" />
-      </span>
-      <span
+        width={256}
+        height={160}
+        priority
         className={cn(
-          "hidden min-[360px]:block leading-none",
-          variant === "full" ? "block" : "",
+          "h-9 w-auto",
+          variant === "full" ? "hidden" : "min-[360px]:hidden",
         )}
-      >
-        <span className="block text-[13px] font-bold tracking-tight text-foreground">
-          FIT<span className="text-primary">SYNC</span>
-        </span>
-        <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.28em] text-muted-foreground">
-          training system
-        </span>
-      </span>
+      />
+      <Image
+        src="/brand/logo-full.png"
+        alt="KinetixFitt"
+        width={900}
+        height={257}
+        priority
+        className={cn(
+          "h-8 w-auto",
+          variant === "full" ? "block" : "hidden min-[360px]:block",
+        )}
+      />
     </button>
   );
 }

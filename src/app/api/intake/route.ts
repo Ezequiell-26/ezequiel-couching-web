@@ -49,7 +49,7 @@ export async function POST(req: Request) {
 
     await sendEmail({
       to: d.email,
-      subject: "Recibimos tu cuestionario — FITSYNC",
+      subject: "Recibimos tu cuestionario — KinetixFitt",
       body: `Gracias ${d.name}. Tu cuestionario quedó registrado (ref. #${intake.id}). Te contactaremos con tu propuesta.`,
     });
 

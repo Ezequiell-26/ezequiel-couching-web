@@ -196,7 +196,7 @@ export function Hero() {
               transition={{ duration: 0.45, delay: 0.12 }}
               className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base"
             >
-              FITSYNC convierte tu entrenamiento en un sistema: un plan hecho para
+              KinetixFitt convierte tu entrenamiento en un sistema: un plan hecho para
               vos, el registro de cada serie y las métricas que muestran si esto
               realmente está funcionando.
             </motion.p>

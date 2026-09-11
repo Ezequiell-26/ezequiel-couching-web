@@ -135,7 +135,7 @@ type FruityViceJson = {
 async function fetchFruityVice(fruit: { en: string; es: string }): Promise<FoodSearchResult | null> {
   try {
     const res = await fetch(`https://www.fruityvice.com/api/fruit/${encodeURIComponent(fruit.en.toLowerCase())}`, {
-      headers: { "User-Agent": "FITSYNC/1.0" },
+      headers: { "User-Agent": "KinetixFitt/1.0" },
       signal: AbortSignal.timeout(7000),
     });
     if (!res.ok) {
@@ -197,7 +197,7 @@ export async function GET(req: Request) {
   // y devuelve la base completa): cadena v2 → v1 CGI → reintento v1.
   const qEnc = encodeURIComponent(parsed.data);
   const OFF_FIELDS = "code,product_name,product_name_es,brands,nutriments";
-  const OFF_UA = { "User-Agent": "FITSYNC/1.0 (web fitness; contacto via fitsync form)" };
+  const OFF_UA = { "User-Agent": "KinetixFitt/1.0 (web fitness; contacto via kinetixfitt form)" };
   const attempts = [
     `https://world.openfoodfacts.org/api/v2/search?search_terms=${qEnc}&page_size=24&fields=${OFF_FIELDS}`,
     `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${qEnc}&json=1&page_size=24&fields=${OFF_FIELDS}`,

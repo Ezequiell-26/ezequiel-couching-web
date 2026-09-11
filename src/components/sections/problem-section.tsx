@@ -77,7 +77,7 @@ export function ProblemSection() {
               {/* Panel de datos reales que la app registra */}
               <div className="rounded-lg border border-border bg-background/95 p-4 sm:absolute sm:bottom-5 sm:left-5 sm:right-auto sm:w-[300px] sm:backdrop-blur">
                 <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Lo que FITSYNC registra
+                  Lo que KinetixFitt registra
                 </p>
                 <ul className="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1.5">
                   {TRACKED.map((t) => (

@@ -16,7 +16,7 @@
  *   razonable para un plan de entrenamiento y evita eventos infinitos.
  * - Duración de 1 hora (DURATION:PT1H): la hora real de fin no existe en la BD,
  *   el usuario elige la hora de inicio y la duración es una constante honesta.
- * - UID determinista (hash FNV-1a de routineName+weekday+fitsync): re-exportar
+ * - UID determinista (hash FNV-1a de routineName+weekday+kinetixfitt): re-exportar
  *   el plan actualiza los eventos en el calendario en vez de duplicarlos.
  * - Sin BOM: los archivos .ics deben ser UTF-8 plano.
  */
@@ -27,7 +27,7 @@ import { createEvents } from "ics";
 export type WeekPlanSlot = { weekday: number; routineName: string | null };
 
 /** Nombre del archivo descargado. */
-export const ICS_FILENAME = "fitsync-plan-semanal.ics";
+export const ICS_FILENAME = "kinetixfitt-plan-semanal.ics";
 
 /** BYDAY de RFC 5545 indexado por weekday del plan (0=Lunes..6=Domingo). */
 const BYDAY = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"] as const;
@@ -101,9 +101,9 @@ export function buildWeekPlanIcs(slots: WeekPlanSlot[], hour: number, now: Date 
         endOutputType: "local" as const,
         duration: { hours: DURATION_HOURS },
         title: `Entrenamiento — ${routineName}`,
-        description: "Planificado con FITSYNC · Mi Zona",
-        categories: ["FITSYNC"],
-        uid: `${fnv1a(`${routineName}|${slot.weekday}|fitsync`)}-${slugify(routineName)}@fitsync`,
+        description: "Planificado con KinetixFitt · Mi Zona",
+        categories: ["KinetixFitt"],
+        uid: `${fnv1a(`${routineName}|${slot.weekday}|kinetixfitt`)}-${slugify(routineName)}@kinetixfitt`,
         recurrenceRule: `FREQ=WEEKLY;COUNT=${RRULE_COUNT};BYDAY=${BYDAY[slot.weekday] ?? "MO"}`,
       };
     });
@@ -111,8 +111,8 @@ export function buildWeekPlanIcs(slots: WeekPlanSlot[], hour: number, now: Date 
   if (events.length === 0) return null;
 
   const { error, value } = createEvents(events, {
-    productId: "-//FITSYNC//Plan semanal//ES",
-    calName: "FITSYNC — Plan semanal",
+    productId: "-//KinetixFitt//Plan semanal//ES",
+    calName: "KinetixFitt — Plan semanal",
   });
   if (error || !value) return null;
   return value;

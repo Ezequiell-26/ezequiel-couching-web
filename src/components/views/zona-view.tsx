@@ -428,7 +428,7 @@ function FinishSuccess({
           .replace(/^-|-$/g, "") || "entrenamiento";
       const a = document.createElement("a");
       a.href = dataUrl;
-      a.download = `fitsync-${slug}-${new Date().toISOString().slice(0, 10)}.png`;
+      a.download = `kinetixfitt-${slug}-${new Date().toISOString().slice(0, 10)}.png`;
       a.click();
       toast({ title: "Imagen descargada", description: "Tu resumen quedó listo para compartir." });
       track("zona_share_session", { prs: newPRs.length });
@@ -488,7 +488,7 @@ function FinishSuccess({
           )}
 
           <p className="mt-5 border-t border-border/60 pt-3 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-            FITSYNC · Training System
+            KinetixFitt · Training System
           </p>
         </CardContent>
       </Card>

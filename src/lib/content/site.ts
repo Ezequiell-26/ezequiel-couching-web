@@ -5,11 +5,11 @@
  */
 
 export const site = {
-  name: "FITSYNC",
+  name: "KinetixFitt",
   shortName: "FS",
   tagline: "Entrenamiento con método: plan personalizado, registro real y progreso medible",
   description:
-    "FITSYNC combina planes de entrenamiento personalizados, registro de cada sesión y métricas reales de progreso en Mi Zona, la app de la plataforma.",
+    "KinetixFitt combina planes de entrenamiento personalizados, registro de cada sesión y métricas reales de progreso en Mi Zona, la app de la plataforma.",
   email: "[SUSTITUIR: email de contacto]",
   whatsappNumber: "", // [SUSTITUIR: número WhatsApp internacional sin +. Vacío = botón oculto]
   location: "[SUSTITUIR: ciudad, país]",

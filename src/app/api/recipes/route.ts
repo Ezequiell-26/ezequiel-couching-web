@@ -132,7 +132,7 @@ let lastRandomMealId: number | null = null;
 
 async function fetchTheMealDB(path: string): Promise<unknown> {
   const res = await fetch(`${THE_MEAL_DB}/${path}`, {
-    headers: { "User-Agent": "FITSYNC/1.0" },
+    headers: { "User-Agent": "KinetixFitt/1.0" },
     signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) throw new Error(`TheMealDB ${path} → HTTP ${res.status}`);

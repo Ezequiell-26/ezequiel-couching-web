@@ -271,11 +271,11 @@ export async function GET(req: Request) {
     // Forecast y aire en paralelo: el aire NUNCA tumba al clima (allSettled).
     const [fRes, aRes] = await Promise.allSettled([
       fetch(forecastUrl, {
-        headers: { "User-Agent": "FITSYNC/1.0" },
+        headers: { "User-Agent": "KinetixFitt/1.0" },
         signal: AbortSignal.timeout(7000),
       }),
       fetch(airUrl, {
-        headers: { "User-Agent": "FITSYNC/1.0" },
+        headers: { "User-Agent": "KinetixFitt/1.0" },
         signal: AbortSignal.timeout(7000),
       }),
     ]);

@@ -38,13 +38,13 @@ import {
  * generadas por IA y servidas desde /public/images/ejercicios.
  */
 const GROUP_IMAGES: Record<ExerciseGroup, string> = {
-  pecho: "/images/ejercicios/pecho.jpg",
-  espalda: "/images/ejercicios/espalda.jpg",
-  piernas: "/images/ejercicios/piernas.jpg",
-  hombros: "/images/ejercicios/hombros.jpg",
-  brazos: "/images/ejercicios/brazos.jpg",
-  core: "/images/ejercicios/core.jpg",
-  "full-body": "/images/ejercicios/full-body.jpg",
+  pecho: "/images/ejercicios/pecho-v2.jpg",
+  espalda: "/images/ejercicios/espalda-v2.jpg",
+  piernas: "/images/ejercicios/piernas-v2.jpg",
+  hombros: "/images/ejercicios/hombros-v2.jpg",
+  brazos: "/images/ejercicios/brazos-v2.jpg",
+  core: "/images/ejercicios/core-v2.jpg",
+  "full-body": "/images/ejercicios/full-body-v2.jpg",
 };
 
 const ANY_GROUP = "todos-los-grupos";

@@ -1,10 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Archivo } from "next/font/google";
 import "./globals.css";
 import { SITE_NAME, SITE_URL, organizationJsonLd } from "@/lib/seo";
 import { RegisterSW } from "@/components/pwa/register-sw";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+
+/** Display para títulos (h1-h3 vía CSS): grotesca atlética, tracking negativo. */
+const archivo = Archivo({ subsets: ["latin"], variable: "--font-archivo", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -29,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b1315",
+  themeColor: "#0b0b0b",
   width: "device-width",
   initialScale: 1,
 };
@@ -37,7 +40,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const orgJsonLd = JSON.stringify(organizationJsonLd());
   return (
-    <html lang="es" className={inter.variable}>
+    <html lang="es" className={`${inter.variable} ${archivo.variable}`}>
       <body className="font-sans">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: orgJsonLd }} />
         <RegisterSW />

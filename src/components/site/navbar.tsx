@@ -83,11 +83,6 @@ export function Navbar() {
       )}
     >
       <ScrollProgress />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 transition-opacity duration-300 data-[on=true]:opacity-100"
-        data-on={scrolled}
-      />
       <nav
         aria-label="Navegación principal"
         className={cn(
@@ -121,7 +116,7 @@ export function Navbar() {
                 {view === item.view ? (
                   <span
                     aria-hidden
-                    className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-primary shadow-[0_0_8px_oklch(0.885_0.211_124/0.7)]"
+                    className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-primary"
                   />
                 ) : null}
               </button>

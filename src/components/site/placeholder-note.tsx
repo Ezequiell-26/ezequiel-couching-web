@@ -1,3 +1,4 @@
+import { PenLine } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Nota de placeholder visible y honesta para datos pendientes del negocio. */
@@ -10,7 +11,7 @@ export function PlaceholderNote({ children, className }: { children: React.React
         className,
       )}
     >
-      <span aria-hidden className="mr-1">✎</span>
+      <PenLine aria-hidden className="mr-1.5 inline size-3.5 -translate-y-px" />
       {children}
     </div>
   );

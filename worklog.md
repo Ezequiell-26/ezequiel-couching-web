@@ -578,3 +578,23 @@ Work Log:
 Stage Summary:
 - Toda la web (público + Mi Zona + herramientas) con el estilo profesional dark teal + esmeralda pedido (referencia FitSync), sin tocar lógica ni JSX: cambio a nivel tokens + assets de marca recoloreados in-place.
 - Sin datos de prueba (BD en 0). PENDIENTE: push a GitHub (token ghp_ sigue activo).
+---
+Task ID: 29
+Agent: main (Z.ai Code)
+Task: Restyling "profesional premium" — eliminar el look "página de IA" del restyling FitSync (feedback del usuario) y llevar la web a identidad editorial premium
+
+Work Log:
+- Diagnóstico del feedback "se ve muy página de IA": la Task 28 (teal + mint + glows + radius 1rem) cae de lleno en la estética genérica de outputs IA (superficies con tinte teal, acento mint #3ddc97 típico, halos radiales neón, sombras glow). Decisiones: superficies NEUTRAS near-black sin tinte, un único acento = volt #bdef27 (identidad original de marca del logo del usuario), tipografía display Archivo (h1-h3 vía CSS, tracking -0.02em), radios 1rem→0.625rem, bordes hairline.
+- FASE 1 tokens (globals.css): background oklch(0.155 0 0) neutro, card/popover/muted/accent/border/input en escala de grises neutra, --primary #bdef27 con foreground negro, --ring volt, selection volt/28, focus-visible volt, scrollbar gris neutro. Utilidades redefinidas: .glow-volt = sombra ambiental muy contenida (sin neón), .bg-brand-halo = luz neutra 3.5% (profundidad sutil). Nuevo --font-display en @theme (Archivo→Inter fallback) + regla global h1,h2,h3 { font-family: var(--font-display); letter-spacing: -0.02em }.
+- layout.tsx: fuente Archivo (next/font/google, variable --font-archivo) junto a Inter; themeColor #0b1315→#0b0b0b. manifest.ts background_color/theme_color y sw.js offline bg → #0b0b0b.
+- Assets: git checkout a1eaef0 -- public/brand/{og,icon-512,icon-512-rounded,icon-192,apple-touch-icon,logo-mark}.png (identidad volt exacta pre-Task 28; Task 28 los había recoloreado a mint). Las 7 coberturas de ejercicios recoloreadas a volt EXACTO con PIL (H=53,S=213 manteniendo V para preservar sombreado; antes verde spring).
+- Caché de imágenes: el browser y el optimizador servían las coberturas viejas (mint) — descartados .glow neón en button default, indicador activo del navbar (shadow 0_0_8px oklch volt) y hairline con gradiente del navbar. Renombradas las 7 coberturas a *-v2.jpg + actualizado GROUP_IMAGES en biblioteca-view y hero (cache-busting real para todos los clientes; verificado con canvas: figura RGB(153,193,32) = volt en browser).
+- Hero rediseñado "editorial premium": layout 2 columnas (izquierda: kicker mono con tick volt + H1 display enorme + subcopy + CTAs + franja de métricas reales 200+/4/0 con divisores hairline y tabular-nums; derecha: full-body-v2.jpg con marco offset volt/40 + caption "Biblioteca de ejercicios"). Mobile: imagen bajo el texto, sin centrar. Sin pill-badge, sin halo. Stats reales y verificables (biblioteca 200, fórmulas Mifflin-St Jeor/Epley/Deurenberg/US Navy, sin permanencia).
+- placeholder-note: ✎ unicode → PenLine de lucide.
+- Verificación: lint 0/0 · tsc 0 · E2E browser (home hero/TrustBar/secciones/footer, coaching, calculadoras IMC 78kg/178cm → "24,6" exacto, Mi Zona #/mi-zona con AuthGate, biblioteca con cards volt, 404 estilizado) · 320px: home y mi-zona con sw==cw==320 (único "offender" = marca de agua EC absoluta con overflow-hidden, falso positivo) · consola sin errores · dev.log sin líneas hydrat|error|warn · BD verificada en 0 en las 9 tablas (solo cálculo IMC client-side, sin datos).
+- Nota: la ruta hash de Mi Zona es #/mi-zona (no #/zona); corregido durante la verificación.
+
+Stage Summary:
+- Web con identidad "premium editorial": negro neutro + volt #bdef27 medido, tipografía display Archivo, hairlines, radios contenidos, cero glows/halos neón (eliminada la estética "página de IA" del restyling FitSync sin tocar lógica ni features).
+- Assets de marca 100% consistentes en volt (brand + 7 coberturas) con cache-busting v2.
+- 35+ vistas intactas funcionalmente (token-level + hero/navbar/button); BD vacía; PENDIENTE: push (token ghp_ sigue activo) y revocación del token por parte del usuario.

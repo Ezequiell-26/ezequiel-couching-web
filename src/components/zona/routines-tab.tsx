@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CalendarDays, ChevronDown, Copy, Loader2, Pencil, Plus, Sparkles, SquarePen, Trash2, X } from "lucide-react";
+import { CalendarArrowDown, CalendarDays, ChevronDown, Copy, Loader2, Pencil, Plus, Sparkles, SquarePen, Trash2, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { EmptyState, ErrorState } from "@/components/site/states";
 import { RoutineForm } from "@/components/zona/routine-form";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/analytics";
+import { downloadWeekPlanIcs, ICS_DEFAULT_HOUR, ICS_HOUR_OPTIONS } from "@/lib/ics-export";
 import {
   EQUIPMENT_LABELS,
   GOAL_LABELS,
@@ -328,6 +329,11 @@ function WeeklyPlan({ routines, onActionError }: { routines: RoutineDTO[]; onAct
   const [assignTarget, setAssignTarget] = React.useState<number | null>(null);
   const [pickRoutine, setPickRoutine] = React.useState("");
   const [pickDay, setPickDay] = React.useState("1");
+  // Exportar el plan a calendario (.ics, Task 36-c): selector de hora + confirmación.
+  const [icsOpen, setIcsOpen] = React.useState(false);
+  const [icsHour, setIcsHour] = React.useState(String(ICS_DEFAULT_HOUR));
+  const [icsBusy, setIcsBusy] = React.useState(false);
+  const assignedCount = schedule?.filter((s) => s.routineId != null).length ?? 0;
 
   // Solo rutinas activas: el API rechaza asignaciones de rutinas inactivas.
   const activeRoutines = React.useMemo(() => routines.filter((r) => r.active), [routines]);
@@ -422,6 +428,32 @@ function WeeklyPlan({ routines, onActionError }: { routines: RoutineDTO[]; onAct
     setAssignTarget(weekday);
   }
 
+  /** Exporta el plan vigente a .ics con la hora elegida; nunca lanza (la lib traga errores). */
+  async function handleIcsExport() {
+    if (!schedule || icsBusy) return;
+    setIcsBusy(true);
+    try {
+      const hour = Number(icsHour);
+      const ok = await downloadWeekPlanIcs(
+        schedule.map((s) => ({ weekday: s.weekday, routineName: s.routineTitle })),
+        hour,
+      );
+      if (ok) {
+        const skipped = schedule.length - assignedCount;
+        toast({
+          title: "Plan semanal exportado",
+          description: `Se agendaron ${assignedCount} ${assignedCount === 1 ? "día" : "días"} a las ${hour}:00.${skipped > 0 ? ` ${skipped} ${skipped === 1 ? "día" : "días"} sin rutina no se agendaron.` : ""}`,
+        });
+        track("zona_schedule_ics", { days: assignedCount, hour });
+        setIcsOpen(false);
+      } else {
+        toast({ title: "No pudimos generar el archivo", description: "Intentá de nuevo en un momento." });
+      }
+    } finally {
+      setIcsBusy(false);
+    }
+  }
+
   return (
     <Card>
       <CardContent className="p-4 sm:p-6">
@@ -502,6 +534,47 @@ function WeeklyPlan({ routines, onActionError }: { routines: RoutineDTO[]; onAct
             </ul>
             <p className="mt-2 text-[11px] text-muted-foreground sm:hidden">Deslizá la fila para ver los 7 días.</p>
             <p className="mt-1 text-[11px] text-muted-foreground">Se guarda en cuanto confirmás cada día.</p>
+
+            {/* ── Exportar a calendario (.ics, Task 36-c): solo con al menos un día con rutina ── */}
+            {assignedCount > 0 ? (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-h-11 sm:min-h-9"
+                  aria-expanded={icsOpen}
+                  disabled={icsBusy}
+                  onClick={() => setIcsOpen((v) => !v)}
+                >
+                  <CalendarArrowDown aria-hidden /> Agendar en mi calendario
+                </Button>
+                {icsOpen ? (
+                  <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-background/40 px-3 py-2">
+                    <Label htmlFor="zona-ics-hour" className="text-xs text-muted-foreground">Hora de inicio</Label>
+                    <Select
+                      id="zona-ics-hour"
+                      className="h-9 w-auto"
+                      value={icsHour}
+                      disabled={icsBusy}
+                      onChange={(e) => setIcsHour(e.target.value)}
+                    >
+                      {ICS_HOUR_OPTIONS.map((h) => (
+                        <option key={h} value={String(h)}>
+                          {h}:00
+                        </option>
+                      ))}
+                    </Select>
+                    <Button size="sm" className="min-h-9" disabled={icsBusy} onClick={() => void handleIcsExport()}>
+                      {icsBusy ? <Loader2 aria-hidden className="animate-spin" /> : null}
+                      {icsBusy ? "Generando…" : "Descargar .ics"}
+                    </Button>
+                    <Button variant="ghost" size="sm" className="min-h-9" disabled={icsBusy} onClick={() => setIcsOpen(false)}>
+                      Cancelar
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </>
         )}
       </CardContent>

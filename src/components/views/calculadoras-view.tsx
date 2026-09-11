@@ -32,11 +32,19 @@ import {
   type MacroGoal,
   type Sex,
 } from "@/lib/nutrition";
+import {
+  cooperCategory,
+  platesFor,
+  roundToPlate,
+  vo2Cooper,
+  type CooperCategory,
+} from "@/lib/barbell";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 /**
- * Calculadoras — 9 herramientas con fórmulas publicadas (ver src/lib/nutrition.ts).
+ * Calculadoras — 11 herramientas con fórmulas publicadas (ver src/lib/nutrition.ts
+ * y src/lib/barbell.ts).
  * 100% local: los datos introducidos no salen del navegador. Las fórmulas son
  * estimaciones de cribado, nunca un diagnóstico.
  */
@@ -51,6 +59,8 @@ const TABS = [
   { id: "ideal", label: "Peso ideal" },
   { id: "fc", label: "FC" },
   { id: "dots", label: "DOTS" },
+  { id: "discos", label: "Discos" },
+  { id: "vo2max", label: "VO2máx" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -62,6 +72,11 @@ function toNum(v: string): number {
 
 function fmt1(n: number): string {
   return new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 }).format(n);
+}
+
+/** Hasta 2 decimales: los discos de 1,25 kg no deben mostrarse como "1,3". */
+function fmtPlate(n: number): string {
+  return new Intl.NumberFormat("es-ES", { maximumFractionDigits: 2 }).format(n);
 }
 
 function NumberField({
@@ -470,6 +485,9 @@ function OneRmCalc() {
   }
 
   const PCTS = [95, 90, 85, 80, 75];
+  // Cargas de trabajo: % de 1RM redondeado al múltiplo de 2,5 más cercano
+  // (armable con discos estándar) vía roundToPlate() de src/lib/barbell.ts.
+  const WORK_PCTS = [50, 60, 70, 75, 80, 85, 90, 95];
 
   return (
     <Card>
@@ -521,6 +539,30 @@ function OneRmCalc() {
                 </tbody>
               </table>
             </div>
+
+            <p className="mt-6 text-xs font-medium uppercase tracking-wide text-muted-foreground">Cargas de trabajo</p>
+            <div className="mt-2 overflow-hidden rounded-lg border border-border/70">
+              <table className="w-full text-sm">
+                <caption className="sr-only">Cargas de trabajo por porcentaje del 1RM, redondeadas a discos de 2,5 kg</caption>
+                <thead>
+                  <tr className="border-b border-border/70 bg-background/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                    <th scope="col" className="px-3 py-2">% de 1RM</th>
+                    <th scope="col" className="px-3 py-2">kg</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {WORK_PCTS.map((p) => (
+                    <tr key={p} className="border-b border-border/50 last:border-0">
+                      <td className="px-3 py-2 font-medium tabular-nums">{p}%</td>
+                      <td className="px-3 py-2 tabular-nums text-muted-foreground">{fmtPlate(roundToPlate((res.average * p) / 100, 2.5))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Valores redondeados a discos de 2,5 kg (el múltiplo más cercano), para que cada carga sea armable en la barra.
+            </p>
           </CalcResult>
         ) : null}
 
@@ -989,6 +1031,272 @@ function DotsCalc() {
   );
 }
 
+/* j) Discos — armado de barra ---------------------------------------------- */
+
+// Barras olímpicas estándar de gimnasio (los discos del set son los clásicos).
+const BARBELL_OPTIONS = [
+  { kg: 20, label: "Olímpica 20 kg (hombres)" },
+  { kg: 15, label: "Olímpica 15 kg (mujeres)" },
+] as const;
+
+// Set estándar del gimnasio, todo marcado por defecto (se puede destildar).
+const PLATE_SET = [25, 20, 15, 10, 5, 2.5, 1.25];
+
+function DiscosCalc() {
+  const [barKg, setBarKg] = React.useState(20);
+  const [objetivo, setObjetivo] = React.useState("");
+  const [sel, setSel] = React.useState<Record<number, boolean>>(() =>
+    Object.fromEntries(PLATE_SET.map((p) => [p, true])),
+  );
+  const [res, setRes] = React.useState<{
+    side: number[];
+    leftover: number;
+    error: string | null;
+    barKg: number;
+  } | null>(null);
+
+  function calcular(e: React.FormEvent) {
+    e.preventDefault();
+    const t = toNum(objetivo);
+    if (!Number.isFinite(t) || t < 20 || t > 500) {
+      errorToast("Ingresá un peso objetivo entre 20 y 500 kg.");
+      return;
+    }
+    const r = platesFor(t, barKg, PLATE_SET.filter((p) => sel[p]));
+    setRes({ ...r, barKg });
+    if (r.error === null) track("calc_discos");
+  }
+
+  const sideSum = res ? res.side.reduce((a, b) => a + b, 0) : 0;
+  const totalBarra = res ? res.barKg + 2 * sideSum : 0;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Discos para el peso objetivo</CardTitle>
+        <CardDescription>
+          Qué discos cargar por lado para llegar al peso buscado. El algoritmo prueba del disco más pesado al más liviano, como se
+          arma una barra real: cada disco elegido va a ambos lados, por eso el peso a cargar por lado es la mitad del total.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={calcular} className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="discos-barra">Barra</Label>
+            <Select
+              id="discos-barra"
+              value={String(barKg)}
+              onChange={(e) => setBarKg(Number(e.target.value))}
+              className="h-11"
+            >
+              {BARBELL_OPTIONS.map((b) => (
+                <option key={b.kg} value={b.kg}>
+                  {b.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <NumberField
+            id="discos-objetivo"
+            label="Peso objetivo"
+            unit="kg"
+            value={objetivo}
+            onChange={setObjetivo}
+            min={20}
+            max={500}
+            placeholder="100"
+          />
+          <fieldset className="space-y-1.5 sm:col-span-2">
+            <legend className="text-sm font-medium leading-none text-foreground/90">Discos disponibles</legend>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {PLATE_SET.map((p) => (
+                <label
+                  key={p}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors",
+                    sel[p] ? "border-primary/50 bg-primary/10 text-foreground" : "border-border bg-card text-muted-foreground",
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    className="accent-primary"
+                    checked={sel[p]}
+                    onChange={(e) => setSel((prev) => ({ ...prev, [p]: e.target.checked }))}
+                  />
+                  <span className="tabular-nums">{fmtPlate(p)} kg</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <div className="sm:col-span-2">
+            <Button type="submit" size="lg">Calcular discos</Button>
+          </div>
+        </form>
+
+        {res ? (
+          res.error ? (
+            <p className="mt-5 rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground">{res.error}</p>
+          ) : (
+            <CalcResult>
+              <p className="text-sm text-muted-foreground">Peso total en la barra</p>
+              <p className="text-4xl font-bold tracking-tight tabular-nums">
+                {fmtPlate(totalBarra)} <span className="text-sm font-normal text-muted-foreground">kg</span>
+              </p>
+              {res.side.length > 0 ? (
+                <>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    Por lado:{" "}
+                    <span className="font-medium text-foreground tabular-nums">
+                      {res.side.map((p) => fmtPlate(p)).join(" + ")} kg
+                    </span>
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {res.side.map((p, i) => (
+                      <Badge key={`${p}-${i}`} className="tabular-nums">
+                        {fmtPlate(p)} kg
+                      </Badge>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Con el set marcado no entra ningún disco por lado.
+                </p>
+              )}
+              {res.leftover > 0 ? (
+                <p className="mt-4 rounded-lg border border-border/70 bg-background/40 px-3 py-2 text-sm text-muted-foreground">
+                  No se puede armar exacto con ese set: faltan {fmtPlate(res.leftover)} kg por lado ({fmtPlate(res.leftover * 2)} kg
+                  en total).
+                </p>
+              ) : null}
+            </CalcResult>
+          )
+        ) : null}
+
+        <LimitationNote>Barra estándar; verificá la barra real de tu gimnasio.</LimitationNote>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* k) VO2máx — test de Cooper ----------------------------------------------- */
+
+/**
+ * Rango de VO2máx equivalente a la banda de distancia, derivado con la MISMA
+ * fórmula de Cooper (no es un dato de fuente: es la fórmula citada aplicada a
+ * los umbrales verificados).
+ */
+function vo2RangeText(cat: CooperCategory): string {
+  if (cat.to === null) return `≥ ${fmt1(vo2Cooper(cat.from))}`;
+  if (cat.from === 0) return `< ${fmt1(vo2Cooper(cat.to))}`;
+  return `${fmt1(vo2Cooper(cat.from))}–${fmt1(vo2Cooper(cat.to))}`;
+}
+
+function Vo2MaxCalc() {
+  const [profile] = React.useState(() => loadProfile());
+  const [dist, setDist] = React.useState("");
+  const [sex, setSex] = React.useState<Sex>(profile?.sex ?? "hombre");
+  const [edad, setEdad] = React.useState(profile ? String(profile.age) : "");
+  const [res, setRes] = React.useState<{ vo2: number; cat: CooperCategory | null } | null>(null);
+
+  function calcular(e: React.FormEvent) {
+    e.preventDefault();
+    const d = toNum(dist);
+    const a = toNum(edad);
+    if (!Number.isFinite(d) || d < 800 || d > 6000) {
+      errorToast("Ingresá la distancia recorrida en metros, entre 800 y 6000.");
+      return;
+    }
+    if (!Number.isFinite(a) || a < 10 || a > 100) {
+      errorToast("Ingresá una edad entre 10 y 100 años.");
+      return;
+    }
+    setRes({ vo2: vo2Cooper(d), cat: cooperCategory(d, sex, a) });
+    track("calc_vo2max");
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>VO2máx estimado — test de Cooper (12 minutos)</CardTitle>
+        <CardDescription>
+          Fórmula de Cooper (JAMA, 1968): VO2máx = (distancia − 504,9) / 44,73 ml/kg/min, aplicada a la distancia que recorras en
+          12 minutos.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={calcular} className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="vo2-dist">
+              Distancia en 12 minutos
+              <span className="font-normal text-muted-foreground"> · metros</span>
+            </Label>
+            <Input
+              id="vo2-dist"
+              type="number"
+              inputMode="numeric"
+              min={800}
+              max={6000}
+              step="1"
+              placeholder="p. ej. 2800"
+              value={dist}
+              onChange={(e) => setDist(e.target.value)}
+              className="h-11"
+              aria-describedby="vo2-dist-hint"
+            />
+            <p id="vo2-dist-hint" className="text-xs text-muted-foreground">
+              Corré/caminá lo máximo posible en 12 minutos e ingresá la distancia.
+            </p>
+          </div>
+          <SexField id="vo2-sex" value={sex} onChange={setSex} />
+          <NumberField id="vo2-edad" label="Edad" unit="años" value={edad} onChange={setEdad} min={10} max={100} step="1" placeholder="30" />
+          <div className="sm:col-span-2">
+            <Button type="submit" size="lg">Calcular VO2máx</Button>
+          </div>
+        </form>
+
+        {res ? (
+          <CalcResult>
+            <p className="text-sm text-muted-foreground">VO2máx estimado — (distancia − 504,9) / 44,73</p>
+            <p className="text-4xl font-bold tracking-tight tabular-nums">
+              {fmt1(res.vo2)} <span className="text-sm font-normal text-muted-foreground">ml/kg/min</span>
+            </p>
+            {res.cat ? (
+              <>
+                <div className="mt-3">
+                  <Badge>{res.cat.label}</Badge>
+                </div>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Banda Cooper ({sex === "hombre" ? "hombres" : "mujeres"}, {res.cat.band}):{" "}
+                  <span className="font-medium text-foreground tabular-nums">
+                    {res.cat.from === 0
+                      ? `menos de ${res.cat.to} m`
+                      : res.cat.to === null
+                        ? `más de ${res.cat.from} m`
+                        : `${res.cat.from}–${res.cat.to} m`}
+                  </span>{" "}
+                  en 12 min ≈ {vo2RangeText(res.cat)} ml/kg/min (equivalente con la misma fórmula).
+                </p>
+              </>
+            ) : (
+              <p className="mt-3 rounded-lg border border-border/70 bg-background/40 px-3 py-2 text-sm text-muted-foreground">
+                Para 60 años o más no mostramos categoría: esa franja de la tabla de Cooper no se pudo verificar en dos fuentes
+                independientes. Compará tu valor con tablas publicadas de referencia.
+              </p>
+            )}
+          </CalcResult>
+        ) : null}
+
+        <LimitationNote>
+          Fórmula de Cooper (JAMA, 1968). Clasificación por sexo y edad verificada en tres fuentes independientes
+          (palabraderunner.com, planetatriatlon.com, corredorespopulares.es; franjas de menos de 30 a 59 años): las tablas varían
+          levemente entre ediciones. Estimación de campo: no reemplaza una medición de laboratorio (espirometría).
+        </LimitationNote>
+      </CardContent>
+    </Card>
+  );
+}
+
 /* Vista hub ---------------------------------------------------------------- */
 
 export function CalculadorasView() {
@@ -999,7 +1307,7 @@ export function CalculadorasView() {
       <PageHeader
         eyebrow="Herramientas"
         title="Calculadoras fitness"
-        description="Nueve calculadoras con fórmulas publicadas (Mifflin-St Jeor, Navy, Epley, Tanaka…). Todos los cálculos ocurren en tu navegador: no guardamos ni enviamos tus datos."
+        description="Once calculadoras con fórmulas publicadas (Mifflin-St Jeor, Navy, Epley, Cooper, Tanaka…). Todos los cálculos ocurren en tu navegador: no guardamos ni enviamos tus datos."
         breadcrumb={[{ label: "Inicio", href: "#/" }, { label: "Calculadoras" }]}
       />
       <Container className="py-8 sm:py-10">
@@ -1040,6 +1348,8 @@ export function CalculadorasView() {
           {active === "ideal" ? <IdealWeightCalc /> : null}
           {active === "fc" ? <HrCalc /> : null}
           {active === "dots" ? <DotsCalc /> : null}
+          {active === "discos" ? <DiscosCalc /> : null}
+          {active === "vo2max" ? <Vo2MaxCalc /> : null}
         </div>
       </Container>
     </>

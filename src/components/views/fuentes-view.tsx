@@ -106,6 +106,12 @@ const STACK: Source[] = [
   },
   { name: "Prisma", role: "ORM", license: "Apache-2.0", url: "https://prisma.io" },
   { name: "sharp", role: "Optimización de imágenes", license: "Apache-2.0", url: "https://sharp.pixelplumbing.com" },
+  {
+    name: "ics",
+    role: "Exportar el plan semanal a calendario (.ics)",
+    license: "ISC",
+    url: "https://github.com/adamgibbons/ics",
+  },
 ];
 
 /* Sección 3 — Evaluadas y no integradas (criterio de descarte). */

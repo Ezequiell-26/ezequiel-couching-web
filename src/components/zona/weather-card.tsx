@@ -21,6 +21,8 @@ import {
   RefreshCw,
   Search,
   Sun,
+  Sunrise,
+  Sunset,
   TriangleAlert,
   Wind,
   type LucideIcon,
@@ -50,8 +52,24 @@ interface AirQualityData {
 }
 
 interface WeatherData {
-  current: { temp: number; apparent: number; humidity: number; windKmh: number; code: number; precip: number };
-  daily: { precipProb: number | null; tMax: number; tMin: number };
+  current: {
+    temp: number;
+    apparent: number;
+    humidity: number;
+    windKmh: number;
+    code: number;
+    precip: number;
+    uv?: number | null;
+    uvBand?: { band: string; label: string } | null;
+  };
+  daily: {
+    precipProb: number | null;
+    tMax: number;
+    tMin: number;
+    sunrise?: string | null;
+    sunset?: string | null;
+    uvMax?: number | null;
+  };
   verdict: { level: "great" | "ok" | "warn" | "bad"; label: string };
   airQuality?: AirQualityData | null;
 }
@@ -98,6 +116,14 @@ function airBadgeClass(band: string): string {
 }
 
 const AIR_BAD_BANDS = new Set(["poor", "very-poor", "extremely-poor"]);
+
+/** Clase del badge UV según banda OMS (destructive desde alta, como warn/bad). */
+function uvBadgeClass(band: string): string {
+  if (band === "high" || band === "very-high" || band === "extreme") {
+    return "border-destructive/40 bg-destructive/10 text-destructive";
+  }
+  return "text-muted-foreground"; // low / moderate
+}
 
 function loadPlace(): Place {
   if (typeof window === "undefined") return DEFAULT_PLACE;
@@ -328,11 +354,42 @@ export function WeatherCard() {
                   Aire: {data.airQuality.bandLabel} · EAQI {data.airQuality.euAqi}
                 </Badge>
               ) : null}
+              {data.current.uv != null ? (
+                <Badge
+                  variant="secondary"
+                  className={`gap-1 ${data.current.uvBand ? uvBadgeClass(data.current.uvBand.band) : ""}`}
+                >
+                  <Sun aria-hidden className="size-3 shrink-0" />
+                  UV {data.current.uv}
+                  {data.current.uvBand ? ` · ${data.current.uvBand.label}` : ""}
+                  {data.daily.uvMax != null ? ` · máx ${data.daily.uvMax}` : ""}
+                </Badge>
+              ) : null}
             </div>
+
+            {data.daily.sunrise && data.daily.sunset ? (
+              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1">
+                  <Sunrise aria-hidden className="size-3 shrink-0" />
+                  Amanecer {data.daily.sunrise}
+                </span>
+                <span aria-hidden>·</span>
+                <span className="inline-flex items-center gap-1">
+                  <Sunset aria-hidden className="size-3 shrink-0" />
+                  Atardecer {data.daily.sunset}
+                </span>
+              </div>
+            ) : null}
 
             {data.airQuality && AIR_BAD_BANDS.has(data.airQuality.band) ? (
               <p className="mt-2 text-xs text-muted-foreground">
                 Calidad del aire mala: considerá entrenar adentro.
+              </p>
+            ) : null}
+
+            {data.current.uv != null && data.current.uv >= 6 ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Índice UV alto: usá protección si entrenás al mediodía.
               </p>
             ) : null}
           </>

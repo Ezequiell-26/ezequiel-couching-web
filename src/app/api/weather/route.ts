@@ -17,6 +17,9 @@ try {
 /** Veredicto determinista de entrenabilidad al aire libre. */
 type Verdict = { level: "great" | "ok" | "warn" | "bad"; label: string };
 
+/** Banda OMS del índice UV (escala pública) + etiqueta es-AR. */
+type UvBand = { band: string; label: string };
+
 /** Calidad del aire actual (EAQI europeo + PM) o null si la sub-llamada falló. */
 type AirQuality = {
   euAqi: number;
@@ -35,8 +38,17 @@ type WeatherPayload = {
     windKmh: number;
     code: number;
     precip: number;
+    uv: number | null;
+    uvBand: UvBand | null;
   };
-  daily: { precipProb: number | null; tMax: number; tMin: number };
+  daily: {
+    precipProb: number | null;
+    tMax: number;
+    tMin: number;
+    sunrise: string | null;
+    sunset: string | null;
+    uvMax: number | null;
+  };
   verdict: Verdict;
   airQuality: AirQuality | null;
 };
@@ -112,11 +124,15 @@ type ForecastJson = {
     precipitation?: unknown;
     weather_code?: unknown;
     wind_speed_10m?: unknown;
+    uv_index?: unknown;
   };
   daily?: {
     precipitation_probability_max?: unknown;
     temperature_2m_max?: unknown;
     temperature_2m_min?: unknown;
+    sunrise?: unknown;
+    sunset?: unknown;
+    uv_index_max?: unknown;
   };
 };
 
@@ -125,6 +141,23 @@ function firstDaily(v: unknown): number | null {
   if (!Array.isArray(v) || v.length === 0) return null;
   const n = num(v[0]);
   return Number.isFinite(n) ? n : null;
+}
+
+/** Primer elemento string de una serie daily (o null si falta/no es string). */
+function firstDailyStr(v: unknown): string | null {
+  if (!Array.isArray(v) || v.length === 0) return null;
+  return typeof v[0] === "string" ? v[0] : null;
+}
+
+/** "HH:mm" (24 h) desde el ISO local de Open-Meteo ("2026-09-11T07:12") o null. */
+function hhmm(v: string | null): string | null {
+  if (v === null) return null;
+  const m = /^\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})/.exec(v.trim());
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h > 23 || min > 59) return null;
+  return `${m[1]}:${m[2]}`;
 }
 
 /* Parseo seguro de Open-Meteo Air Quality ---------------------------------- */
@@ -146,6 +179,16 @@ function aqiBand(euAqi: number): { band: string; bandLabel: string } {
   if (euAqi <= 80) return { band: "poor", bandLabel: "Mala" };
   if (euAqi <= 100) return { band: "very-poor", bandLabel: "Muy mala" };
   return { band: "extremely-poor", bandLabel: "Extremadamente mala" };
+}
+
+/** Escala OMS del índice UV (estándar público): 0–2 Bajo … ≥11 Extremo. */
+function uvBand(v: number | null): UvBand | null {
+  if (v === null) return null;
+  if (v <= 2) return { band: "low", label: "Bajo" };
+  if (v <= 5) return { band: "moderate", label: "Moderado" };
+  if (v <= 7) return { band: "high", label: "Alto" };
+  if (v <= 10) return { band: "very-high", label: "Muy alto" };
+  return { band: "extreme", label: "Extremo" };
 }
 
 /** AirQuality desde el JSON upstream, o null sin EAQI numérico (nunca lanza). */
@@ -217,8 +260,8 @@ export async function GET(req: Request) {
     const forecastUrl =
       `https://api.open-meteo.com/v1/forecast?latitude=${lat2}` +
       `&longitude=${lon2}` +
-      `&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m` +
-      `&daily=precipitation_probability_max,temperature_2m_max,temperature_2m_min` +
+      `&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,uv_index` +
+      `&daily=precipitation_probability_max,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max` +
       `&forecast_days=1&timezone=auto`;
     const airUrl =
       `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat2}` +
@@ -255,6 +298,15 @@ export async function GET(req: Request) {
     const precipProb = firstDaily(daily.precipitation_probability_max);
     const tMax = firstDaily(daily.temperature_2m_max);
     const tMin = firstDaily(daily.temperature_2m_min);
+
+    // UV y sol con degradación pieza a pieza: si un campo nuevo no viene o
+    // viene inválido queda null (nunca afecta al 502 de datos esenciales).
+    const uvRaw = num(cur.uv_index);
+    const uv = Number.isFinite(uvRaw) ? roundInt(uvRaw) : null;
+    const uvMaxRaw = firstDaily(daily.uv_index_max);
+    const uvMax = uvMaxRaw === null ? null : roundInt(uvMaxRaw);
+    const sunrise = hhmm(firstDailyStr(daily.sunrise));
+    const sunset = hhmm(firstDailyStr(daily.sunset));
 
     // Datos esenciales ausentes = respuesta upstream inutilizable → 502 honesto.
     if (
@@ -300,11 +352,16 @@ export async function GET(req: Request) {
         windKmh: roundInt(windKmh),
         code: roundInt(code),
         precip: round1(precip),
+        uv,
+        uvBand: uvBand(uv),
       },
       daily: {
         precipProb,
         tMax: roundInt(tMax),
         tMin: roundInt(tMin),
+        sunrise,
+        sunset,
+        uvMax,
       },
       verdict: verdictFor(round1(precip), precipProb, roundInt(apparent)),
       airQuality,

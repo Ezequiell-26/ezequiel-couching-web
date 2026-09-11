@@ -5,11 +5,12 @@
  * sobre TheMealDB (API pública gratuita, contenido en inglés). La API propia
  * (/api/recipes) normaliza y cachea el upstream; acá solo consumimos esa ruta
  * relativa. Cada card abre un diálogo con ingredientes, medidas e
- * instrucciones reales de TheMealDB.
+ * instrucciones reales de TheMealDB. Task 37-b: botón "Sorprendeme" que trae
+ * una receta aleatoria (mode=random) y la muestra en el mismo diálogo.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChefHat, ExternalLink, Search } from "lucide-react";
+import { ChefHat, Dices, ExternalLink, Loader2, Search } from "lucide-react";
 import { PageHeader } from "@/components/site/page-header";
 import { Container } from "@/components/site/container";
 import { EmptyState, ErrorState, LoadingState, Skeleton } from "@/components/site/states";
@@ -18,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Input, Label } from "@/components/ui/input";
+import { toast } from "@/components/ui/toaster";
 import { track } from "@/lib/analytics";
 
 type MealSummary = {
@@ -67,6 +69,7 @@ export function RecetasView() {
   const [categories, setCategories] = useState<CategoriesState>({ status: "loading" });
   const [selected, setSelected] = useState<MealSummary | null>(null);
   const [detail, setDetail] = useState<DetailState>({ status: "loading" });
+  const [randomLoading, setRandomLoading] = useState(false);
 
   // Debounce 450 ms + descarte de respuestas obsoletas (patrón del contador).
   const searchTimer = useRef<number | null>(null);
@@ -241,6 +244,44 @@ export function RecetasView() {
     setDetail({ status: "loading" });
   }
 
+  /* "Sorprendeme": receta aleatoria (mode=random, sin caché). Reusa el
+     mismo diálogo del detalle: el resumen se deriva del detalle recibido
+     (la API mapea con el mismo shape que el lookup por id) y el cuerpo
+     llega ya cargado. Fracasos: toast honesto, sin tocar la búsqueda. */
+  async function onSurprise() {
+    if (randomLoading) return;
+    setRandomLoading(true);
+    try {
+      const res = await fetch("/api/recipes?mode=random");
+      const json = (await res.json()) as { meals?: MealDetail[]; error?: string };
+      const meal = Array.isArray(json.meals) ? json.meals[0] : undefined;
+      if (!res.ok || !meal) {
+        toast({
+          title: "No pudimos traer una receta",
+          description: "Intentá de nuevo en un momento.",
+          variant: "error",
+        });
+        return;
+      }
+      setSelected({
+        id: meal.id,
+        name: meal.name,
+        category: meal.category,
+        thumb: meal.thumb,
+      });
+      setDetail({ status: "loaded", meal });
+      track("recipes_random", { id: meal.id });
+    } catch {
+      toast({
+        title: "No pudimos traer una receta",
+        description: "Intentá de nuevo en un momento.",
+        variant: "error",
+      });
+    } finally {
+      setRandomLoading(false);
+    }
+  }
+
   return (
     <>
       <PageHeader
@@ -254,20 +295,33 @@ export function RecetasView() {
         <Card className="p-4 sm:p-6">
           <div role="search" aria-label="Buscar recetas">
             <Label htmlFor="recetas-q">Buscar receta por nombre</Label>
-            <div className="relative mt-2">
-              <Search
-                aria-hidden
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-              />
-              <Input
-                id="recetas-q"
-                type="search"
-                value={q}
-                onChange={(e) => onQueryChange(e.target.value)}
-                placeholder="Ej.: chicken, pasta, soup…"
-                autoComplete="off"
-                className="pl-9"
-              />
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="relative min-w-0 flex-1">
+                <Search
+                  aria-hidden
+                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                />
+                <Input
+                  id="recetas-q"
+                  type="search"
+                  value={q}
+                  onChange={(e) => onQueryChange(e.target.value)}
+                  placeholder="Ej.: chicken, pasta, soup…"
+                  autoComplete="off"
+                  className="pl-9"
+                />
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => void onSurprise()}
+                disabled={randomLoading}
+                aria-label="Sorprendeme con una receta aleatoria"
+                className="min-h-11 shrink-0 rounded-lg"
+              >
+                {randomLoading ? <Loader2 aria-hidden className="animate-spin" /> : <Dices aria-hidden />}
+                Sorprendeme
+              </Button>
             </div>
           </div>
 

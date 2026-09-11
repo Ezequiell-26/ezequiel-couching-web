@@ -112,6 +112,12 @@ const STACK: Source[] = [
     license: "ISC",
     url: "https://github.com/adamgibbons/ics",
   },
+  {
+    name: "Photon (komoot)",
+    role: "Búsqueda de gimnasios (POIs de OpenStreetMap) en Mi Zona. Datos © OpenStreetMap contributors (ODbL).",
+    license: "MIT",
+    url: "https://github.com/komoot/photon",
+  },
 ];
 
 /* Sección 3 — Evaluadas y no integradas (criterio de descarte). */

@@ -77,6 +77,9 @@ interface WeatherData {
 type Place = Pick<GeoResult, "name" | "admin1" | "country" | "lat" | "lon">;
 
 const STORAGE_KEY = "ec_weather_city_v1";
+/** Evento DOM para avisar a otras cards de Mi Zona (p. ej. Gimnasios cerca,
+ *  Task 37-a) que la ciudad elegida cambió. Cross-tab llega vía "storage". */
+export const WEATHER_CITY_EVENT = "ec_weather_city_changed";
 /** Ciudad por defecto (la mayoría entrena en AMBA): primera visita con datos reales. */
 const DEFAULT_PLACE: Place = {
   name: "Buenos Aires",
@@ -217,6 +220,7 @@ export function WeatherCard() {
     } catch {
       /* almacenamiento no disponible */
     }
+    window.dispatchEvent(new Event(WEATHER_CITY_EVENT));
     setPicking(false);
     setQuery("");
     setSuggestions([]);

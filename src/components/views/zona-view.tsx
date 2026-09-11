@@ -17,6 +17,7 @@ import { ProgressTab } from "@/components/zona/progress-tab";
 import { AchievementsTab } from "@/components/zona/achievements-tab";
 import { HistoryTab } from "@/components/zona/history-tab";
 import { WeatherCard } from "@/components/zona/weather-card";
+import { GymsCard } from "@/components/zona/gyms-card";
 import {
   ZonaUnauthorized,
   fmtInt,
@@ -348,6 +349,7 @@ export function ZonaView() {
               {tab === "rutinas" ? (
                 <div className="space-y-6">
                   <WeatherCard />
+                  <GymsCard />
                   <RoutinesTab routines={routines!} onRefresh={refreshRoutines} onStartDay={startFromRoutine} onActionError={handleActionError} />
                 </div>
               ) : null}

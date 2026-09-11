@@ -60,8 +60,8 @@ const querySchema = z
       .regex(/^\d+$/, "El parámetro id debe ser un número.")
       .optional(),
     mode: z
-      .literal("categories", {
-        message: "El parámetro mode solo admite el valor categories.",
+      .enum(["categories", "random"], {
+        message: "El parámetro mode solo admite los valores categories o random.",
       })
       .optional(),
   })
@@ -72,7 +72,7 @@ const querySchema = z
     if (chosen.length > 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Usá un solo modo: texto (q), categoría, id o mode=categories.",
+        message: "Usá un solo modo: texto (q), categoría, id o mode (categories o random).",
       });
     }
   });
@@ -123,6 +123,12 @@ let categoriesCache: { at: number; categories: string[] } | null = null;
 /* Upstream: TheMealDB (API pública, test key "1") -------------------------- */
 
 const THE_MEAL_DB = "https://www.themealdb.com/api/json/v1/1";
+
+// Última receta random servida (id): dedupe best-effort de repeticiones
+// consecutivas (solo contra la respuesta inmediatamente anterior, con un
+// reintento; NO reemplaza a la aleatoriedad del upstream). Variable módulo:
+// válida por proceso, sin persistencia.
+let lastRandomMealId: number | null = null;
 
 async function fetchTheMealDB(path: string): Promise<unknown> {
   const res = await fetch(`${THE_MEAL_DB}/${path}`, {
@@ -245,6 +251,33 @@ export async function GET(req: Request) {
     try {
       const categories = await getCategories();
       return NextResponse.json({ categories });
+    } catch (error) {
+      console.error("[api/recipes]", error);
+      return NextResponse.json(
+        { error: "El servicio de recetas no está disponible ahora." },
+        { status: 502 },
+      );
+    }
+  }
+
+  /* Modo random: receta aleatoria de TheMealDB. Sin caché a propósito
+     (cada pedido debe poder devolver una receta distinta) y con el mismo
+     mapper de detalle que el lookup por id, para que el frontend reutilice
+     su diálogo sin cambios. Upstream sin resultados → { meals: [] } (200). */
+  if (mode === "random") {
+    try {
+      const fetchOne = async () => {
+        const json = (await fetchTheMealDB("random.php")) as {
+          meals?: unknown[] | null;
+        };
+        return mealDetail(Array.isArray(json.meals) ? json.meals[0] : null);
+      };
+      let meal = await fetchOne();
+      // Reintento único si repite la última servida; si vuelve a repetir, se
+      // acepta (el upstream es aleatorio y no hay más garantías).
+      if (meal && meal.id === lastRandomMealId) meal = await fetchOne();
+      if (meal) lastRandomMealId = meal.id;
+      return NextResponse.json({ meals: meal ? [meal] : [] });
     } catch (error) {
       console.error("[api/recipes]", error);
       return NextResponse.json(

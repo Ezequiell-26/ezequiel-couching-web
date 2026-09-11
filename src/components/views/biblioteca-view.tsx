@@ -2,13 +2,15 @@
 
 /**
  * Biblioteca de ejercicios (#/ejercicios, Task 24-b; filtro por músculo en Task 26-c).
- * Búsqueda + filtros por grupo/equipo/nivel/músculo primario sobre el dataset
- * estático de src/lib/content/exercises.ts (todo client-side, sin API). Cada
- * tarjeta abre un diálogo con músculos, ejecución paso a paso, consejos y CTA a Mi Zona.
+ * Facetas + búsqueda fuzzy con fuse.js (MIT, Task 34): tolera errores de tipeo
+ * ("senadilla" encuentra sentadillas) y busca también en los músculos. Todo
+ * client-side, sin API. Cada tarjeta abre un diálogo con músculos, ejecución
+ * paso a paso, consejos y CTA a Mi Zona.
  */
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import Fuse from "fuse.js";
 import { Dumbbell, Lightbulb, Search } from "lucide-react";
 import { PageHeader } from "@/components/site/page-header";
 import { Container } from "@/components/site/container";
@@ -152,6 +154,21 @@ export function BibliotecaView() {
   const [selected, setSelected] = useState<Exercise | null>(null);
   const navigate = useRouter((s) => s.navigate);
 
+  /** Índice fuzzy (fuse.js, MIT): nombre con más peso, músculos como apoyo. */
+  const fuse = useMemo(
+    () =>
+      new Fuse(EXERCISES, {
+        keys: [
+          { name: "name", weight: 0.65 },
+          { name: "primaryMuscles", weight: 0.25 },
+          { name: "secondaryMuscles", weight: 0.1 },
+        ],
+        threshold: 0.38,
+        ignoreLocation: true,
+      }),
+    [],
+  );
+
   /**
    * Opciones del filtro por músculo derivadas de los primaryMuscles REALES del
    * dataset (unique + sort): nunca hardcodeado, escala si el dataset crece.
@@ -165,15 +182,23 @@ export function BibliotecaView() {
   );
 
   const results = useMemo(() => {
+    // 1) Facetas sobre el dataset completo.
     const base = filterExercises({
-      q,
       group: group === ANY_GROUP ? undefined : group,
       equipment: equipment === ANY_EQUIPMENT ? undefined : equipment,
       level: level === ANY_LEVEL ? undefined : level,
     });
-    // El filtro por músculo primario se aplica encima del helper (aditivo, sin tocar exercises.ts).
-    return muscle === ANY_MUSCLE ? base : base.filter((e) => e.primaryMuscles.includes(muscle));
-  }, [q, group, equipment, level, muscle]);
+    const byMuscle = (e: Exercise) => muscle === ANY_MUSCLE || e.primaryMuscles.includes(muscle);
+
+    // 2) Query: fuzzy (tolera tipeo) recortada a lo que pasan las facetas;
+    //    sin query, el filtro exacto de siempre.
+    if (q.trim() === "") return base.filter(byMuscle);
+    const allowed = new Set(base.map((e) => e.id));
+    return fuse
+      .search(q.trim())
+      .map((r) => r.item)
+      .filter((e) => allowed.has(e.id) && byMuscle(e));
+  }, [q, group, equipment, level, muscle, fuse]);
 
   const hasFilters =
     q.trim() !== "" ||

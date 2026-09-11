@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ClipboardList, Dumbbell, History, LogOut, Trophy, TrendingUp } from "lucide-react";
+import { ClipboardList, Dumbbell, History, Loader2, LogOut, Share2, Trophy, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/site/page-header";
 import { Container } from "@/components/site/container";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { TrainEmpty, TrainTab } from "@/components/zona/train-tab";
 import { ProgressTab } from "@/components/zona/progress-tab";
 import { AchievementsTab } from "@/components/zona/achievements-tab";
 import { HistoryTab } from "@/components/zona/history-tab";
+import { WeatherCard } from "@/components/zona/weather-card";
 import {
   ZonaUnauthorized,
   fmtInt,
@@ -345,7 +346,10 @@ export function ZonaView() {
 
             <div role="tabpanel" aria-label={`Contenido de ${TABS.find((t) => t.id === tab)?.label}`}>
               {tab === "rutinas" ? (
-                <RoutinesTab routines={routines!} onRefresh={refreshRoutines} onStartDay={startFromRoutine} onActionError={handleActionError} />
+                <div className="space-y-6">
+                  <WeatherCard />
+                  <RoutinesTab routines={routines!} onRefresh={refreshRoutines} onStartDay={startFromRoutine} onActionError={handleActionError} />
+                </div>
               ) : null}
 
               {tab === "entrenar" ? (
@@ -403,10 +407,45 @@ function FinishSuccess({
     ? Math.max(1, Math.round((new Date(session.finishedAt).getTime() - new Date(session.startedAt).getTime()) / 60000))
     : null;
 
+  // Task 34: "Compartir resumen" renderiza la tarjeta como PNG (html-to-image,
+  // MIT, import dinámico para no pesar el bundle) y la descarga.
+  const shareRef = React.useRef<HTMLDivElement>(null);
+  const [sharing, setSharing] = React.useState(false);
+
+  async function share() {
+    const node = shareRef.current;
+    if (!node || sharing) return;
+    setSharing(true);
+    try {
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(node, { pixelRatio: 2, backgroundColor: "#071012" });
+      const slug =
+        session.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "") || "entrenamiento";
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `fitsync-${slug}-${new Date().toISOString().slice(0, 10)}.png`;
+      a.click();
+      toast({ title: "Imagen descargada", description: "Tu resumen quedó listo para compartir." });
+      track("zona_share_session", { prs: newPRs.length });
+    } catch {
+      toast({
+        title: "No pudimos generar la imagen",
+        description: "Probá de nuevo en un momento.",
+        variant: "error",
+      });
+    } finally {
+      setSharing(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <SuccessNote message="¡Entrenamiento completado! Tus series quedaron guardadas en tu progreso." />
 
+      <div ref={shareRef}>
       <Card>
         <CardContent className="p-4 sm:p-6">
           <h2 className="text-lg font-bold">{session.title}</h2>
@@ -445,8 +484,20 @@ function FinishSuccess({
               ))}
             </ul>
           )}
+
+          <p className="mt-5 border-t border-border/60 pt-3 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            FITSYNC · Training System
+          </p>
         </CardContent>
       </Card>
+      </div>
+
+      <div className="flex justify-center">
+        <Button variant="outline" onClick={() => void share()} disabled={sharing}>
+          {sharing ? <Loader2 aria-hidden className="animate-spin" /> : <Share2 aria-hidden />}
+          {sharing ? "Generando imagen…" : "Compartir resumen"}
+        </Button>
+      </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
         <Button size="lg" onClick={onGoProgress}>

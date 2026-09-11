@@ -598,3 +598,16 @@ Stage Summary:
 - Web con identidad "premium editorial": negro neutro + volt #bdef27 medido, tipografía display Archivo, hairlines, radios contenidos, cero glows/halos neón (eliminada la estética "página de IA" del restyling FitSync sin tocar lógica ni features).
 - Assets de marca 100% consistentes en volt (brand + 7 coberturas) con cache-busting v2.
 - 35+ vistas intactas funcionalmente (token-level + hero/navbar/button); BD vacía; PENDIENTE: push (token ghp_ sigue activo) y revocación del token por parte del usuario.
+---
+Task ID: 30
+Agent: main (Z.ai Code)
+Task: Rotación de token GitHub + guardado ("guarda la web") solicitado por el usuario
+
+Work Log:
+- El usuario emitió un token clásico NUEVO (ghp_...z0rj, enmascarado por seguridad) tras el aviso de revocación del anterior (ghp_...dzbo).
+- Configurado en el remote local: git remote set-url origin (el token vive SOLO en .git/config, que no se commitea ni pushea). Verificado con git grep que el token crudo NO aparece en ningún archivo trackeado.
+- Árbol limpio en 01ae3f4 (Task 29 premium editorial ya pusheada y verificada remote==local). Sin cambios de código pendientes.
+- Worklog actualizado y push de esta entrada como prueba de vida del token nuevo (ver ls-remote abajo).
+
+Stage Summary:
+- Remote origin pre-configurado con el token vigente: los próximos agentes pueden pushear directo con `git push origin main` (GIT_TERMINAL_PROMPT=0). Si el sandbox restaura un snapshot y pierde .git/config, pedir token nuevo al usuario y recordar revocar el anterior.

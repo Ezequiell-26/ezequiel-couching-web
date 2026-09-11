@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "Entrenamiento online: planes, seguimiento, calculadoras y contador de calorías.",
     start_url: "/",
     display: "standalone",
-    background_color: "#0b0b0e",
-    theme_color: "#0b0b0e",
+    background_color: "#0b1315",
+    theme_color: "#0b1315",
     icons: [
       { src: "/brand/icon-192.png", sizes: "192x192", type: "image/png" },
       { src: "/brand/icon-512.png", sizes: "512x512", type: "image/png" },

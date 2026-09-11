@@ -550,3 +550,31 @@ Stage Summary:
 - Repo GitHub sincronizado con TODO el trabajo (Tasks 24→27). Widget "Plan de hoy" (retención diaria), evolución de e1RM por ejercicio (gráfica accesible propia, sin dependencias nuevas), biblioteca de 200 ejercicios reales.
 - Estados del widget 100% verificados en browser real; endpoint trend 200/401/400 según contrato; E2E completo con datos reales sembrados y BD devuelta a 0.
 - PENDIENTE usuario: revocar el token ghp_...dzbo (sigue activo) y emitir uno nuevo si se van a seguir pusheando cambios.
+---
+Task ID: 28-restauracion
+Agent: main (Z.ai Code)
+Task: Recuperación del proyecto tras reset del sandbox + inicio de restyling "estilo FitSync" (dark teal + esmeralda)
+
+Work Log:
+- INCIDENTE: al comenzar Task 28 el workspace estaba restaurado a un snapshot viejo (HEAD en auto-commit 0883846): desaparecieron src/components/zona, src/app/api/zona, biblioteca-view, exercises.ts de 200, worklog de Tasks 25-27, imágenes de ejercicios; el remote origin fue eliminado de la config local y el dev server servía el código viejo (/api/products).
+- RECUPERACIÓN: backup de .env/Caddyfile/db a /tmp/backup-restore → git remote add origin → fetch → git reset --hard origin/main (a1eaef0, estado verificado de Task 27) → restauración de .env y Caddyfile → bun install (160 paquetes) → bunx prisma db push (16 tablas recreadas, 0 perfiles) → restart del dev server (el viejo quedó con estado mixto: 500 en / y /manifest.webmanifest) → verificación: HOME 200, exercise-trend 401 sin sesión, manifest 200.
+- Lección: el sandbox puede restaurar snapshots entre sesiones; el push a GitHub fue la red de seguridad — sin él se perdía todo.
+
+Stage Summary:
+- Proyecto restaurado 1:1 al estado a1eaef0 (Task 27 completa). BD vacía. Servidor sano.
+---
+Task ID: 28
+Agent: main (Z.ai Code)
+Task: Restyling completo al estilo "app fitness pro" (referencia FitSync del usuario): dark teal + esmeralda/mint
+
+Work Log:
+- DECISIÓN DE ALCANCE: el estilo FitSync (dark teal profundo + acento esmeralda + bordes sutiles + glows + radios suaves) se implementa a nivel de TOKENS, no tocando componente por componente — toda la app usa clases semánticas (bg-background, text-primary, stroke-primary...), así que un swap de paleta en globals.css recolorea las 35+ vistas sin riesgo funcional.
+- FASE 1 (globals.css): --background oklch(0.14 0.012 190) teal oscuro; superficies/card/popover/border/input con tinte teal (hue 190); --primary esmeralda mint oklch(0.84 0.17 162) ≈ #3ddc97 con foreground verde-negro; selection/focus/scrollbar/glow-volt/bg-brand-halo actualizados al mismo verde; --radius 0.625rem → 1rem (look más suave y redondeado, tipo mockup FitSync).
+- Colores de sistema: themeColor (layout.tsx), background/theme_color (manifest.ts) y fondo de la página offline (sw.js) → #0b1315.
+- FASE 2 (assets de marca): recolor programático con PIL (hue-shift +83°, solo píxeles con saturación>0.25) en og.png, icon-512, icon-512-rounded, icon-192, apple-touch-icon, logo-mark — el stripe/texto/punto volt pasaron a esmeralda conservando el diseño píxel a píxel (verificado visualmente). logo-full.png (blanco puro) y las 7 imágenes de ejercicios (ya eran verde esmeralda) intactas. Falsas alarmas descartadas: /brand/* sirve 200; los 404 de /og.png e /icon-512.png venían del manifest viejo cacheado por el navegador de pruebas.
+- Smoke E2E post-restyle: registro en Mi Zona (detectado: click con ref stale no dispara; click por eval funciona) → zona con 5 tabs + widget "Plan de hoy" empty state OK → calculadora IMC: 78kg/178cm → "24,6" exacto → biblioteca OK → 320px sw==cw==320 en home/mi-zona/calculadoras → agent-browser errors vacío. Captura fullpage "vacía" diagnosticada: los Reveal animan on-scroll (no disparan en captura fullpage); scrolleando de verdad las secciones renderizan completas (evidencia /tmp/restyle-mid.png).
+- Limpieza: perfil de prueba borrado → 9 tablas en 0. lint 0/0 · tsc 0 · HOME 200.
+
+Stage Summary:
+- Toda la web (público + Mi Zona + herramientas) con el estilo profesional dark teal + esmeralda pedido (referencia FitSync), sin tocar lógica ni JSX: cambio a nivel tokens + assets de marca recoloreados in-place.
+- Sin datos de prueba (BD en 0). PENDIENTE: push a GitHub (token ghp_ sigue activo).

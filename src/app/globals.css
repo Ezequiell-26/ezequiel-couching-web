@@ -2,31 +2,32 @@
 
 /*
  * EZEQUIEL COACHING — sistema visual
- * Fondo casi-negro #0b0b0e / acento volt #bdef27 (oklch 0.885 0.211 124).
+ * Estilo "app fitness pro" (referencia FitSync): superficies dark teal
+ * profundas + acento esmeralda/mint (oklch 0.84 0.17 162 ≈ #3ddc97).
  * Tema oscuro por diseño (marca fitness premium). Sin azul/índigo.
  */
 
 :root {
-  --background: oklch(0.16 0.005 285);
-  --foreground: oklch(0.97 0.002 285);
-  --card: oklch(0.2 0.006 285);
-  --card-foreground: oklch(0.97 0.002 285);
-  --popover: oklch(0.22 0.006 285);
-  --popover-foreground: oklch(0.97 0.002 285);
-  --primary: oklch(0.885 0.211 124);
-  --primary-foreground: oklch(0.16 0.02 124);
-  --secondary: oklch(0.25 0.006 285);
-  --secondary-foreground: oklch(0.97 0.002 285);
-  --muted: oklch(0.24 0.006 285);
-  --muted-foreground: oklch(0.68 0.008 285);
-  --accent: oklch(0.26 0.008 285);
-  --accent-foreground: oklch(0.97 0.002 285);
+  --background: oklch(0.14 0.012 190);
+  --foreground: oklch(0.97 0.005 175);
+  --card: oklch(0.175 0.014 190);
+  --card-foreground: oklch(0.97 0.005 175);
+  --popover: oklch(0.19 0.014 190);
+  --popover-foreground: oklch(0.97 0.005 175);
+  --primary: oklch(0.84 0.17 162);
+  --primary-foreground: oklch(0.15 0.04 170);
+  --secondary: oklch(0.23 0.016 190);
+  --secondary-foreground: oklch(0.97 0.005 175);
+  --muted: oklch(0.22 0.016 190);
+  --muted-foreground: oklch(0.72 0.015 180);
+  --accent: oklch(0.24 0.018 185);
+  --accent-foreground: oklch(0.97 0.005 175);
   --destructive: oklch(0.62 0.21 25);
   --destructive-foreground: oklch(0.98 0.005 25);
-  --border: oklch(0.29 0.008 285);
-  --input: oklch(0.26 0.008 285);
-  --ring: oklch(0.885 0.211 124);
-  --radius: 0.625rem;
+  --border: oklch(0.3 0.016 190);
+  --input: oklch(0.26 0.016 190);
+  --ring: oklch(0.84 0.17 162);
+  --radius: 1rem;
 }
 
 @theme inline {
@@ -73,7 +74,7 @@ body {
 }
 
 ::selection {
-  background: oklch(0.885 0.211 124 / 0.3);
+  background: oklch(0.84 0.17 162 / 0.3);
 }
 
 /* Scrollbar fina y discreta */
@@ -85,22 +86,22 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.32 0.01 285);
+  background: oklch(0.32 0.016 190);
   border-radius: 8px;
   border: 2px solid var(--background);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.42 0.012 285);
+  background: oklch(0.42 0.02 185);
 }
 
 /* Utilidades de marca */
 .glow-volt {
-  box-shadow: 0 0 24px oklch(0.885 0.211 124 / 0.35);
+  box-shadow: 0 0 24px oklch(0.84 0.17 162 / 0.35);
 }
 
 .bg-brand-halo {
   background:
-    radial-gradient(600px 300px at 50% 0%, oklch(0.885 0.211 124 / 0.08), transparent 70%);
+    radial-gradient(600px 300px at 50% 0%, oklch(0.84 0.17 162 / 0.08), transparent 70%);
 }
 
 .text-balance {
@@ -109,7 +110,7 @@ body {
 
 /* Foco visible accesible */
 :focus-visible {
-  outline: 2px solid oklch(0.885 0.211 124 / 0.8);
+  outline: 2px solid oklch(0.84 0.17 162 / 0.8);
   outline-offset: 2px;
 }
 

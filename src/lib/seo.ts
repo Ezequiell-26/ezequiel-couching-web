@@ -91,10 +91,20 @@ const VIEW_META: Record<ViewId, Meta> = {
     description:
       "Biblioteca de ejercicios con técnica paso a paso: músculos implicados, ejecución y consejos para pecho, espalda, piernas, hombros, brazos y core.",
   },
+  recetas: {
+    title: "Recetas — FITSYNC",
+    description:
+      "Recetas internacionales de TheMealDB (contenido en inglés): buscá por nombre o explorá por categoría, con ingredientes, medidas y preparación.",
+  },
   zona: {
     title: "Mi Zona de entrenamiento — FITSYNC",
     description:
       "Tu zona de entrenamiento personal: rutinas, sesiones guiadas y seguimiento adaptadas a tu objetivo y material.",
+  },
+  fuentes: {
+    title: "Fuentes de datos y open source — FITSYNC",
+    description:
+      "Créditos técnicos: qué bases de datos abiertas y qué software libre alimentan cada función de FITSYNC, y bajo qué licencia.",
   },
   contacto: {
     title: "Contacto — FITSYNC",

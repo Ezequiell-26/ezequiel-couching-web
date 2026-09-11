@@ -13,6 +13,7 @@ type FoodSearchResult = {
   protein: number;
   carbs: number;
   fat: number;
+  source: "off" | "fruityvice";
 };
 
 const querySchema = z
@@ -75,6 +76,101 @@ type OffProduct = {
   nutriments?: unknown;
 };
 
+/* Fallback FruityVice (datos reales por 100 g) ------------------------------ */
+
+/**
+ * Mapa es → en armado SOLO con frutas verificadas en la lista real de
+ * https://www.fruityvice.com/api/fruit/all (49 frutas, consultada con curl):
+ * todas las claves existen ahí con ese nombre exacto. Sinónimos es-AR
+ * (frutilla/fresa, ananá/piña, banana/plátano) apuntan al mismo nombre EN.
+ */
+const FRUITYVICE_FRUITS: Record<string, { en: string; es: string }> = {
+  banana: { en: "Banana", es: "Banana" },
+  platano: { en: "Banana", es: "Plátano" },
+  manzana: { en: "Apple", es: "Manzana" },
+  naranja: { en: "Orange", es: "Naranja" },
+  pera: { en: "Pear", es: "Pera" },
+  frutilla: { en: "Strawberry", es: "Frutilla" },
+  fresa: { en: "Strawberry", es: "Fresa" },
+  durazno: { en: "Peach", es: "Durazno" },
+  uva: { en: "Grape", es: "Uva" },
+  sandia: { en: "Watermelon", es: "Sandía" },
+  melon: { en: "Melon", es: "Melón" },
+  kiwi: { en: "Kiwi", es: "Kiwi" },
+  anana: { en: "Pineapple", es: "Ananá" },
+  pina: { en: "Pineapple", es: "Piña" },
+  limon: { en: "Lemon", es: "Limón" },
+  lima: { en: "Lime", es: "Lima" },
+  cereza: { en: "Cherry", es: "Cereza" },
+  mango: { en: "Mango", es: "Mango" },
+  papaya: { en: "Papaya", es: "Papaya" },
+  frambuesa: { en: "Raspberry", es: "Frambuesa" },
+  arandano: { en: "Blueberry", es: "Arándano" },
+  pomelo: { en: "Pomelo", es: "Pomelo" },
+  granada: { en: "Pomegranate", es: "Granada" },
+  damasco: { en: "Apricot", es: "Damasco" },
+  ciruela: { en: "Plum", es: "Ciruela" },
+};
+
+/** lowercase + sin acentos (para matchear «ananá», «FRUTILLA», «Sandía»…). */
+function normalizeQuery(q: string): string {
+  return q
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+type FruityViceJson = {
+  name?: unknown;
+  nutritions?: {
+    calories?: unknown;
+    protein?: unknown;
+    fat?: unknown;
+    carbohydrates?: unknown;
+  };
+};
+
+/** Busca la fruta en FruityVice; null si no responde o trae datos inutilizables. */
+async function fetchFruityVice(fruit: { en: string; es: string }): Promise<FoodSearchResult | null> {
+  try {
+    const res = await fetch(`https://www.fruityvice.com/api/fruit/${encodeURIComponent(fruit.en.toLowerCase())}`, {
+      headers: { "User-Agent": "FITSYNC/1.0" },
+      signal: AbortSignal.timeout(7000),
+    });
+    if (!res.ok) {
+      console.error(`[api/food-search] FruityVice → HTTP ${res.status}`);
+      return null;
+    }
+    const json = (await res.json()) as FruityViceJson;
+    const name = typeof json.name === "string" ? json.name.trim() : "";
+    const nut = json.nutritions ?? {};
+    // Sin calories numérico la fruta no sirve como resultado.
+    const calories = num(nut.calories);
+    if (!name || !Number.isFinite(calories) || calories < 0) {
+      console.error("[api/food-search] FruityVice devolvió datos incompletos");
+      return null;
+    }
+    const macro = (v: unknown) => {
+      const n = num(v);
+      return Number.isFinite(n) && n >= 0 ? Math.round(n * 10) / 10 : 0;
+    };
+    return {
+      id: `fv:${name}`,
+      name: fruit.es,
+      brand: "FruityVice",
+      kcal: Math.round(calories),
+      protein: macro(nut.protein),
+      carbs: macro(nut.carbohydrates),
+      fat: macro(nut.fat),
+      source: "fruityvice",
+    };
+  } catch (error) {
+    console.error("[api/food-search] FruityVice falló", error);
+    return null;
+  }
+}
+
 export async function GET(req: Request) {
   const rl = rateLimit(clientKey(req, "food-search"), 30, 60_000);
   if (!rl.ok) {
@@ -130,54 +226,77 @@ export async function GET(req: Request) {
         console.error(`[api/food-search] intento ${i} falló`, attemptError);
       }
     }
-    if (!json) throw new Error("Open Food Facts no respondió en ningún intento");
+    // OFF sin respuesta utilizable: se decide más abajo (502 solo si además el
+    // fallback de frutas no da resultado).
+    let results: FoodSearchResult[] = [];
+    if (!json) {
+      console.error("[api/food-search] Open Food Facts no respondió en ningún intento");
+    } else {
+      const products = Array.isArray(json.products) ? json.products : [];
 
-    const products = Array.isArray(json.products) ? json.products : [];
+      // Normalizar y deduplicar por (nombre + marca) en minúsculas.
+      const seen = new Set<string>();
+      const ranked: { hasEs: boolean; item: FoodSearchResult }[] = [];
 
-    // Normalizar y deduplicar por (nombre + marca) en minúsculas.
-    const seen = new Set<string>();
-    const ranked: { hasEs: boolean; item: FoodSearchResult }[] = [];
+      for (const p of products) {
+        const nameEs = typeof p.product_name_es === "string" ? p.product_name_es.trim() : "";
+        const name = nameEs || (typeof p.product_name === "string" ? p.product_name.trim() : "");
+        const nut = (p.nutriments ?? {}) as Record<string, unknown>;
+        const kcal = num(nut["energy-kcal_100g"]);
+        // Descartar productos sin nombre usable o sin kcal por 100 g.
+        if (!name || !Number.isFinite(kcal) || kcal < 0) continue;
 
-    for (const p of products) {
-      const nameEs = typeof p.product_name_es === "string" ? p.product_name_es.trim() : "";
-      const name = nameEs || (typeof p.product_name === "string" ? p.product_name.trim() : "");
-      const nut = (p.nutriments ?? {}) as Record<string, unknown>;
-      const kcal = num(nut["energy-kcal_100g"]);
-      // Descartar productos sin nombre usable o sin kcal por 100 g.
-      if (!name || !Number.isFinite(kcal) || kcal < 0) continue;
+        const brand = firstBrand(p.brands);
+        const dedupeKey = `${name.toLowerCase()}|${brand.toLowerCase()}`;
+        if (seen.has(dedupeKey)) continue;
+        seen.add(dedupeKey);
 
-      const brand = firstBrand(p.brands);
-      const dedupeKey = `${name.toLowerCase()}|${brand.toLowerCase()}`;
-      if (seen.has(dedupeKey)) continue;
-      seen.add(dedupeKey);
+        const protein = num(nut["proteins_100g"]);
+        const carbs = num(nut["carbohydrates_100g"]);
+        const fat = num(nut["fat_100g"]);
 
-      const protein = num(nut["proteins_100g"]);
-      const carbs = num(nut["carbohydrates_100g"]);
-      const fat = num(nut["fat_100g"]);
+        ranked.push({
+          hasEs: nameEs !== "",
+          item: {
+            id: `off:${typeof p.code === "string" ? p.code : ""}`,
+            name,
+            brand,
+            kcal: Math.round(kcal),
+            protein: Number.isFinite(protein) ? Math.round(protein * 10) / 10 : 0,
+            carbs: Number.isFinite(carbs) ? Math.round(carbs * 10) / 10 : 0,
+            fat: Number.isFinite(fat) ? Math.round(fat * 10) / 10 : 0,
+            source: "off",
+          },
+        });
+      }
 
-      ranked.push({
-        hasEs: nameEs !== "",
-        item: {
-          id: `off:${typeof p.code === "string" ? p.code : ""}`,
-          name,
-          brand,
-          kcal: Math.round(kcal),
-          protein: Number.isFinite(protein) ? Math.round(protein * 10) / 10 : 0,
-          carbs: Number.isFinite(carbs) ? Math.round(carbs * 10) / 10 : 0,
-          fat: Number.isFinite(fat) ? Math.round(fat * 10) / 10 : 0,
-        },
+      // Orden: primero con nombre en español, luego alfabético ("es").
+      ranked.sort((a, b) => {
+        if (a.hasEs !== b.hasEs) return a.hasEs ? -1 : 1;
+        return a.item.name.localeCompare(b.item.name, "es");
       });
+
+      results = ranked.slice(0, 12).map((r) => r.item);
     }
 
-    // Orden: primero con nombre en español, luego alfabético ("es").
-    ranked.sort((a, b) => {
-      if (a.hasEs !== b.hasEs) return a.hasEs ? -1 : 1;
-      return a.item.name.localeCompare(b.item.name, "es");
-    });
+    // Fallback FruityVice: OFF falló por completo o no encontró nada y el query
+    // matchea una fruta del mapa → un único resultado con datos reales por 100 g.
+    if (results.length === 0) {
+      const fruit = FRUITYVICE_FRUITS[normalizeQuery(norm)];
+      if (fruit) {
+        const fv = await fetchFruityVice(fruit);
+        if (fv) results = [fv];
+      }
+    }
 
-    const results = ranked.slice(0, 12).map((r) => r.item);
-    cacheSet(norm, results);
-    return NextResponse.json({ results });
+    // OFF respondió (aunque con 0 resultados) o el fallback dio fruta → 200.
+    if (json || results.length > 0) {
+      cacheSet(norm, results);
+      return NextResponse.json({ results });
+    }
+
+    // Todo falló: OFF caído y el query no es una fruta (o FruityVice tampoco respondió).
+    throw new Error("Open Food Facts no respondió en ningún intento");
   } catch (error) {
     console.error("[api/food-search]", error);
     return NextResponse.json(

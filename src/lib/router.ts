@@ -42,7 +42,9 @@ export type ViewId =
   | "coach"
   | "admin"
   | "biblioteca"
+  | "recetas"
   | "zona"
+  | "fuentes"
   | "not-found";
 
 export interface ViewParams {
@@ -95,7 +97,9 @@ const VALID_VIEWS: ViewId[] = [
   "coach",
   "admin",
   "biblioteca",
+  "recetas",
   "zona",
+  "fuentes",
 ];
 
 export function parseHash(hash: string): { view: ViewId; params: ViewParams } {
@@ -152,9 +156,15 @@ export function parseHash(hash: string): { view: ViewId; params: ViewParams } {
     // Biblioteca de ejercicios: hash descriptivo (SEO/UX), como "contador".
     case "ejercicios":
       return { view: "biblioteca", params: {} };
+    // Recetas (TheMealDB): hash ya idempotente con toHash default.
+    case "recetas":
+      return { view: "recetas", params: {} };
     // Mi Zona: área personal de entrenamiento.
     case "mi-zona":
       return { view: "zona", params: {} };
+    // Fuentes de datos y open source: créditos técnicos (transparencia).
+    case "fuentes":
+      return { view: "fuentes", params: {} };
     case "contacto":
       return { view: "contacto", params: {} };
     case "faq":

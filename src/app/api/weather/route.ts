@@ -17,6 +17,16 @@ try {
 /** Veredicto determinista de entrenabilidad al aire libre. */
 type Verdict = { level: "great" | "ok" | "warn" | "bad"; label: string };
 
+/** Calidad del aire actual (EAQI europeo + PM) o null si la sub-llamada falló. */
+type AirQuality = {
+  euAqi: number;
+  usAqi: number | null;
+  pm25: number | null;
+  pm10: number | null;
+  band: string;
+  bandLabel: string;
+};
+
 type WeatherPayload = {
   current: {
     temp: number;
@@ -28,6 +38,7 @@ type WeatherPayload = {
   };
   daily: { precipProb: number | null; tMax: number; tMin: number };
   verdict: Verdict;
+  airQuality: AirQuality | null;
 };
 
 /* Validación de coordenadas: strings de query → número en rango. */
@@ -116,6 +127,45 @@ function firstDaily(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/* Parseo seguro de Open-Meteo Air Quality ---------------------------------- */
+
+type AirQualityJson = {
+  current?: {
+    european_aqi?: unknown;
+    us_aqi?: unknown;
+    pm2_5?: unknown;
+    pm10?: unknown;
+  };
+};
+
+/** Banda pública EEA del AQI europeo: 0–20 Buena … >100 Extremadamente mala. */
+function aqiBand(euAqi: number): { band: string; bandLabel: string } {
+  if (euAqi <= 20) return { band: "good", bandLabel: "Buena" };
+  if (euAqi <= 40) return { band: "fair", bandLabel: "Razonable" };
+  if (euAqi <= 60) return { band: "moderate", bandLabel: "Moderada" };
+  if (euAqi <= 80) return { band: "poor", bandLabel: "Mala" };
+  if (euAqi <= 100) return { band: "very-poor", bandLabel: "Muy mala" };
+  return { band: "extremely-poor", bandLabel: "Extremadamente mala" };
+}
+
+/** AirQuality desde el JSON upstream, o null sin EAQI numérico (nunca lanza). */
+function airQualityFrom(json: AirQualityJson): AirQuality | null {
+  const cur = json.current ?? {};
+  const euAqiRaw = num(cur.european_aqi);
+  if (!Number.isFinite(euAqiRaw)) return null;
+  const euAqi = roundInt(euAqiRaw);
+  const usAqi = num(cur.us_aqi);
+  const pm25 = num(cur.pm2_5);
+  const pm10 = num(cur.pm10);
+  return {
+    euAqi,
+    usAqi: Number.isFinite(usAqi) ? roundInt(usAqi) : null,
+    pm25: Number.isFinite(pm25) ? round1(pm25) : null,
+    pm10: Number.isFinite(pm10) ? round1(pm10) : null,
+    ...aqiBand(euAqi),
+  };
+}
+
 /** Veredicto determinista, evaluado en este orden exacto. */
 function verdictFor(precip: number, precipProbRaw: number | null, apparent: number): Verdict {
   const precipProb = precipProbRaw ?? 0;
@@ -162,17 +212,33 @@ export async function GET(req: Request) {
 
   try {
     // Mismos 2 decimales que la clave de caché (≈1 km, sobrado para clima).
-    const url =
-      `https://api.open-meteo.com/v1/forecast?latitude=${key.split(",")[0]}` +
-      `&longitude=${key.split(",")[1]}` +
+    const lat2 = key.split(",")[0];
+    const lon2 = key.split(",")[1];
+    const forecastUrl =
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat2}` +
+      `&longitude=${lon2}` +
       `&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m` +
       `&daily=precipitation_probability_max,temperature_2m_max,temperature_2m_min` +
       `&forecast_days=1&timezone=auto`;
+    const airUrl =
+      `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat2}` +
+      `&longitude=${lon2}` +
+      `&current=european_aqi,pm2_5,pm10,us_aqi&timezone=auto`;
 
-    const res = await fetch(url, {
-      headers: { "User-Agent": "FITSYNC/1.0" },
-      signal: AbortSignal.timeout(7000),
-    });
+    // Forecast y aire en paralelo: el aire NUNCA tumba al clima (allSettled).
+    const [fRes, aRes] = await Promise.allSettled([
+      fetch(forecastUrl, {
+        headers: { "User-Agent": "FITSYNC/1.0" },
+        signal: AbortSignal.timeout(7000),
+      }),
+      fetch(airUrl, {
+        headers: { "User-Agent": "FITSYNC/1.0" },
+        signal: AbortSignal.timeout(7000),
+      }),
+    ]);
+
+    if (fRes.status === "rejected") throw fRes.reason;
+    const res = fRes.value;
     if (!res.ok) throw new Error(`Open-Meteo forecast → HTTP ${res.status}`);
 
     const json = (await res.json()) as ForecastJson;
@@ -204,6 +270,28 @@ export async function GET(req: Request) {
       throw new Error("Open-Meteo forecast devolvió datos incompletos");
     }
 
+    // Aire con degradación honesta: si la sub-llamada falla o no trae un
+    // european_aqi numérico, airQuality queda null y el clima sigue 200.
+    let airQuality: AirQuality | null = null;
+    if (aRes.status === "fulfilled") {
+      const airRes = aRes.value;
+      if (airRes.ok) {
+        try {
+          airQuality = airQualityFrom((await airRes.json()) as AirQualityJson);
+        } catch {
+          // Cuerpo ilegible: seguimos sin aire.
+        }
+      }
+      if (airQuality === null) {
+        console.error(
+          "[api/weather] air-quality degradada:",
+          airRes.ok ? "respuesta sin european_aqi numérico" : `HTTP ${airRes.status}`,
+        );
+      }
+    } else {
+      console.error("[api/weather] air-quality degradada:", aRes.reason);
+    }
+
     const payload: WeatherPayload = {
       current: {
         temp: roundInt(temp),
@@ -219,6 +307,7 @@ export async function GET(req: Request) {
         tMin: roundInt(tMin),
       },
       verdict: verdictFor(round1(precip), precipProb, roundInt(apparent)),
+      airQuality,
     };
 
     cacheSet(key, payload);

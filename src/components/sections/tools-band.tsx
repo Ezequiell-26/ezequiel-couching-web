@@ -20,6 +20,12 @@ const TOOLS = [
     cta: "Abrir contador",
   },
   {
+    view: "recetas" as const,
+    title: "Recetas internacionales",
+    body: "Buscá por nombre o categoría y mirá ingredientes, medidas y preparación. Datos reales de TheMealDB.",
+    cta: "Ver recetas",
+  },
+  {
     view: "progreso" as const,
     title: "Mi progreso",
     body: "Registra tu peso y tus sesiones, y mira tu evolución con gráficos claros. 100% local y privado.",

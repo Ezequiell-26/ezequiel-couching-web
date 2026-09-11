@@ -22,6 +22,7 @@ import {
   Search,
   Sun,
   TriangleAlert,
+  Wind,
   type LucideIcon,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,10 +40,20 @@ interface GeoResult {
   lon: number;
 }
 
+interface AirQualityData {
+  euAqi: number;
+  usAqi: number | null;
+  pm25: number | null;
+  pm10: number | null;
+  band: string;
+  bandLabel: string;
+}
+
 interface WeatherData {
   current: { temp: number; apparent: number; humidity: number; windKmh: number; code: number; precip: number };
   daily: { precipProb: number | null; tMax: number; tMin: number };
   verdict: { level: "great" | "ok" | "warn" | "bad"; label: string };
+  airQuality?: AirQualityData | null;
 }
 
 type Place = Pick<GeoResult, "name" | "admin1" | "country" | "lat" | "lon">;
@@ -77,6 +88,17 @@ const VERDICT_STYLES: Record<WeatherData["verdict"]["level"], { chip: string; Ic
   bad: { chip: "border-destructive/50 bg-destructive/15 text-destructive", Icon: TriangleAlert },
 };
 
+/** Clase del badge de aire según banda EEA (mismos tonos destructive que warn/bad). */
+function airBadgeClass(band: string): string {
+  if (band === "poor" || band === "very-poor" || band === "extremely-poor") {
+    return "border-destructive/40 bg-destructive/10 text-destructive";
+  }
+  if (band === "moderate") return "text-muted-foreground";
+  return "text-primary"; // good / fair
+}
+
+const AIR_BAD_BANDS = new Set(["poor", "very-poor", "extremely-poor"]);
+
 function loadPlace(): Place {
   if (typeof window === "undefined") return DEFAULT_PLACE;
   try {
@@ -108,7 +130,12 @@ export function WeatherCard() {
       const res = await fetch(`/api/weather?lat=${p.lat}&lon=${p.lon}`);
       const json = (await res.json()) as WeatherData & { error?: string };
       if (!res.ok) throw new Error(json.error ?? "No se pudo consultar el clima.");
-      setData({ current: json.current, daily: json.daily, verdict: json.verdict });
+      setData({
+        current: json.current,
+        daily: json.daily,
+        verdict: json.verdict,
+        airQuality: json.airQuality ?? null,
+      });
       setError(null);
     } catch (err) {
       setData(null);
@@ -292,12 +319,27 @@ export function WeatherCard() {
               <Badge variant="secondary">
                 Máx {data.daily.tMax}° / Mín {data.daily.tMin}°
               </Badge>
+              {data.airQuality ? (
+                <Badge
+                  variant={data.airQuality.band === "moderate" ? "outline" : "secondary"}
+                  className={`gap-1 ${airBadgeClass(data.airQuality.band)}`}
+                >
+                  <Wind aria-hidden className="size-3 shrink-0" />
+                  Aire: {data.airQuality.bandLabel} · EAQI {data.airQuality.euAqi}
+                </Badge>
+              ) : null}
             </div>
+
+            {data.airQuality && AIR_BAD_BANDS.has(data.airQuality.band) ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Calidad del aire mala: considerá entrenar adentro.
+              </p>
+            ) : null}
           </>
         )}
 
         <p className="mt-4 border-t border-border/60 pt-3 text-[11px] text-muted-foreground">
-          Datos: Open-Meteo (API abierta). El veredicto es orientativo: siempre priorizá tu seguridad.
+          Datos: Open-Meteo y Air Quality · Open-Meteo (API abierta). El veredicto es orientativo: siempre priorizá tu seguridad.
         </p>
       </CardContent>
     </Card>

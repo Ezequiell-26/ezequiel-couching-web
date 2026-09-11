@@ -396,6 +396,7 @@ type FoodSearchResult = {
   protein: number;
   carbs: number;
   fat: number;
+  source?: "off" | "fruityvice";
 };
 
 type SearchState =
@@ -639,7 +640,14 @@ function AddFoodDialog({
                           className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent"
                         >
                           <span className="min-w-0">
-                            <span className="block truncate text-sm font-medium">{item.name}</span>
+                            <span className="flex items-center gap-1.5">
+                              <span className="truncate text-sm font-medium">{item.name}</span>
+                              {item.source === "fruityvice" ? (
+                                <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[10px] font-medium">
+                                  fruta
+                                </Badge>
+                              ) : null}
+                            </span>
                             {item.brand ? (
                               <span className="block truncate text-xs text-muted-foreground">{item.brand}</span>
                             ) : null}
@@ -657,7 +665,7 @@ function AddFoodDialog({
                 ) : null}
               </>
             ) : null}
-            <p className="text-[11px] text-muted-foreground">Datos de Open Food Facts (base abierta colaborativa).</p>
+            <p className="text-[11px] text-muted-foreground">Datos de Open Food Facts y FruityVice (bases abiertas).</p>
           </div>
           {off ? (
             <div className="flex items-start justify-between gap-3 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2">

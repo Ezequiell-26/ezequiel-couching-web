@@ -1,10 +1,14 @@
 /**
- * Fórmulas de nutrición con estándares publicados (reales, no simuladas):
+ * Fórmulas de nutrición y fuerza con estándares publicados (reales, no simuladas):
  * - BMR: Mifflin-St Jeor (1990), Harris-Benedict revisado (Roza & Shizgal, 1984),
  *   Katch-McArdle (con % grasa conocida).
  * - TDEE: BMR × factor de actividad (estándares ASECP/USDA).
  * - IMC: OMS. % grasa: US Navy (Hodgdon & Beckett, 1984) y Deurenberg (1991).
  * - 1RM: Epley (1985) y Brzycki (1993). Agua: 30–35 ml/kg (EFSA aproximación).
+ * - FC máxima: Tanaka, Monahan & Seals (J Am Coll Cardiol, 2001); zonas por
+ *   Karvonen (% de reserva cardíaca) o % de FC máxima.
+ * - DOTS: score de powerlifting con los coeficientes oficiales de dominio
+ *   público (ver comentario en dots()).
  */
 
 export type Sex = "hombre" | "mujer";
@@ -135,6 +139,59 @@ export function macroSplit(kcal: number, goal: MacroGoal, weightKg: number): {
   const fatG = Math.round((target * (goal === "perder" ? 0.27 : 0.25)) / 9);
   const carbG = Math.max(0, Math.round((target - proteinG * 4 - fatG * 9) / 4));
   return { kcal: Math.round(target), proteinG, fatG, carbG };
+}
+
+/**
+ * FC máxima — Tanaka, Monahan & Seals, "Updated prediction of exercise
+ * HRmax" (J Am Coll Cardiol 2001;37:153–4): HRmax = 208 − 0,7 × edad.
+ * Metaanálisis validado en mujeres y adultos mayores; menos sesgo que "220 − edad".
+ */
+export function hrMaxTanaka(age: number): number {
+  return Math.round(208 - 0.7 * age);
+}
+
+export type HrZone = { id: string; label: string; min: number; max: number };
+
+/**
+ * Cinco zonas de entrenamiento sobre la FC máxima.
+ * - Con FC en reposo (Karvonen): objetivo = reposo + pct × (máx − reposo),
+ *   es decir, un % de la RESERVA cardíaca.
+ * - Sin FC en reposo: objetivo = pct × máx (directo).
+ * Redondeo: Math.round (medio punto hacia arriba) aplicado UNA vez a cada
+ * límite compartido, de modo que min(zona) === max(zona anterior) siempre.
+ */
+export function hrZones(hrMax: number, hrRest: number | null): HrZone[] {
+  const base = hrRest ?? 0;
+  const span = hrRest !== null ? hrMax - hrRest : hrMax;
+  const bounds = [0.5, 0.6, 0.7, 0.8, 0.9, 1].map((p) => Math.round(base + p * span));
+  const defs: Array<[string, string]> = [
+    ["z1", "Recuperación"],
+    ["z2", "Base aeróbica"],
+    ["z3", "Aeróbico"],
+    ["z4", "Umbral"],
+    ["z5", "Máximo"],
+  ];
+  return defs.map(([id, label], i) => ({ id, label, min: bounds[i], max: bounds[i + 1] }));
+}
+
+/**
+ * DOTS (powerlifting): total × 500 / (a + b·p + c·p² + d·p³ + e·p⁴), con p =
+ * peso corporal en kg. Coeficientes oficiales de dominio público (atribuidos
+ * a Tim Konertz; válido 40–210 kg hombres, 40–150 kg mujeres). Verificados
+ * contra dos fuentes independientes el 2026-09-11:
+ * - dotscalculator.com/blog/how-dots-score-calculated (publica el ejemplo
+ *   hombre, 83 kg, total 550 kg → 371,30 DOTS; esta fórmula da 371,2981).
+ * - concalculator.com/dots-calculator (misma tabla de constantes).
+ */
+const DOTS_COEFFS: Record<Sex, [number, number, number, number, number]> = {
+  hombre: [-307.75076, 24.0900756, -0.1918759221, 0.0007391293, -0.000001093],
+  mujer: [-57.96288, 13.6175032, -0.1126655495, 0.0005158568, -0.0000010706],
+};
+
+export function dots(sex: Sex, bodyKg: number, totalKg: number): number {
+  const [a, b, c, d, e] = DOTS_COEFFS[sex];
+  const den = a + bodyKg * (b + bodyKg * (c + bodyKg * (d + bodyKg * e)));
+  return Math.round(((totalKg * 500) / den) * 10) / 10;
 }
 
 /** Base local de alimentos con kcal/macros por 100 g (valores estándar USDA). */

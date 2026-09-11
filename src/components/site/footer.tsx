@@ -53,6 +53,7 @@ const COLUMNS: { title: string; links: { label: string; view: Parameters<ReturnT
       { label: "Privacidad", view: "privacidad" },
       { label: "Cookies", view: "cookies" },
       { label: "Términos", view: "terminos" },
+      { label: "Fuentes de datos", view: "fuentes" },
     ],
   },
 ];

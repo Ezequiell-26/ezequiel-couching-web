@@ -26,6 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Coaching", view: "coaching" },
   { label: "Tienda", view: "tienda" },
   { label: "Ejercicios", view: "biblioteca", desktopClassName: "hidden lg:block" },
+  { label: "Recetas", view: "recetas", desktopClassName: "hidden lg:block" },
   { label: "Método", view: "metodo" },
   { label: "Resultados", view: "resultados" },
   { label: "Blog", view: "blog" },

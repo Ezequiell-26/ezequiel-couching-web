@@ -16,6 +16,9 @@ import {
   bmrMifflin,
   bodyFatDeurenberg,
   bodyFatNavy,
+  dots,
+  hrMaxTanaka,
+  hrZones,
   idealWeightDevine,
   idealWeightRange,
   imc,
@@ -25,6 +28,7 @@ import {
   tdee,
   waterLiters,
   type ActivityKey,
+  type HrZone,
   type MacroGoal,
   type Sex,
 } from "@/lib/nutrition";
@@ -32,7 +36,7 @@ import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 /**
- * Calculadoras — 7 herramientas con fórmulas publicadas (ver src/lib/nutrition.ts).
+ * Calculadoras — 9 herramientas con fórmulas publicadas (ver src/lib/nutrition.ts).
  * 100% local: los datos introducidos no salen del navegador. Las fórmulas son
  * estimaciones de cribado, nunca un diagnóstico.
  */
@@ -45,6 +49,8 @@ const TABS = [
   { id: "grasa", label: "Grasa corporal" },
   { id: "agua", label: "Agua" },
   { id: "ideal", label: "Peso ideal" },
+  { id: "fc", label: "FC" },
+  { id: "dots", label: "DOTS" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -786,6 +792,203 @@ function IdealWeightCalc() {
   );
 }
 
+/* h) FC — zonas de frecuencia cardíaca ------------------------------------- */
+
+const FC_ZONE_PCTS = ["50–60 %", "60–70 %", "70–80 %", "80–90 %", "90–100 %"];
+
+function HrCalc() {
+  const [profile] = React.useState(() => loadProfile());
+  const [edad, setEdad] = React.useState(profile ? String(profile.age) : "");
+  const [reposo, setReposo] = React.useState("");
+  const [res, setRes] = React.useState<{ hrMax: number; karvonen: boolean; reposo: number | null; zones: HrZone[] } | null>(null);
+
+  function calcular(e: React.FormEvent) {
+    e.preventDefault();
+    const a = toNum(edad);
+    if (!Number.isFinite(a) || a < 15 || a > 90) {
+      errorToast("Ingresá una edad entre 15 y 90.");
+      return;
+    }
+    const r = reposo.trim() === "" ? null : toNum(reposo);
+    if (r !== null && (!Number.isFinite(r) || r < 30 || r > 100)) {
+      errorToast("La FC en reposo debe estar entre 30 y 100, o dejala vacía.");
+      return;
+    }
+    const hrMax = hrMaxTanaka(a);
+    setRes({ hrMax, karvonen: r !== null, reposo: r, zones: hrZones(hrMax, r) });
+    track("calc_fc");
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Zonas de frecuencia cardíaca</CardTitle>
+        <CardDescription>
+          FC máxima con Tanaka (2001) y cinco zonas de entrenamiento. Si indicás tu FC en reposo se aplica Karvonen (% de la
+          reserva cardíaca) en vez del porcentaje directo.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={calcular} className="grid gap-4 sm:grid-cols-2">
+          <NumberField id="fc-edad" label="Edad" unit="años" value={edad} onChange={setEdad} min={15} max={90} step="1" placeholder="30" />
+          <div className="space-y-1.5">
+            <Label htmlFor="fc-reposo">
+              FC en reposo
+              <span className="font-normal text-muted-foreground"> · bpm</span>
+            </Label>
+            <Input
+              id="fc-reposo"
+              type="number"
+              inputMode="numeric"
+              min={30}
+              max={100}
+              step="1"
+              placeholder="p. ej. 60"
+              value={reposo}
+              onChange={(e) => setReposo(e.target.value)}
+              className="h-11"
+              aria-describedby="fc-reposo-hint"
+            />
+            <p id="fc-reposo-hint" className="text-xs text-muted-foreground">
+              Opcional — mejora la precisión (Karvonen).
+            </p>
+          </div>
+          <div className="sm:col-span-2">
+            <Button type="submit" size="lg">Calcular zonas</Button>
+          </div>
+        </form>
+
+        {res ? (
+          <CalcResult>
+            <p className="text-sm text-muted-foreground">FC máxima estimada — 208 − 0,7 × edad</p>
+            <p className="text-4xl font-bold tracking-tight tabular-nums">
+              {res.hrMax} <span className="text-sm font-normal text-muted-foreground">bpm</span>
+            </p>
+            <div className="mt-5 overflow-hidden rounded-lg border border-border/70">
+              <table className="w-full text-sm">
+                <caption className="sr-only">Zonas de entrenamiento con su rango en bpm</caption>
+                <thead>
+                  <tr className="border-b border-border/70 bg-background/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                    <th scope="col" className="px-3 py-2">Zona</th>
+                    <th scope="col" className="px-3 py-2">Intensidad</th>
+                    <th scope="col" className="px-3 py-2">Rango</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {res.zones.map((z, i) => (
+                    <tr key={z.id} className="border-b border-border/50 last:border-0">
+                      <td className="px-3 py-2 font-medium">{z.label}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{FC_ZONE_PCTS[i]}</td>
+                      <td className="px-3 py-2 tabular-nums text-muted-foreground">{z.min}–{z.max} bpm</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {res.karvonen && res.reposo !== null ? (
+              <p className="mt-3 text-sm text-muted-foreground">
+                Zonas por reserva cardíaca (Karvonen): {res.hrMax} − {res.reposo} = {res.hrMax - res.reposo} bpm de reserva,
+                repartida del 50 al 100 %.
+              </p>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">
+                Estimación sin Karvonen (ingresá tu FC en reposo para más precisión).
+              </p>
+            )}
+          </CalcResult>
+        ) : null}
+
+        <LimitationNote>Fórmula de Tanaka (2001). Estimación de cribado, no un valor clínico.</LimitationNote>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* i) DOTS — score de fuerza ------------------------------------------------ */
+
+function DotsCalc() {
+  const [profile] = React.useState(() => loadProfile());
+  const [sex, setSex] = React.useState<Sex>(profile?.sex ?? "hombre");
+  const [peso, setPeso] = React.useState(profile ? String(profile.weightKg) : "");
+  const [sentadilla, setSentadilla] = React.useState("");
+  const [banca, setBanca] = React.useState("");
+  const [pesoMuerto, setPesoMuerto] = React.useState("");
+  const [res, setRes] = React.useState<{ score: number; total: number; bodyKg: number } | null>(null);
+
+  function calcular(e: React.FormEvent) {
+    e.preventDefault();
+    const body = toNum(peso);
+    if (!Number.isFinite(body) || body < 40 || body > 200) {
+      errorToast("Ingresá un peso corporal entre 40 y 200 kg.");
+      return;
+    }
+    const lifts = [
+      { nombre: "Sentadilla", v: toNum(sentadilla) },
+      { nombre: "Press banca", v: toNum(banca) },
+      { nombre: "Peso muerto", v: toNum(pesoMuerto) },
+    ];
+    for (const { nombre, v } of lifts) {
+      if (!Number.isFinite(v) || v < 0 || v > 600) {
+        errorToast(`${nombre}: ingresá un valor entre 0 y 600 kg.`);
+        return;
+      }
+    }
+    const total = lifts.reduce((acc, l) => acc + l.v, 0);
+    if (total <= 0) {
+      errorToast("Ingresá al menos un levantamiento mayor a 0 kg.");
+      return;
+    }
+    setRes({ score: dots(sex, body, total), total, bodyKg: body });
+    track("calc_dots");
+  }
+
+  const liftsNum = [sentadilla, banca, pesoMuerto].map(toNum).filter((n) => Number.isFinite(n) && n > 0);
+  const totalPreview = liftsNum.length === 3 ? fmt1(liftsNum.reduce((a, b) => a + b, 0)) : "—";
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>DOTS — score de fuerza</CardTitle>
+        <CardDescription>
+          Compara tu total (sentadilla + press banca + peso muerto) contra lifters de cualquier peso corporal: total × 500 /
+          polinomio sobre tu peso.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={calcular} className="grid gap-4 sm:grid-cols-2">
+          <SexField id="dots-sex" value={sex} onChange={setSex} />
+          <NumberField id="dots-peso" label="Peso corporal" unit="kg" value={peso} onChange={setPeso} min={40} max={200} placeholder="83" />
+          <NumberField id="dots-sentadilla" label="Sentadilla" unit="kg" value={sentadilla} onChange={setSentadilla} min={0} max={600} placeholder="180" />
+          <NumberField id="dots-banca" label="Press banca" unit="kg" value={banca} onChange={setBanca} min={0} max={600} placeholder="120" />
+          <NumberField id="dots-peso-muerto" label="Peso muerto" unit="kg" value={pesoMuerto} onChange={setPesoMuerto} min={0} max={600} placeholder="220" />
+          <div className="flex items-end pb-1 text-sm text-muted-foreground">
+            Total: <span className="ml-1 font-medium text-foreground tabular-nums">{totalPreview} kg</span>
+          </div>
+          <div className="sm:col-span-2">
+            <Button type="submit" size="lg">Calcular DOTS</Button>
+          </div>
+        </form>
+
+        {res ? (
+          <CalcResult>
+            <p className="text-sm text-muted-foreground">Tu DOTS</p>
+            <p className="text-4xl font-bold tracking-tight tabular-nums">{fmt1(res.score)}</p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Total: <span className="font-medium text-foreground tabular-nums">{fmt1(res.total)} kg</span> · Peso corporal:{" "}
+              <span className="font-medium text-foreground tabular-nums">{fmt1(res.bodyKg)} kg</span>
+            </p>
+          </CalcResult>
+        ) : null}
+
+        <LimitationNote>
+          Coeficientes DOTS (powerlifting, dominio público). Sirve para comparar totales entre pesos corporales: no reemplaza
+          el scoring oficial de una federación.
+        </LimitationNote>
+      </CardContent>
+    </Card>
+  );
+}
+
 /* Vista hub ---------------------------------------------------------------- */
 
 export function CalculadorasView() {
@@ -796,7 +999,7 @@ export function CalculadorasView() {
       <PageHeader
         eyebrow="Herramientas"
         title="Calculadoras fitness"
-        description="Siete calculadoras con fórmulas publicadas (Mifflin-St Jeor, Navy, Epley…). Todos los cálculos ocurren en tu navegador: no guardamos ni enviamos tus datos."
+        description="Nueve calculadoras con fórmulas publicadas (Mifflin-St Jeor, Navy, Epley, Tanaka…). Todos los cálculos ocurren en tu navegador: no guardamos ni enviamos tus datos."
         breadcrumb={[{ label: "Inicio", href: "#/" }, { label: "Calculadoras" }]}
       />
       <Container className="py-8 sm:py-10">
@@ -835,6 +1038,8 @@ export function CalculadorasView() {
           {active === "grasa" ? <BodyFatCalc /> : null}
           {active === "agua" ? <WaterCalc /> : null}
           {active === "ideal" ? <IdealWeightCalc /> : null}
+          {active === "fc" ? <HrCalc /> : null}
+          {active === "dots" ? <DotsCalc /> : null}
         </div>
       </Container>
     </>

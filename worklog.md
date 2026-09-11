@@ -849,3 +849,14 @@ Stage Summary:
 - FITSYNC ahora documenta e integra 23 fuentes: 7 APIs/bases abiertas (Open Food Facts, FruityVice, TheMealDB, free-exercise-db, Open-Meteo ×3) y 16 librerías open source del stack, todas con licencia visible en #/fuentes, más 4 fuentes evaluadas y descartadas con criterio.
 - Nuevas capacidades reales: recetas internacionales con búsqueda y detalle, respaldo de frutas para el buscador de alimentos, zonas de frecuencia cardíaca con fórmulas publicadas (Tanaka/Karvonen), score DOTS con coeficientes verificados, y calidad del aire en el clima de Mi Zona.
 - Archivos: +src/app/api/recipes/route.ts, +src/components/views/recetas-view.tsx, +src/components/views/fuentes-view.tsx; ~router/site-shell/seo/navbar/footer/tools-band, ~food-search, ~contador-view, ~nutrition.ts, ~calculadoras-view, ~weather route, ~weather-card. Sin dependencias nuevas, sin datos inventados.
+---
+Task ID: 35-push
+Agent: main (Z.ai Code)
+Task: Intento de push de b05f282
+
+Work Log:
+- git push origin main → FATAL: token del remote inválido ("Invalid username or token"). El usuario lo revocó (pendiente conocido) o el sandbox restauró .git/config viejo.
+- Remote aún en bb30e90 (Task 34). Commit local b05f282 íntegro (lint 0/0, tsc 0, 0 secretos en staged).
+
+Stage Summary:
+- PENDIENTE: pedir token GitHub nuevo al usuario, configurar remote (git remote set-url, token solo en .git/config) y pushear b05f282.

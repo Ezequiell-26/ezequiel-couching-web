@@ -11,3 +11,6 @@ db/*.db
 db/*.db-journal
 tool-results/
 agent-ctx/
+
+# Referencias subidas por el usuario (no forman parte del sitio)
+upload/

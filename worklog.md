@@ -611,3 +611,22 @@ Work Log:
 
 Stage Summary:
 - Remote origin pre-configurado con el token vigente: los próximos agentes pueden pushear directo con `git push origin main` (GIT_TERMINAL_PROMPT=0). Si el sandbox restaura un snapshot y pierde .git/config, pedir token nuevo al usuario y recordar revocar el anterior.
+---
+Task ID: 31
+Agent: main (Z.ai Code)
+Task: Restyling "exactamente igual o mejor" a las 2 imágenes de referencia FitSync enviadas por el usuario (fondo fotográfico de gimnasio + dashboard preview + fila de 5 mockups + paleta esmeralda)
+
+Work Log:
+- Lectura de las 2 referencias (upload/): dark teal profundo + acento esmeralda ~#3ddc97, hero fotográfico de gimnasio, titular de 3 líneas con última en esmeralda, dashboard de app con anillo/semana/métricas, banda "Más que una app...", fila de 5 mockups de teléfono, rúbrica manuscrita de marca.
+- Fondo fotográfico: generado con z-ai image (gimnasio oscuro cinematográfico, 1344x768) + post-proceso PIL (desaturar azul 0.30, hue hacia teal, V x0.52, contraste) → public/images/hero-gym.jpg. Reutilizado en hero y CTA final con degradados de fusión.
+- Tokens (globals.css): paleta teal profundo (background oklch 0.16 0.014 200, card 0.20, border 0.30) + --primary esmeralda oklch(0.84 0.17 162) + radius 0.75rem. Mantenidas: Archivo display en h1-h3, --font-script (Caveat nueva en layout), glow-volt suave, halo esmeralda 7%. themeColor/manifest/sw → #0c1417.
+- Assets: brand assets restaurados a esmeralda desde 3f88c45 (og, icon-512, icon-512-rounded, icon-192, apple-touch-icon, logo-mark); coberturas de ejercicios restauradas desde 3f88c45 y recoloreadas al esmeralda EXACTO del sistema (H=109,S=184, V intacto) como *-v3.jpg (cache-busting; eliminadas -v2); GROUP_IMAGES y hero actualizados a -v3.
+- Hero reconstruido (estilo referencia): fondo hero-gym.jpg con doble gradiente de fusión; izquierda kicker + H1 3 líneas "Tu cuerpo. / Tu progreso. / Una sola app." (esmeralda) + subcopy + CTAs (Empezar ahora / Abrir Mi Zona) + badges PWA iOS·Android·Escritorio; derecha ZonePreview (dashboard ilustrativo: anillo 57% 4/7 días, barras L-X-J-V, "Entrenamiento de hoy · Fuerza · Tren superior" con CTA esmeralda, tiles Peso/Agua/Racha — todas funciones REALES de Mi Zona); franja inferior de 4 features con iconos esmeralda. Caption "Vista ilustrativa · datos de ejemplo" (honestidad anti-datos-inventados: solo funciones existentes).
+- NUEVO app-showcase.tsx: fila de 5 mockups de teléfono (Entrenamientos/Nutrición/Progreso/Biblioteca/Herramientas) con mini-UIs basadas en las funciones reales (tabs, ring kcal, macros, line chart e1RM, récords, buscador, herramientas), montado en home-view tras ValueProps; disclaimer de datos de ejemplo en la descripción de sección.
+- trust-bar.tsx → banda "Más que una web, es tu entrenador personal." + 4 items icono+texto (planes/seguimiento/herramientas/coach). final-cta.tsx → fondo fotográfico + H2 "Tu mejor versión, cada día." (copys de la referencia) + rúbrica Caveat "No es solo entrenar, es un estilo de vida.".
+- Fix menor: MiniBar con truncate + whitespace-nowrap (evita wrap de "210 g" en el mockup de Nutrición).
+- Verificación: lint 0/0 · tsc 0 · E2E browser (hero con foto+dashboard, banda, 5 phones, tools, CTA final con rúbrica, Mi Zona, biblioteca con coberturas esmeralda verificada por canvas pixel (54,193,133), 404) · IMC 78kg/178cm → "24,6" exacto · 320px: home y mi-zona sw==cw==320 · consola sin errores · dev.log limpio · BD en 0 (9 tablas).
+
+Stage Summary:
+- Home con la estructura exacta de las referencias FitSync (foto gimnasio + dashboard preview + 5 mockups + banda + rúbrica) y paleta esmeralda aplicada a toda la web vía tokens, sin tocar lógica de las 35+ vistas.
+- Imágenes de marca 100% consistentes en esmeralda con cache-busting v3. Datos de ejemplo solo dentro de mockups etiquetados como ilustrativos; cero datos de prueba en BD.

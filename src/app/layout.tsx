@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Archivo } from "next/font/google";
+import { Inter, Archivo, Caveat } from "next/font/google";
 import "./globals.css";
 import { SITE_NAME, SITE_URL, organizationJsonLd } from "@/lib/seo";
 import { RegisterSW } from "@/components/pwa/register-sw";
@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "sw
 
 /** Display para títulos (h1-h3 vía CSS): grotesca atlética, tracking negativo. */
 const archivo = Archivo({ subsets: ["latin"], variable: "--font-archivo", display: "swap" });
+
+/** Rúbrica manuscrita para frases de marca (usar con moderación). */
+const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -32,7 +35,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0b0b",
+  themeColor: "#0c1417",
   width: "device-width",
   initialScale: 1,
 };
@@ -40,7 +43,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const orgJsonLd = JSON.stringify(organizationJsonLd());
   return (
-    <html lang="es" className={`${inter.variable} ${archivo.variable}`}>
+    <html lang="es" className={`${inter.variable} ${archivo.variable} ${caveat.variable}`}>
       <body className="font-sans">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: orgJsonLd }} />
         <RegisterSW />

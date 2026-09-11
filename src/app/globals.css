@@ -1,35 +1,35 @@
 @import "tailwindcss";
 
 /*
- * EZEQUIEL COACHING — sistema visual "premium editorial"
- * Superficies negras neutras (sin tinte de color) + un único acento volt
- * (#bdef27) usado con moderación. Tipografía display Archivo para títulos
- * (tracking negativo, peso alto) + Inter para texto. Bordes hairline,
- * radios contenidos y sombras discretas: cero glows neón, cero halos.
+ * EZEQUIEL COACHING — sistema visual "fitness app premium" (referencia FitSync)
+ * Superficies oscuras con tinte teal profundo + acento esmeralda/mint
+ * (oklch 0.84 0.17 162 ≈ #3ddc97). Fondo fotográfico de gimnasio en hero/CTA
+ * con degradados de fusión. Tipografía: Archivo display para títulos + Inter
+ * para texto. Bordes hairline claros (white/alpha), radios suaves.
  * Tema oscuro por diseño. Sin azul/índigo.
  */
 
 :root {
-  --background: oklch(0.155 0 0);
-  --foreground: oklch(0.97 0 0);
-  --card: oklch(0.19 0 0);
-  --card-foreground: oklch(0.97 0 0);
-  --popover: oklch(0.2 0 0);
-  --popover-foreground: oklch(0.97 0 0);
-  --primary: #bdef27;
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.24 0 0);
-  --secondary-foreground: oklch(0.97 0 0);
-  --muted: oklch(0.23 0 0);
-  --muted-foreground: oklch(0.71 0 0);
-  --accent: oklch(0.25 0 0);
-  --accent-foreground: oklch(0.97 0 0);
+  --background: oklch(0.16 0.014 200);
+  --foreground: oklch(0.97 0.005 175);
+  --card: oklch(0.2 0.016 200);
+  --card-foreground: oklch(0.97 0.005 175);
+  --popover: oklch(0.21 0.016 200);
+  --popover-foreground: oklch(0.97 0.005 175);
+  --primary: oklch(0.84 0.17 162);
+  --primary-foreground: oklch(0.16 0.03 170);
+  --secondary: oklch(0.25 0.018 200);
+  --secondary-foreground: oklch(0.97 0.005 175);
+  --muted: oklch(0.24 0.016 200);
+  --muted-foreground: oklch(0.72 0.015 180);
+  --accent: oklch(0.27 0.02 195);
+  --accent-foreground: oklch(0.97 0.005 175);
   --destructive: oklch(0.62 0.21 25);
   --destructive-foreground: oklch(0.98 0.005 25);
-  --border: oklch(0.27 0 0);
-  --input: oklch(0.24 0 0);
-  --ring: #bdef27;
-  --radius: 0.625rem;
+  --border: oklch(0.3 0.018 200);
+  --input: oklch(0.27 0.018 200);
+  --ring: oklch(0.84 0.17 162);
+  --radius: 0.75rem;
 }
 
 @theme inline {
@@ -58,6 +58,7 @@
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-archivo), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-script: var(--font-caveat), "Segoe Script", cursive;
   --font-mono: ui-monospace, "SFMono-Regular", monospace;
 }
 
@@ -85,10 +86,10 @@ h3 {
 }
 
 ::selection {
-  background: rgb(189 239 39 / 0.28);
+  background: oklch(0.84 0.17 162 / 0.3);
 }
 
-/* Scrollbar fina y discreta (grises neutros) */
+/* Scrollbar fina y discreta (tono teal oscuro) */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -97,34 +98,40 @@ h3 {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.3 0 0);
+  background: oklch(0.32 0.016 200);
   border-radius: 8px;
   border: 2px solid var(--background);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.38 0 0);
+  background: oklch(0.42 0.02 195);
 }
 
 /*
- * Utilidades de marca (rediseñadas "premium"):
- * - glow-volt: sombra ambiental muy contenida para CTAs críticos (sin halo neón).
- * - bg-brand-halo: luz neutra casi imperceptible para dar profundidad a cabeceras.
+ * Utilidades de marca:
+ * - glow-volt: brillo esmeralda muy suave para CTA y anillos de progreso.
+ * - bg-brand-halo: aura esmeralda sutil para cabeceras y tarjetas destacadas.
+ * - .text-script: rúbrica manuscrita (Caveat) para frases de marca.
  */
 .glow-volt {
-  box-shadow: 0 8px 24px -14px rgb(189 239 39 / 0.45);
+  box-shadow: 0 6px 24px -10px oklch(0.84 0.17 162 / 0.45);
 }
 
 .bg-brand-halo {
-  background: radial-gradient(900px 320px at 50% 0%, oklch(1 0 0 / 0.035), transparent 70%);
+  background: radial-gradient(900px 320px at 50% 0%, oklch(0.84 0.17 162 / 0.07), transparent 70%);
+}
+
+.text-script {
+  font-family: var(--font-script);
+  letter-spacing: 0;
 }
 
 .text-balance {
   text-wrap: balance;
 }
 
-/* Foco visible accesible en volt */
+/* Foco visible accesible en esmeralda */
 :focus-visible {
-  outline: 2px solid rgb(189 239 39 / 0.8);
+  outline: 2px solid oklch(0.84 0.17 162 / 0.8);
   outline-offset: 2px;
 }
 

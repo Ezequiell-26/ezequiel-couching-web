@@ -34,17 +34,17 @@ import {
 
 /**
  * Portada por grupo muscular (Task 25-d): ilustraciones flat/vector con la
- * identidad de la marca (fondo carbón #0b0b0e + acento verde lima #bdef27),
+ * identidad de la marca (fondo teal oscuro + acento esmeralda #3ddc97),
  * generadas por IA y servidas desde /public/images/ejercicios.
  */
 const GROUP_IMAGES: Record<ExerciseGroup, string> = {
-  pecho: "/images/ejercicios/pecho-v2.jpg",
-  espalda: "/images/ejercicios/espalda-v2.jpg",
-  piernas: "/images/ejercicios/piernas-v2.jpg",
-  hombros: "/images/ejercicios/hombros-v2.jpg",
-  brazos: "/images/ejercicios/brazos-v2.jpg",
-  core: "/images/ejercicios/core-v2.jpg",
-  "full-body": "/images/ejercicios/full-body-v2.jpg",
+  pecho: "/images/ejercicios/pecho-v3.jpg",
+  espalda: "/images/ejercicios/espalda-v3.jpg",
+  piernas: "/images/ejercicios/piernas-v3.jpg",
+  hombros: "/images/ejercicios/hombros-v3.jpg",
+  brazos: "/images/ejercicios/brazos-v3.jpg",
+  core: "/images/ejercicios/core-v3.jpg",
+  "full-body": "/images/ejercicios/full-body-v3.jpg",
 };
 
 const ANY_GROUP = "todos-los-grupos";

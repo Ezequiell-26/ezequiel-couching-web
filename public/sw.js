@@ -34,7 +34,7 @@ const OFFLINE_HTML = `<!doctype html>
     <style>
       body {
         font-family: system-ui, sans-serif;
-        background: #0b0b0b;
+        background: #0c1417;
         color: #e5e7eb;
         min-height: 100vh;
         margin: 0;

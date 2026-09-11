@@ -1,11 +1,12 @@
 "use client";
 
+import { Zap } from "lucide-react";
 import { useRouter } from "@/lib/router";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 /**
- * Marca: monograma "EC" + lockup con texto.
+ * Marca FITSYNC: tile con bolt esmeralda + wordmark.
  * <360px solo monograma para no chocar con la CTA del navbar.
  */
 export function Logo({
@@ -24,14 +25,14 @@ export function Logo({
         track("nav_click", { label: "logo" });
         navigate("home");
       }}
-      aria-label="Ezequiel Coaching — ir al inicio"
+      aria-label="FITSYNC — ir al inicio"
       className={cn("group flex items-center gap-2.5", className)}
     >
       <span
         aria-hidden
-        className="grid size-9 place-items-center rounded-lg border border-border bg-[#0d0d10] font-mono text-sm font-bold tracking-tight text-white shadow-inner transition-transform duration-300 group-hover:scale-105"
+        className="grid size-9 place-items-center rounded-md border border-border bg-card transition-transform duration-200 group-hover:scale-105"
       >
-        EC<span className="text-primary">.</span>
+        <Zap className="size-4 fill-primary text-primary" />
       </span>
       <span
         className={cn(
@@ -40,10 +41,10 @@ export function Logo({
         )}
       >
         <span className="block text-[13px] font-bold tracking-tight text-foreground">
-          EZEQUIEL<span className="text-primary"> COACHING</span>
+          FIT<span className="text-primary">SYNC</span>
         </span>
         <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.28em] text-muted-foreground">
-          online fitness
+          training system
         </span>
       </span>
     </button>

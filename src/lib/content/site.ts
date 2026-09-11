@@ -5,11 +5,11 @@
  */
 
 export const site = {
-  name: "Ezequiel Coaching",
-  shortName: "EC",
-  tagline: "Entrenamiento online con método, seguimiento real y resultados honestos",
+  name: "FITSYNC",
+  shortName: "FS",
+  tagline: "Entrenamiento con método: plan personalizado, registro real y progreso medible",
   description:
-    "Entrenamiento online profesional: planes personalizados, seguimiento semanal y herramientas gratuitas con fórmulas validadas.",
+    "FITSYNC combina planes de entrenamiento personalizados, registro de cada sesión y métricas reales de progreso en Mi Zona, la app de la plataforma.",
   email: "[SUSTITUIR: email de contacto]",
   whatsappNumber: "", // [SUSTITUIR: número WhatsApp internacional sin +. Vacío = botón oculto]
   location: "[SUSTITUIR: ciudad, país]",

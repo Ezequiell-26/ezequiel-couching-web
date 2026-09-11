@@ -2,46 +2,30 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import {
-  Apple,
-  ArrowRight,
-  Clock,
-  Droplets,
-  Flame,
-  Gauge,
-  Hand,
-  LineChart,
-  Monitor,
-  Scale,
-  Smartphone,
-  UtensilsCrossed,
-  Dumbbell,
-  MessagesSquare,
-} from "lucide-react";
+import { ArrowRight, Clock, Droplets, Flame, Gauge, Hand, Scale } from "lucide-react";
 import { CTAButton } from "@/components/site/cta-button";
 import { Container } from "@/components/site/container";
 import { useReducedMotionSafe } from "@/hooks/use-reduced-motion-safe";
 
-const PLATFORMS = [
-  { icon: Apple, label: "iOS" },
-  { icon: Smartphone, label: "Android" },
-  { icon: Monitor, label: "Escritorio" },
+/** Métricas del spec strip: todas verificables en la web (biblioteca 200,
+ *  7 pestañas de calculadoras, 4 fórmulas publicadas, sin permanencia). */
+const SPECS = [
+  { value: "200", label: "Ejercicios documentados" },
+  { value: "7", label: "Calculadoras con fórmulas reales" },
+  { value: "4", label: "Fórmulas publicadas" },
+  { value: "0", label: "Permanencia" },
 ] as const;
 
-const FEATURES = [
-  { icon: Dumbbell, title: "Entrenamientos personalizados" },
-  { icon: UtensilsCrossed, title: "Contador de calorías" },
-  { icon: LineChart, title: "Seguimiento avanzado" },
-  { icon: MessagesSquare, title: "Tu coach, de verdad" },
-] as const;
+const WEEK_DAYS = ["L", "M", "X", "J", "V", "S", "D"] as const;
+const WEEK_HEIGHTS = [38, 62, 46, 80, 30, 12, 8] as const;
 
-/** Anillo de progreso SVG (decorativo, dentro de la vista ilustrativa). */
+/** Anillo de progreso del mockup (decorativo, datos de ejemplo). */
 function Ring({ pct, size = 92 }: { pct: number; size?: number }) {
   const r = (size - 10) / 2;
   const c = 2 * Math.PI * r;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`Anillo: ${pct}%`}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="oklch(1 0 0 / 0.08)" strokeWidth="8" />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgb(255 255 255 / 0.08)" strokeWidth="8" />
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -55,112 +39,107 @@ function Ring({ pct, size = 92 }: { pct: number; size?: number }) {
       />
       <text
         x="50%"
-        y="47%"
+        y="46%"
         textAnchor="middle"
         dominantBaseline="middle"
         fill="currentColor"
-        fontSize={size * 0.24}
+        fontSize={size * 0.23}
         fontWeight="700"
       >
         {pct}%
       </text>
-      <text x="50%" y="66%" textAnchor="middle" fill="oklch(0.72 0.015 180)" fontSize={size * 0.1}>
+      <text x="50%" y="65%" textAnchor="middle" fill="#94a7a5" fontSize={size * 0.1}>
         4/7 días
       </text>
     </svg>
   );
 }
 
-const WEEK_DAYS = ["L", "M", "X", "J", "V", "S", "D"] as const;
-const WEEK_HEIGHTS = [38, 62, 46, 80, 30, 12, 8] as const; // illustrativo
-
-/** Vista ilustrativa del dashboard de Mi Zona (datos de ejemplo). */
+/** Panel del producto (Mi Zona) con datos de ejemplo etiquetados. */
 function ZonePreview() {
   return (
     <div className="relative">
-      <div
-        aria-hidden
-        className="absolute -inset-6 rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_40%,oklch(0.84_0.17_162/0.16),transparent_70%)] blur-2xl"
-      />
-      <div className="relative rounded-2xl border border-border/80 bg-card/85 p-4 shadow-[0_40px_80px_-40px_oklch(0_0_0/0.9)] backdrop-blur-xl sm:p-5">
-        {/* Cabecera */}
-        <div className="flex items-center justify-between">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-            Mi Zona<span className="text-primary">.</span>
+      <div className="rounded-xl border border-border bg-card/95 shadow-[0_40px_80px_-48px_rgb(0_0_0/0.9)]">
+        {/* Cabecera del producto */}
+        <div className="flex items-center justify-between border-b border-border/70 px-4 py-3">
+          <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            Mi Zona
+            <span aria-hidden className="size-1.5 rounded-full bg-primary" />
           </p>
-          <span className="grid size-8 place-items-center rounded-full border border-border bg-background font-mono text-[10px] font-bold">
-            EC
+          <span className="grid size-7 place-items-center rounded-md border border-border bg-background font-mono text-[10px] font-bold text-muted-foreground">
+            FS
           </span>
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
-          <Hand aria-hidden className="size-4 text-primary" />
-          <p className="text-base font-bold leading-none">Hola</p>
-        </div>
-        <p className="mt-1 text-xs text-muted-foreground">Hoy es un gran día para ser mejor que ayer.</p>
-
-        {/* Entrenamiento de hoy */}
-        <div className="mt-4 rounded-xl border border-border/70 bg-accent/50 p-3.5">
-          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
-            Entrenamiento de hoy
-          </p>
-          <p className="mt-1 text-sm font-bold">Fuerza · Tren superior</p>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Clock aria-hidden className="size-3" /> 45 min
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Gauge aria-hidden className="size-3" /> Moderado
+        <div className="p-4">
+          <div className="flex items-center gap-2">
+            <Hand aria-hidden className="size-4 text-primary" />
+            <p className="text-sm font-bold">Hola</p>
+            <span className="ml-auto inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              <Flame aria-hidden className="size-3" /> 12 días
             </span>
           </div>
-          <span className="glow-volt mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground">
-            Entrenar ahora <ArrowRight aria-hidden className="size-3" />
-          </span>
-        </div>
+          <p className="mt-1 text-xs text-muted-foreground">Bloque Fuerza · semana 2 de 4</p>
 
-        {/* Semana */}
-        <div className="mt-4 flex items-center gap-4 rounded-xl border border-border/70 bg-background/40 p-3.5">
-          <div className="text-primary">
-            <Ring pct={57} />
+          {/* Prioridad del día */}
+          <div className="mt-3 rounded-lg border border-border/70 bg-accent/50 p-3.5">
+            <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+              Entrenamiento de hoy
+            </p>
+            <p className="mt-1 text-sm font-bold">Fuerza · Tren superior</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <Clock aria-hidden className="size-3" /> 45 min
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Gauge aria-hidden className="size-3" /> Moderado
+              </span>
+            </div>
+            <span className="glow-volt mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground">
+              Entrenar ahora <ArrowRight aria-hidden className="size-3" />
+            </span>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold">Tu semana</p>
-            <div className="mt-2 flex h-16 items-end gap-1.5" aria-hidden>
-              {WEEK_DAYS.map((d, i) => (
-                <div key={d} className="flex flex-1 flex-col items-center gap-1">
-                  <div
-                    className={
-                      i < 4
-                        ? "w-full rounded-sm bg-primary/80"
-                        : "w-full rounded-sm bg-foreground/10"
-                    }
-                    style={{ height: `${WEEK_HEIGHTS[i]}%` }}
-                  />
-                  <span className="text-[8px] text-muted-foreground">{d}</span>
-                </div>
-              ))}
+
+          {/* Semana */}
+          <div className="mt-3 flex items-center gap-4 rounded-lg border border-border/70 bg-background/40 p-3.5">
+            <div className="shrink-0 text-primary">
+              <Ring pct={57} size={84} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold">Tu semana</p>
+              <div className="mt-2 flex h-14 items-stretch gap-1.5" aria-hidden>
+                {WEEK_DAYS.map((d, i) => (
+                  <div key={d} className="flex flex-1 flex-col items-center justify-end gap-1">
+                    <div
+                      className={i < 4 ? "w-full rounded-sm bg-primary/80" : "w-full rounded-sm bg-foreground/10"}
+                      style={{ height: `${WEEK_HEIGHTS[i]}%` }}
+                    />
+                    <span className="text-[8px] text-muted-foreground">{d}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Métricas reales de Mi Zona */}
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {[
-            { icon: Scale, v: "72,4", u: "kg", l: "Peso" },
-            { icon: Droplets, v: "2,1", u: "L", l: "Agua" },
-            { icon: Flame, v: "12", u: "días", l: "Racha" },
-          ].map((t) => (
-            <div key={t.l} className="rounded-xl border border-border/70 bg-background/40 p-2.5">
-              <t.icon aria-hidden className="size-3.5 text-primary" />
-              <p className="mt-1.5 text-sm font-bold tabular-nums">
-                {t.v} <span className="text-[10px] font-medium text-muted-foreground">{t.u}</span>
-              </p>
-              <p className="text-[9px] uppercase tracking-wide text-muted-foreground">{t.l}</p>
-            </div>
-          ))}
+          {/* Métricas que la app registra de verdad */}
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {[
+              { icon: Scale, v: "72,4", u: "kg", l: "Peso" },
+              { icon: Droplets, v: "2,1", u: "L", l: "Agua" },
+              { icon: Flame, v: "4/7", u: "", l: "Sesiones" },
+            ].map((t) => (
+              <div key={t.l} className="rounded-lg border border-border/70 bg-background/40 p-2.5">
+                <t.icon aria-hidden className="size-3.5 text-primary" />
+                <p className="mt-1.5 text-sm font-bold tabular-nums">
+                  {t.v} {t.u ? <span className="text-[10px] font-medium text-muted-foreground">{t.u}</span> : null}
+                </p>
+                <p className="text-[9px] uppercase tracking-wide text-muted-foreground">{t.l}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-      <p className="mt-3 text-center text-[10px] text-muted-foreground">
+      <p className="mt-2.5 text-center text-[10px] text-muted-foreground">
         Vista ilustrativa de Mi Zona · datos de ejemplo
       </p>
     </div>
@@ -172,7 +151,7 @@ export function Hero() {
 
   return (
     <section className="relative isolate overflow-hidden border-b border-border/60" aria-labelledby="hero-title">
-      {/* Fondo fotográfico de gimnasio fundido con la base */}
+      {/* Atmósfera: foto de gimnasio fundida con la superficie base */}
       <Image
         src="/images/hero-gym.jpg"
         alt=""
@@ -182,52 +161,51 @@ export function Hero() {
         aria-hidden
         className="-z-20 object-cover"
       />
-      <div aria-hidden className="-z-10 absolute inset-0 bg-gradient-to-b from-background/60 via-background/85 to-background" />
-      <div aria-hidden className="-z-10 absolute inset-0 bg-gradient-to-r from-background/90 via-background/55 to-background/80" />
+      <div aria-hidden className="-z-10 absolute inset-0 bg-gradient-to-b from-background/55 via-background/85 to-background" />
+      <div aria-hidden className="-z-10 absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-background/85" />
 
-      <Container className="pb-10 pt-28 sm:pt-36">
-        <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
-          {/* Columna de valor */}
+      <Container className="pb-12 pt-24 sm:pt-32">
+        <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.02fr] lg:gap-14">
+          {/* Mensaje de marca + acción */}
           <div>
             <motion.p
-              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex items-center gap-2.5 font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground"
+              transition={{ duration: 0.4 }}
+              className="flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground"
             >
-              <span aria-hidden className="inline-block size-2 rounded-[2px] bg-primary" />
-              Ezequiel Coaching · app propia
+              <span aria-hidden className="inline-block size-1.5 rounded-[2px] bg-primary" />
+              Entrenamiento online · Mi Zona
             </motion.p>
 
             <motion.h1
               id="hero-title"
-              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16 }}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.08 }}
-              className="mt-5 text-balance text-4xl font-bold leading-[1.04] sm:text-5xl md:text-6xl"
+              transition={{ duration: 0.45, delay: 0.06 }}
+              className="mt-4 max-w-lg text-balance text-4xl font-bold leading-[1.06] sm:text-5xl"
             >
-              Tu cuerpo.
+              Entrená con intención.
               <br />
-              Tu progreso.
-              <br />
-              <span className="text-primary">Una sola app.</span>
+              Progresá con <span className="text-primary">datos</span>.
             </motion.h1>
 
             <motion.p
-              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16 }}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.16 }}
-              className="mt-5 max-w-xl text-balance text-sm leading-relaxed text-muted-foreground sm:text-base"
+              transition={{ duration: 0.45, delay: 0.12 }}
+              className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base"
             >
-              Entrená con planes personalizados, registrá cada sesión y seguí tu
-              progreso real desde Mi Zona, la app de Ezequiel Coaching.
+              FITSYNC convierte tu entrenamiento en un sistema: un plan hecho para
+              vos, el registro de cada serie y las métricas que muestran si esto
+              realmente está funcionando.
             </motion.p>
 
             <motion.div
-              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16 }}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.24 }}
-              className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
+              transition={{ duration: 0.45, delay: 0.18 }}
+              className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center"
             >
               <CTAButton
                 view="cuestionario"
@@ -237,69 +215,46 @@ export function Hero() {
                 source="hero"
                 className="w-full sm:w-auto"
               >
-                Empezar ahora
+                Armá tu plan
               </CTAButton>
               <CTAButton
                 view="zona"
-                size="lg"
-                variant="outline"
+                variant="link"
                 event="cta_click"
                 eventProps={{ label: "hero-mi-zona" }}
                 source="hero"
-                withArrow={false}
-                className="w-full sm:w-auto"
+                className="justify-center px-2"
               >
-                Abrir Mi Zona
+                Explorar Mi Zona
               </CTAButton>
             </motion.div>
 
-            {/* Plataformas (PWA instalable) */}
-            <motion.div
-              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
+            {/* Spec strip: densidad de información real, sin iconos decorativos */}
+            <motion.dl
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.32 }}
-              className="mt-7 flex flex-wrap items-center gap-2"
+              transition={{ duration: 0.45, delay: 0.26 }}
+              className="mt-10 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-border pt-6 sm:grid-cols-4"
             >
-              {PLATFORMS.map((p) => (
-                <span
-                  key={p.label}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/70 px-3 py-1.5 text-xs font-medium text-foreground/90 backdrop-blur"
-                >
-                  <p.icon aria-hidden className="size-3.5 text-primary" />
-                  {p.label}
-                </span>
+              {SPECS.map((s) => (
+                <div key={s.label}>
+                  <dd className="text-xl font-bold tabular-nums sm:text-2xl">{s.value}</dd>
+                  <dt className="mt-1 text-[11px] leading-snug text-muted-foreground">{s.label}</dt>
+                </div>
               ))}
-              <span className="ml-1 text-[11px] text-muted-foreground">PWA instalable · gratis</span>
-            </motion.div>
+            </motion.dl>
           </div>
 
-          {/* Vista ilustrativa del dashboard */}
+          {/* Producto */}
           <motion.div
-            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mx-auto w-full max-w-[420px] lg:max-w-none"
+            transition={{ duration: 0.5, delay: 0.16 }}
+            className="mx-auto w-full max-w-[400px] lg:max-w-[440px]"
           >
             <ZonePreview />
           </motion.div>
         </div>
-
-        {/* Franja de features */}
-        <motion.ul
-          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.4 }}
-          className="mt-12 grid grid-cols-2 gap-x-4 gap-y-6 border-t border-border/60 pt-8 sm:grid-cols-4"
-        >
-          {FEATURES.map((f) => (
-            <li key={f.title} className="flex items-center gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
-                <f.icon aria-hidden className="size-5" />
-              </span>
-              <span className="text-sm font-semibold leading-tight">{f.title}</span>
-            </li>
-          ))}
-        </motion.ul>
       </Container>
     </section>
   );

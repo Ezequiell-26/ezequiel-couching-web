@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
     await sendEmail({
       to: parsed.data.email,
-      subject: "Tu guía gratuita — Ezequiel Coaching",
+      subject: "Tu guía gratuita — FITSYNC",
       body: "Gracias por tu interés. Aquí tienes la guía gratuita.",
     });
 

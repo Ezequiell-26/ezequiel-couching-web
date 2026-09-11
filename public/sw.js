@@ -30,11 +30,11 @@ const OFFLINE_HTML = `<!doctype html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sin conexión — Ezequiel Coaching</title>
+    <title>Sin conexión — FITSYNC</title>
     <style>
       body {
         font-family: system-ui, sans-serif;
-        background: #0c1417;
+        background: #071012;
         color: #e5e7eb;
         min-height: 100vh;
         margin: 0;

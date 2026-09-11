@@ -87,7 +87,7 @@ export function Navbar() {
         aria-label="Navegación principal"
         className={cn(
           "relative z-50 mx-auto flex w-full max-w-6xl items-center justify-between px-3 transition-all duration-300 sm:px-6 lg:px-8",
-          scrolled ? "h-14" : "h-[76px]",
+          scrolled ? "h-14" : "h-16",
         )}
       >
         <Logo
@@ -142,6 +142,7 @@ export function Navbar() {
             eventProps={{ label: "navbar-cuestionario" }}
             source="navbar"
             size="sm"
+            variant="outline"
             className="hidden md:inline-flex"
           >
             Empezar

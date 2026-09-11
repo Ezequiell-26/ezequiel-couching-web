@@ -8,132 +8,132 @@ import type { Metadata } from "next";
 import type { ViewId } from "./router";
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ezequielcoaching.example";
-export const SITE_NAME = "Ezequiel Coaching";
+export const SITE_NAME = "FITSYNC";
 
 type Meta = { title: string; description: string };
 
 const VIEW_META: Record<ViewId, Meta> = {
   home: {
-    title: "Ezequiel Coaching — Entrenador personal online",
+    title: "FITSYNC — Entrenador personal online",
     description:
       "Entrenamiento online profesional: planes personalizados, seguimiento real y herramientas gratuitas (calculadoras y contador de calorías).",
   },
   coaching: {
-    title: "Coaching online — Ezequiel Coaching",
+    title: "Coaching online — FITSYNC",
     description: "Programas de coaching online 1:1: acompañamiento, planificación y seguimiento semanal.",
   },
   servicio: {
-    title: "Servicio de coaching — Ezequiel Coaching",
+    title: "Servicio de coaching — FITSYNC",
     description: "Detalle del servicio de coaching online: qué incluye, para quién es y cómo empezar.",
   },
   tienda: {
-    title: "Tienda — Ezequiel Coaching",
+    title: "Tienda — FITSYNC",
     description: "Programas y recursos digitales descargables para entrenar con método.",
   },
   producto: {
-    title: "Producto — Ezequiel Coaching",
+    title: "Producto — FITSYNC",
     description: "Ficha del producto digital: contenido, formato y compra.",
   },
   checkout: {
-    title: "Checkout — Ezequiel Coaching",
+    title: "Checkout — FITSYNC",
     description: "Finaliza tu pedido de forma segura.",
   },
   pedido: {
-    title: "Estado de mi pedido — Ezequiel Coaching",
+    title: "Estado de mi pedido — FITSYNC",
     description: "Consulta el estado de tu pedido con tu número y email.",
   },
   "guia-gratis": {
-    title: "Guía gratuita — Ezequiel Coaching",
+    title: "Guía gratuita — FITSYNC",
     description: "Descarga la guía de inicio: fundamentos de entrenamiento y nutrición.",
   },
   cuestionario: {
-    title: "Cuestionario inicial — Ezequiel Coaching",
+    title: "Cuestionario inicial — FITSYNC",
     description: "Cuéntame tu situación (edad, peso, objetivo, experiencia) y recibe tu propuesta.",
   },
   metodo: {
-    title: "Método — Ezequiel Coaching",
+    title: "Método — FITSYNC",
     description: "El método de trabajo por fases: evaluación, planificación, ejecución y revisión.",
   },
   resultados: {
-    title: "Resultados — Ezequiel Coaching",
+    title: "Resultados — FITSYNC",
     description: "Testimonios y resultados de clientes, con contexto honesto.",
   },
   blog: {
-    title: "Blog — Ezequiel Coaching",
+    title: "Blog — FITSYNC",
     description: "Artículos sobre entrenamiento, nutrición y hábitos.",
   },
   post: {
-    title: "Artículo — Ezequiel Coaching",
-    description: "Artículo del blog de Ezequiel Coaching.",
+    title: "Artículo — FITSYNC",
+    description: "Artículo del blog de FITSYNC.",
   },
   planes: {
-    title: "Planes de entrenamiento — Ezequiel Coaching",
+    title: "Planes de entrenamiento — FITSYNC",
     description: "Planes de entrenamiento por nivel y objetivo, listos para empezar.",
   },
   plan: {
-    title: "Plan de entrenamiento — Ezequiel Coaching",
+    title: "Plan de entrenamiento — FITSYNC",
     description: "Detalle del plan de entrenamiento: semanas, sesiones y compra.",
   },
   progreso: {
-    title: "Mi progreso — Ezequiel Coaching",
+    title: "Mi progreso — FITSYNC",
     description: "Registra tu peso, tus sesiones y sigue tu evolución (datos guardados en tu dispositivo).",
   },
   calculadoras: {
-    title: "Calculadoras fitness — Ezequiel Coaching",
+    title: "Calculadoras fitness — FITSYNC",
     description: "IMC, calorías, macros, 1RM, grasa corporal, agua y peso ideal con fórmulas validadas.",
   },
   contador: {
-    title: "Contador de calorías — Ezequiel Coaching",
+    title: "Contador de calorías — FITSYNC",
     description: "Registra tus comidas del día, controla kcal y macronutrientes. Datos guardados en tu dispositivo.",
   },
   biblioteca: {
-    title: "Biblioteca de ejercicios — Ezequiel Coaching",
+    title: "Biblioteca de ejercicios — FITSYNC",
     description:
       "Biblioteca de ejercicios con técnica paso a paso: músculos implicados, ejecución y consejos para pecho, espalda, piernas, hombros, brazos y core.",
   },
   zona: {
-    title: "Mi Zona de entrenamiento — Ezequiel Coaching",
+    title: "Mi Zona de entrenamiento — FITSYNC",
     description:
       "Tu zona de entrenamiento personal: rutinas, sesiones guiadas y seguimiento adaptadas a tu objetivo y material.",
   },
   contacto: {
-    title: "Contacto — Ezequiel Coaching",
+    title: "Contacto — FITSYNC",
     description: "Escríbeme para dudas, propuestas o colaboración.",
   },
   faq: {
-    title: "Preguntas frecuentes — Ezequiel Coaching",
+    title: "Preguntas frecuentes — FITSYNC",
     description: "Respuestas a las dudas más comunes sobre coaching, planes y herramientas.",
   },
   privacidad: {
-    title: "Política de privacidad — Ezequiel Coaching",
+    title: "Política de privacidad — FITSYNC",
     description: "Cómo tratamos tus datos personales (RGPD/LOPDGDD).",
   },
   terminos: {
-    title: "Términos y condiciones — Ezequiel Coaching",
+    title: "Términos y condiciones — FITSYNC",
     description: "Condiciones de uso, contratación y desistimiento.",
   },
   "aviso-legal": {
-    title: "Aviso legal — Ezequiel Coaching",
+    title: "Aviso legal — FITSYNC",
     description: "Identificación del titular y condiciones de uso (LSSI-CE).",
   },
   cookies: {
-    title: "Política de cookies — Ezequiel Coaching",
+    title: "Política de cookies — FITSYNC",
     description: "Qué cookies usamos y cómo gestionarlas.",
   },
   dashboard: {
-    title: "Mi panel — Ezequiel Coaching",
+    title: "Mi panel — FITSYNC",
     description: "Tu resumen diario: herramientas, progreso y accesos rápidos.",
   },
   coach: {
-    title: "Panel del entrenador — Ezequiel Coaching",
+    title: "Panel del entrenador — FITSYNC",
     description: "Gestión de leads, mensajes y pedidos.",
   },
   admin: {
-    title: "Administración — Ezequiel Coaching",
+    title: "Administración — FITSYNC",
     description: "Panel de administración.",
   },
   "not-found": {
-    title: "Página no encontrada — Ezequiel Coaching",
+    title: "Página no encontrada — FITSYNC",
     description: "La página que buscas no existe o cambió de dirección.",
   },
 };

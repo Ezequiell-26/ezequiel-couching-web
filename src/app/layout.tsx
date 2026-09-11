@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Archivo, Caveat } from "next/font/google";
+import { Inter, Archivo } from "next/font/google";
 import "./globals.css";
 import { SITE_NAME, SITE_URL, organizationJsonLd } from "@/lib/seo";
 import { RegisterSW } from "@/components/pwa/register-sw";
@@ -9,17 +9,14 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "sw
 /** Display para títulos (h1-h3 vía CSS): grotesca atlética, tracking negativo. */
 const archivo = Archivo({ subsets: ["latin"], variable: "--font-archivo", display: "swap" });
 
-/** Rúbrica manuscrita para frases de marca (usar con moderación). */
-const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat", display: "swap" });
-
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — Entrenador personal online`,
+    default: `${SITE_NAME} — Entrenamiento con método, registro y progreso real`,
     template: `%s`,
   },
   description:
-    "Entrenamiento online profesional: planes personalizados, seguimiento real y herramientas gratuitas con fórmulas validadas.",
+    "FITSYNC: entrenamiento online premium con planes personalizados, registro de cada sesión y métricas reales de progreso en Mi Zona.",
   applicationName: SITE_NAME,
   appleWebApp: {
     capable: true,
@@ -35,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0c1417",
+  themeColor: "#071012",
   width: "device-width",
   initialScale: 1,
 };
@@ -43,7 +40,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const orgJsonLd = JSON.stringify(organizationJsonLd());
   return (
-    <html lang="es" className={`${inter.variable} ${archivo.variable} ${caveat.variable}`}>
+    <html lang="es" className={`${inter.variable} ${archivo.variable}`}>
       <body className="font-sans">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: orgJsonLd }} />
         <RegisterSW />

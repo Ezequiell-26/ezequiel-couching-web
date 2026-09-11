@@ -1,334 +1,338 @@
 import {
   ArrowRight,
-  BookOpen,
-  Calculator,
   ChevronRight,
+  Droplets,
   Dumbbell,
   Flame,
   Home,
   LineChart,
   MoreHorizontal,
-  Search,
+  Scale,
+  Timer,
   UtensilsCrossed,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { Container } from "@/components/site/container";
 import { Reveal } from "@/components/site/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
+import { cn } from "@/lib/utils";
 
 /**
- * Fila de mockups de la app (estilo referencia FitSync): cinco pantallas de
- * Mi Zona con datos de ejemplo, claramente etiquetadas como ilustrativas.
- * Cada pantalla refleja funciones REALES de la app (entrenar, contador,
- * progreso/e1RM, biblioteca, herramientas).
+ * Composición de producto "family shot" de Mi Zona: panel desktop (dashboard)
+ * con dos teléfonos delante, solapados en la esquina inferior derecha.
+ * Datos de ejemplo solo dentro de las pantallas; todas las funciones mostradas
+ * existen (rutina del día, series/cargas, descanso, PRs, e1RM, peso, agua, racha).
  */
 
-function MiniTabs({ tabs, active }: { tabs: string[]; active: number }) {
+const NAV_ICONS = [Home, Dumbbell, UtensilsCrossed, LineChart] as const;
+const PHONE_SHADOW = "shadow-[0_24px_60px_-40px_oklch(0_0_0/0.8)]";
+const EXERCISES: ReadonlyArray<readonly [string, string, string]> = [
+  ["Press banca", "4×8", "60 kg"], ["Remo con barra", "4×10", "55 kg"], ["Press militar", "3×8", "32,5 kg"],
+];
+const RECORDS: ReadonlyArray<readonly [string, string]> = [
+  ["Sentadilla", "110 kg"], ["Peso muerto", "140 kg"], ["Press militar", "47,5 kg"],
+];
+const DAYS = ["L", "M", "X", "J", "V", "S", "D"] as const;
+
+function Eyebrow({ className, children }: { className?: string; children: string }) {
   return (
-    <div className="flex gap-1 rounded-lg border border-border/60 bg-background/50 p-0.5">
-      {tabs.map((t, i) => (
-        <span
-          key={t}
-          className={
-            i === active
-              ? "flex-1 rounded-md bg-primary px-1.5 py-1 text-center text-[8px] font-bold text-primary-foreground"
-              : "flex-1 rounded-md px-1.5 py-1 text-center text-[8px] font-medium text-muted-foreground"
-          }
-        >
-          {t}
-        </span>
-      ))}
+    <p className={cn("font-mono uppercase tracking-[0.16em] text-muted-foreground", className ?? "text-[9px]")}>
+      {children}
+    </p>
+  );
+}
+
+function MiniBar({ pct, className }: { pct: number; className?: string }) {
+  return (
+    <div className={cn("h-1 rounded-full bg-foreground/10", className)}>
+      <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
     </div>
   );
 }
 
-function MiniBar({ label, value, pct }: { label: string; value: string; pct: number }) {
-  return (
-    <div>
-      <div className="flex items-center justify-between gap-1 text-[8px] text-muted-foreground">
-        <span className="truncate">{label}</span>
-        <span className="whitespace-nowrap font-semibold text-foreground/80">{value}</span>
-      </div>
-      <div className="mt-0.5 h-1 rounded-full bg-foreground/10">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function MiniRing({ center, sub }: { center: string; sub: string }) {
-  const size = 64;
-  const r = (size - 8) / 2;
+function WeekRing({ value, total }: { value: number; total: number }) {
+  const size = 80;
+  const r = 35;
   const c = 2 * Math.PI * r;
-  const pct = 0.77;
   return (
     <div className="relative shrink-0 text-primary">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="oklch(1 0 0 / 0.08)" strokeWidth="6" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="oklch(1 0 0 / 0.08)" strokeWidth="7" />
         <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="6"
-          strokeLinecap="round"
-          strokeDasharray={`${c * pct} ${c}`}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth="7"
+          strokeLinecap="round" strokeDasharray={`${c * (value / total)} ${c}`} transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center text-center leading-none">
         <div>
-          <p className="text-[11px] font-bold text-foreground">{center}</p>
-          <p className="mt-0.5 text-[7px] text-muted-foreground">{sub}</p>
+          <p className="text-[13px] font-bold tabular-nums text-foreground">{value}/{total}</p>
+          <p className="mt-1 text-[8px] text-muted-foreground">días</p>
         </div>
       </div>
     </div>
   );
 }
 
-function MiniLine() {
+function E1rmChart() {
   return (
-    <svg viewBox="0 0 180 52" className="h-12 w-full" aria-hidden>
+    <svg viewBox="0 0 180 56" className="mt-2 h-12 w-full text-primary" aria-hidden>
       <defs>
-        <linearGradient id="pg-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="oklch(0.84 0.17 162 / 0.35)" />
+        <linearGradient id="as-e1rm" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="oklch(0.84 0.17 162 / 0.25)" />
           <stop offset="100%" stopColor="oklch(0.84 0.17 162 / 0)" />
         </linearGradient>
       </defs>
+      <line x1="4" y1="18" x2="176" y2="18" stroke="oklch(1 0 0 / 0.06)" strokeWidth="1" />
+      <line x1="4" y1="36" x2="176" y2="36" stroke="oklch(1 0 0 / 0.06)" strokeWidth="1" />
+      <path d="M4 42 L30 37 L56 39 L82 30 L108 26 L134 28 L152 19 L176 13 L176 54 L4 54 Z" fill="url(#as-e1rm)" />
       <path
-        d="M4 14 L34 22 L64 18 L94 30 L124 26 L154 38 L176 34 L176 52 L4 52 Z"
-        fill="url(#pg-fill)"
+        d="M4 42 L30 37 L56 39 L82 30 L108 26 L134 28 L152 19 L176 13"
+        fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
       />
-      <path
-        d="M4 14 L34 22 L64 18 L94 30 L124 26 L154 38 L176 34"
-        fill="none"
-        stroke="oklch(0.84 0.17 162)"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <circle cx="176" cy="13" r="2.5" fill="currentColor" />
     </svg>
   );
 }
 
-const NAV_ICONS = [Home, Dumbbell, UtensilsCrossed, LineChart] as const;
-
-function Phone({
-  title,
-  activeNav,
-  children,
+function MetricTile({
+  icon: Icon, label, value, unit, sub, pct,
 }: {
-  title: string;
-  activeNav: number;
-  children: React.ReactNode;
+  icon: LucideIcon; label: string; value: string; unit: string; sub: string; pct?: number;
 }) {
   return (
-    <div className="mx-auto w-full max-w-[232px] rounded-[1.9rem] border border-border bg-card p-2.5 shadow-[0_30px_60px_-30px_oklch(0_0_0/0.85)]">
-      <div className="overflow-hidden rounded-[1.35rem] border border-border/60 bg-background/70">
-        <div className="flex items-center justify-between px-3.5 pb-1 pt-2.5" aria-hidden>
-          <span className="text-[9px] font-semibold tabular-nums">9:41</span>
-          <span className="h-1.5 w-10 rounded-full bg-foreground/15" />
-          <span className="font-mono text-[8px] font-bold text-muted-foreground">EC</span>
+    <div className="min-w-0 rounded-xl border border-border/60 bg-background/50 p-3">
+      <div className="flex items-center gap-1.5">
+        <Icon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+        <Eyebrow className="min-w-0 truncate text-[9px]">{label}</Eyebrow>
+      </div>
+      <p className="mt-2 text-base font-bold leading-none tabular-nums sm:text-lg">
+        {value} <span className="text-[10px] font-semibold text-muted-foreground">{unit}</span>
+      </p>
+      {typeof pct === "number" ? <MiniBar pct={pct} className="mt-2" /> : null}
+      <p className="mt-1.5 truncate text-[9px] text-muted-foreground">{sub}</p>
+    </div>
+  );
+}
+
+function TodayCard() {
+  return (
+    <div className="h-full rounded-xl border border-border/60 bg-accent/40 p-4">
+      <Eyebrow>Entrenamiento de hoy</Eyebrow>
+      <p className="mt-1.5 text-base font-bold tracking-tight sm:text-lg">Fuerza · Tren superior</p>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">Semana 2 · Sesión 2 de 4 · 5 ejercicios</p>
+      <div className="mt-2 divide-y divide-border/60">
+        {EXERCISES.map(([name, sets, load]) => (
+          <div key={name} className="flex items-center justify-between gap-3 py-1.5 first:pt-0">
+            <span className="min-w-0 truncate text-[11px] font-medium">{name}</span>
+            <span className="whitespace-nowrap text-[10px] tabular-nums text-muted-foreground">{sets} · {load}</span>
+          </div>
+        ))}
+        <p className="py-1.5 text-[10px] text-muted-foreground">+ 2 ejercicios más</p>
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-[11px] font-bold text-primary-foreground">
+          Entrenar ahora
+          <ArrowRight className="size-3.5" aria-hidden />
+        </span>
+        <span className="hidden whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground sm:block">
+          ≈ 50 min
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function WeekCard() {
+  return (
+    <div className="h-full rounded-xl border border-border/60 bg-accent/40 p-4">
+      <Eyebrow>Semana 2</Eyebrow>
+      <div className="mt-3 flex items-center gap-4">
+        <WeekRing value={4} total={7} />
+        <div className="min-w-0">
+          <p className="text-sm font-bold leading-tight">4 de 7 días</p>
+          <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">Entrenos completados esta semana</p>
         </div>
-        <p className="px-3.5 pb-2 pt-1 text-[13px] font-bold tracking-tight">{title}</p>
-        <div className="space-y-2 px-3 pb-3">{children}</div>
-        <div className="flex items-center justify-around border-t border-border/60 px-2 py-2" aria-hidden>
-          {NAV_ICONS.map((Icon, i) => (
-            <Icon
-              key={i}
-              className={i === activeNav ? "size-3.5 text-primary" : "size-3.5 text-muted-foreground/70"}
-            />
-          ))}
-          <MoreHorizontal className="size-3.5 text-muted-foreground/70" />
+      </div>
+      <div className="mt-4 flex items-center justify-between" aria-hidden>
+        {DAYS.map((d, i) => (
+          <span
+            key={d}
+            className={i < 4 ? "text-[10px] font-bold text-primary" : "text-[10px] font-medium text-muted-foreground"}
+          >
+            {d}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PanelDesktop() {
+  return (
+    <div className="w-full overflow-hidden rounded-xl border border-border bg-card lg:max-w-[820px]">
+      <div className="flex items-center gap-3 border-b border-border/60 px-4 py-2" aria-hidden>
+        <span className="flex shrink-0 gap-1.5">
+          <span className="size-1.5 rounded-full bg-foreground/20" />
+          <span className="size-1.5 rounded-full bg-foreground/20" />
+          <span className="size-1.5 rounded-full bg-foreground/20" />
+        </span>
+        <span className="min-w-0 flex-1 truncate text-center font-mono text-[9px] text-muted-foreground">
+          fitsync.app/mi-zona
+        </span>
+        <span className="shrink-0 font-mono text-[9px] font-bold text-muted-foreground">FS</span>
+      </div>
+      <div className="p-4 sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <Eyebrow>Mi Zona</Eyebrow>
+            <p className="mt-1.5 text-xl font-bold tracking-tight sm:text-2xl">Buenas</p>
+            <p className="mt-1 text-xs text-muted-foreground">Martes · Bloque Fuerza · Semana 2</p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-4 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <TodayCard />
+          </div>
+          <div className="lg:col-span-4 lg:row-span-2">
+            <WeekCard />
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:col-span-8">
+            <MetricTile icon={Scale} label="Peso" value="78,4" unit="kg" sub="−0,6 kg esta semana" />
+            <MetricTile icon={Droplets} label="Agua" value="1,8" unit="L" sub="de 2,5 L" pct={72} />
+            <MetricTile icon={Flame} label="Racha" value="12" unit="días" sub="mejor racha: 21 días" />
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-const SHOWCASE = [
-  {
-    title: "Entrenamientos",
-    caption: "Planes adaptados a tu nivel y objetivo.",
-    nav: 1,
-    body: (
-      <>
-        <MiniTabs tabs={["Plan", "Biblioteca", "Metas"]} active={0} />
-        <div className="rounded-xl border border-border/60 bg-accent/40 p-2.5">
-          <p className="text-[8px] uppercase tracking-[0.16em] text-muted-foreground">Entrenamiento de hoy</p>
-          <p className="mt-0.5 text-[11px] font-bold">Fuerza · Tren superior</p>
-          <p className="mt-1 text-[8px] text-muted-foreground">4 semanas · Intermedio</p>
-          <span className="mt-2 inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[8px] font-bold text-primary-foreground">
-            Entrenar ahora <ArrowRight className="size-2.5" aria-hidden />
+function StatusBar() {
+  return (
+    <div className="relative flex items-center justify-between px-3 pt-2" aria-hidden>
+      <span className="text-[8px] font-semibold tabular-nums">9:41</span>
+      <span className="absolute left-1/2 top-2 h-1 w-9 -translate-x-1/2 rounded-full bg-foreground/15" />
+      <span className="font-mono text-[8px] font-bold text-muted-foreground">FS</span>
+    </div>
+  );
+}
+
+function PhoneNav({ active }: { active: number }) {
+  return (
+    <div className="flex items-center justify-between border-t border-border/60 px-3 py-2" aria-hidden>
+      {NAV_ICONS.map((Icon, i) => (
+        <Icon key={i} className={i === active ? "size-3.5 text-primary" : "size-3.5 text-muted-foreground/60"} />
+      ))}
+      <MoreHorizontal className="size-3.5 text-muted-foreground/60" />
+    </div>
+  );
+}
+
+function PhoneFrame({
+  activeNav, widthClass, children,
+}: {
+  activeNav: number; widthClass: string; children: ReactNode;
+}) {
+  return (
+    <div className={cn("rounded-xl border border-border bg-card p-1.5", PHONE_SHADOW, widthClass)}>
+      <div className="overflow-hidden rounded-lg border border-border/60 bg-background">
+        <StatusBar />
+        <div className="space-y-2 px-2.5 pb-3 pt-2.5">{children}</div>
+        <PhoneNav active={activeNav} />
+      </div>
+    </div>
+  );
+}
+
+function SessionPhoneBody() {
+  return (
+    <>
+      <div className="flex items-center justify-between gap-2">
+        <Eyebrow className="text-[8px]">Entrenar</Eyebrow>
+        <span className="whitespace-nowrap font-mono text-[8px] uppercase tracking-[0.16em] text-primary">En curso</span>
+      </div>
+      <p className="text-[12px] font-bold tracking-tight">Fuerza · Tren superior</p>
+      <div className="rounded-lg border border-border/60 bg-accent/40 p-3">
+        <div className="flex items-center justify-between gap-2">
+          <Eyebrow className="min-w-0 truncate text-[8px]">Ejercicio actual</Eyebrow>
+          <span className="whitespace-nowrap text-[8px] font-semibold tabular-nums text-muted-foreground">Serie 2/4</span>
+        </div>
+        <p className="mt-1.5 whitespace-nowrap text-[15px] font-bold leading-none tabular-nums text-primary">60 kg × 8</p>
+        <div className="mt-2.5 flex items-center gap-1.5" aria-hidden>
+          <span className="size-1.5 rounded-full bg-primary" />
+          <span className="size-1.5 rounded-full border border-primary" />
+          <span className="size-1.5 rounded-full bg-foreground/15" />
+          <span className="size-1.5 rounded-full bg-foreground/15" />
+        </div>
+      </div>
+      <div className="rounded-lg border border-border/60 bg-accent/40 p-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="flex min-w-0 items-center gap-1.5">
+            <Timer className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+            <Eyebrow className="min-w-0 truncate text-[8px]">Descanso</Eyebrow>
           </span>
+          <span className="whitespace-nowrap text-[13px] font-bold leading-none tabular-nums">1:29</span>
         </div>
-        <MiniBar label="Semana actual" value="2/4" pct={50} />
-        <div className="space-y-1.5">
-          <p className="text-[8px] uppercase tracking-[0.16em] text-muted-foreground">Otros planes</p>
-          {["Torso inferior · Principiante", "HIIT · Intermedio"].map((p) => (
-            <div key={p} className="flex items-center justify-between rounded-lg border border-border/60 bg-background/50 px-2 py-1.5">
-              <span className="text-[9px] font-medium">{p}</span>
-              <ChevronRight className="size-3 text-muted-foreground" aria-hidden />
-            </div>
-          ))}
-        </div>
-      </>
-    ),
-  },
-  {
-    title: "Nutrición",
-    caption: "Contador de calorías simple y efectivo.",
-    nav: 2,
-    body: (
-      <>
-        <MiniTabs tabs={["Hoy", "Calculadoras"]} active={0} />
-        <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-accent/40 p-2.5">
-          <MiniRing center="1.840" sub="/ 2.400 kcal" />
-          <div className="min-w-0 flex-1 space-y-1.5">
-            <MiniBar label="Proteínas" value="120 g" pct={72} />
-            <MiniBar label="Carbohidratos" value="210 g" pct={64} />
-            <MiniBar label="Grasas" value="65 g" pct={58} />
-          </div>
-        </div>
-        <p className="text-[8px] uppercase tracking-[0.16em] text-muted-foreground">Comidas de hoy</p>
-        {[
-          ["Desayuno", "420 kcal"],
-          ["Almuerzo", "580 kcal"],
-          ["Cena", "640 kcal"],
-        ].map(([m, k]) => (
-          <div key={m} className="flex items-center justify-between rounded-lg border border-border/60 bg-background/50 px-2 py-1.5">
-            <span className="text-[9px] font-medium">{m}</span>
-            <span className="text-[9px] tabular-nums text-muted-foreground">{k}</span>
+        <MiniBar pct={62} className="mt-2.5" />
+        <p className="mt-1.5 truncate text-[8px] text-muted-foreground">Serie 3 · 60 kg × 8</p>
+      </div>
+      <p className="flex items-center gap-1 text-[9px] text-muted-foreground">
+        <ChevronRight className="size-3 shrink-0" aria-hidden />
+        <span className="min-w-0 truncate">Siguiente: press inclinado</span>
+      </p>
+    </>
+  );
+}
+
+function ProgressPhoneBody() {
+  return (
+    <>
+      <Eyebrow className="text-[8px]">Progreso</Eyebrow>
+      <div className="rounded-lg border border-border/60 bg-accent/40 p-3">
+        <Eyebrow className="text-[8px]">e1RM · Banca</Eyebrow>
+        <p className="mt-1.5 whitespace-nowrap text-[15px] font-bold leading-none tabular-nums text-primary">82,3 kg</p>
+        <p className="mt-1 truncate text-[8px] text-muted-foreground">+11 % en 8 semanas · Epley</p>
+        <E1rmChart />
+      </div>
+      <Eyebrow className="text-[8px]">Récords</Eyebrow>
+      <div className="divide-y divide-border/60">
+        {RECORDS.map(([name, value]) => (
+          <div key={name} className="flex items-center justify-between gap-2 py-1.5 first:pt-0">
+            <span className="min-w-0 truncate text-[10px] font-medium">{name}</span>
+            <span className="whitespace-nowrap text-[10px] font-semibold tabular-nums">{value}</span>
           </div>
         ))}
-      </>
-    ),
-  },
-  {
-    title: "Progreso",
-    caption: "Visualizá tus resultados reales.",
-    nav: 3,
-    body: (
-      <>
-        <MiniTabs tabs={["Resumen", "Fuerza"]} active={1} />
-        <div className="rounded-xl border border-border/60 bg-accent/40 p-2.5">
-          <div className="flex items-baseline justify-between">
-            <p className="text-[9px] text-muted-foreground">Peso corporal</p>
-            <p className="text-[11px] font-bold tabular-nums">78,4 kg</p>
-          </div>
-          <MiniLine />
-        </div>
-        <p className="text-[8px] uppercase tracking-[0.16em] text-muted-foreground">Récords · e1RM</p>
-        {[
-          ["Press de banca", "82,3 kg"],
-          ["Sentadilla", "110 kg"],
-          ["Peso muerto", "130 kg"],
-        ].map(([l, v]) => (
-          <div key={l} className="flex items-center justify-between rounded-lg border border-border/60 bg-background/50 px-2 py-1.5">
-            <span className="text-[9px] font-medium">{l}</span>
-            <span className="text-[9px] font-semibold tabular-nums text-primary">{v}</span>
-          </div>
-        ))}
-      </>
-    ),
-  },
-  {
-    title: "Biblioteca",
-    caption: "200 ejercicios con técnica clara.",
-    nav: 1,
-    body: (
-      <>
-        <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-background/50 px-2 py-1.5 text-muted-foreground">
-          <Search className="size-3" aria-hidden />
-          <span className="text-[9px]">Buscar ejercicio o músculo…</span>
-        </div>
-        <div className="flex flex-wrap gap-1">
-          {["Pecho", "Espalda", "Piernas"].map((g, i) => (
-            <span
-              key={g}
-              className={
-                i === 0
-                  ? "rounded-full bg-primary px-2 py-0.5 text-[8px] font-bold text-primary-foreground"
-                  : "rounded-full border border-border/60 bg-background/50 px-2 py-0.5 text-[8px] text-muted-foreground"
-              }
-            >
-              {g}
-            </span>
-          ))}
-        </div>
-        {["Press de banca con barra", "Jalón al pecho"].map((e) => (
-          <div key={e} className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/50 p-1.5">
-            <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/15 text-primary">
-              <Dumbbell className="size-3.5" aria-hidden />
-            </span>
-            <span className="min-w-0 flex-1 truncate text-[9px] font-medium">{e}</span>
-            <ChevronRight className="size-3 shrink-0 text-muted-foreground" aria-hidden />
-          </div>
-        ))}
-        <p className="rounded-lg bg-primary/10 px-2 py-1.5 text-[8px] font-semibold text-primary">
-          200 ejercicios · 7 grupos musculares
-        </p>
-      </>
-    ),
-  },
-  {
-    title: "Herramientas",
-    caption: "Todo lo que necesitás, en un solo lugar.",
-    nav: 0,
-    body: (
-      <>
-        {[
-          { icon: Calculator, l: "Calculadoras fitness", s: "IMC, TDEE, macros, 1RM" },
-          { icon: UtensilsCrossed, l: "Contador de calorías", s: "Registro diario" },
-          { icon: Dumbbell, l: "Biblioteca de ejercicios", s: "200 ejercicios" },
-          { icon: BookOpen, l: "Blog y guía", s: "Artículos y recursos" },
-        ].map((r) => (
-          <div key={r.l} className="flex items-center gap-2 rounded-lg border border-border/60 bg-background/50 p-1.5">
-            <span className="grid size-7 shrink-0 place-items-center rounded-md bg-primary/15 text-primary">
-              <r.icon className="size-3.5" aria-hidden />
-            </span>
-            <span className="min-w-0 flex-1 leading-tight">
-              <span className="block truncate text-[9px] font-semibold">{r.l}</span>
-              <span className="block truncate text-[8px] text-muted-foreground">{r.s}</span>
-            </span>
-            <ChevronRight className="size-3 shrink-0 text-muted-foreground" aria-hidden />
-          </div>
-        ))}
-        <div className="flex items-start gap-2 rounded-lg border border-primary/25 bg-primary/10 p-2">
-          <Flame className="mt-0.5 size-3 shrink-0 text-primary" aria-hidden />
-          <p className="text-[8px] leading-snug text-foreground/90">
-            <span className="font-bold">Consejo:</span> registrá cada serie. Lo que se mide, mejora.
-          </p>
-        </div>
-      </>
-    ),
-  },
-] as const;
+      </div>
+    </>
+  );
+}
 
 export function AppShowcase() {
   return (
-    <section aria-labelledby="app-showcase-title" className="py-16 sm:py-20">
+    <section aria-label="Mi Zona, por dentro" className="py-16 sm:py-20">
       <Container>
         <SectionHeading
-          eyebrow="Una sola app"
-          title="Todo lo que necesitás, en un solo lugar"
-          description="Mi Zona reúne tus rutinas, tu registro, tu progreso y las herramientas de nutrición. Vistas ilustrativas con datos de ejemplo."
-          align="center"
+          eyebrow="La app"
+          title="Mi Zona, por dentro"
+          description="Mi Zona es tu área privada: tu rutina del día, el registro de cada sesión con PRs y e1RM (Epley), el control de peso, agua y hábitos, y el temporizador de descanso entre series. Vistas ilustrativas con datos de ejemplo."
         />
-        <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 xl:grid-cols-5">
-          {SHOWCASE.map((s, i) => (
-            <Reveal key={s.title} delay={0.05 * i}>
-              <div className="flex h-full flex-col gap-3">
-                <Phone title={s.title} activeNav={s.nav}>
-                  {s.body}
-                </Phone>
-                <div className="px-1 text-center">
-                  <p className="text-sm font-bold">{s.title}</p>
-                  <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{s.caption}</p>
-                </div>
+        <div className="relative mt-10 lg:mb-20 lg:mt-14">
+          <Reveal>
+            <PanelDesktop />
+          </Reveal>
+          <Reveal delay={0.12} className="relative z-10 mt-8 lg:absolute lg:bottom-0 lg:right-0 lg:mt-0">
+            <div className="mx-auto grid max-w-[420px] grid-cols-2 items-end gap-3 sm:gap-4 lg:mx-0 lg:flex lg:w-max lg:max-w-none lg:translate-y-10 lg:gap-4">
+              <PhoneFrame activeNav={1} widthClass="w-full lg:w-[168px] xl:w-[184px]">
+                <SessionPhoneBody />
+              </PhoneFrame>
+              <div className="lg:translate-y-8">
+                <PhoneFrame activeNav={3} widthClass="w-full lg:w-[168px] xl:w-[184px]">
+                  <ProgressPhoneBody />
+                </PhoneFrame>
               </div>
-            </Reveal>
-          ))}
+            </div>
+          </Reveal>
         </div>
       </Container>
     </section>

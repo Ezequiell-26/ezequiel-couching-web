@@ -11,7 +11,7 @@ export function FinalCta() {
 
   return (
     <section aria-labelledby="final-cta-title" className="relative isolate overflow-hidden border-t border-border/60">
-      {/* Fondo fotográfico (misma escena del hero, más fundida) */}
+      {/* Misma atmósfera del hero, más fundida hacia la superficie */}
       <Image
         src="/images/hero-gym.jpg"
         alt=""
@@ -20,39 +20,37 @@ export function FinalCta() {
         aria-hidden
         className="-z-20 object-cover object-bottom opacity-70"
       />
-      <div aria-hidden className="-z-10 absolute inset-0 bg-gradient-to-b from-background via-background/75 to-background/95" />
+      <div aria-hidden className="-z-10 absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background/95" />
 
-      <Container className="relative py-20 text-center sm:py-28">
+      <Container className="relative py-20 text-center sm:py-24">
         <motion.div
-          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16 }}
+          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         >
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">
-            Ezequiel Coaching
+          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-primary">
+            FITSYNC · Mi Zona
           </p>
           <h2
             id="final-cta-title"
-            className="mx-auto mt-3 max-w-2xl text-balance text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
+            className="mx-auto mt-3 max-w-2xl text-balance text-3xl font-bold tracking-tight sm:text-4xl"
           >
-            Tu mejor versión, <span className="text-primary">cada día.</span>
+            Menos improvisación. <span className="text-primary">Más progreso.</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-balance text-sm text-muted-foreground sm:text-base">
-            Entrená. Nutrí. Progresá. Todo en una sola app: contame tu punto de
-            partida y recibí tu propuesta. Sin compromiso.
+          <p className="mx-auto mt-4 max-w-lg text-balance text-sm text-muted-foreground sm:text-base">
+            Empezá con una evaluación honesta de tu punto de partida:
+            experiencia, material, tiempo y objetivo. Desde ahí, cada semana
+            tiene dirección.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <CTAButton view="cuestionario" size="lg" event="cta_click" eventProps={{ label: "final-cuestionario" }} source="final-cta" className="w-full sm:w-auto">
-              Empezar ahora
+              Empezá ahora
             </CTAButton>
-            <CTAButton view="guia-gratis" size="lg" variant="outline" event="cta_click" eventProps={{ label: "final-guia" }} source="final-cta" withArrow={false} className="w-full sm:w-auto">
-              Descargar guía gratis
+            <CTAButton view="planes" size="lg" variant="outline" event="cta_click" eventProps={{ label: "final-planes" }} source="final-cta" withArrow={false} className="w-full sm:w-auto">
+              Ver planes
             </CTAButton>
           </div>
-          <p className="text-script mt-8 -rotate-2 text-2xl text-primary sm:text-3xl" aria-hidden>
-            No es solo entrenar, es un estilo de vida.
-          </p>
         </motion.div>
       </Container>
     </section>

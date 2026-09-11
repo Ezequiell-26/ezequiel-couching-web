@@ -630,3 +630,45 @@ Work Log:
 Stage Summary:
 - Home con la estructura exacta de las referencias FitSync (foto gimnasio + dashboard preview + 5 mockups + banda + rúbrica) y paleta esmeralda aplicada a toda la web vía tokens, sin tocar lógica de las 35+ vistas.
 - Imágenes de marca 100% consistentes en esmeralda con cache-busting v3. Datos de ejemplo solo dentro de mockups etiquetados como ilustrativos; cero datos de prueba en BD.
+
+---
+Task ID: 32-a
+Agent: subagente app-showcase
+Task: Reescritura de AppShowcase como composición de producto (panel desktop + 2 teléfonos integrados)
+
+Work Log:
+- Contexto leído: worklog.md (Tasks 31/29/28 para estética FitSync esmeralda + decisiones anti-"look IA"), SectionHeading, Reveal, Container, globals.css (tokens oklch) y el AppShowcase anterior (fila de 5 teléfonos idénticos = patrón prohibido). ÚNICO archivo tocado: src/components/sections/app-showcase.tsx (reescritura completa, misma export AppShowcase).
+- Nueva composición "product family shot": PanelDesktop (bg-card, rounded-xl, hairline) a la izquierda con topbar de navegador simulado (dots neutros + fitsync.app/mi-zona + FS), cabecera con saludo/contexto (Mi Zona · Buenas, Eze · Martes · Bloque Fuerza · Semana 2), tarjeta "Entrenamiento de hoy" (Fuerza · Tren superior, 3 ejercicios con series×reps·carga + "+2 más", CTA esmeralda "Entrenar ahora", ≈50 min), WeekCard con anillo de semana 4/7 + letras L-X-J-V-S-D (activos en primary) y fila de métricas Peso 78,4 kg / Agua 1,8 L (barra 72%) / Racha 12 días.
+- Derecha, DELANTE y solapando: 2 teléfonos a escala realista (168-184px vs panel 820px) en absolute bottom-right con translate-y (el de Progreso 32px más bajo, asimetría) colgando 72px por debajo del panel; LG+: panel max-w-820 y col-span-8/4 diseñado para que el solape caiga sobre la zona vacía de la WeekCard (nada de contenido crítico tapado). Mobile: todo apilado, panel arriba y los 2 teléfonos lado a lado (grid-cols-2 max-w-420).
+- Teléfono "Entrenar" (sesión en curso): eyebrow EN CURSO en primary, ejercicio actual Press de banca 60 kg × 8 (cifra clave primary), Serie 2/4 con dots de progreso, bloque DESCANSO 1:29 con barra de progreso primary y "Siguiente: press inclinado". Teléfono "Progreso": e1RM Press banca 82,3 kg (primary) +11 % en 8 semanas · Epley, line chart SVG (stroke currentColor + gradiente oklch 0.25→0, gridlines hairline) y récords Sentadilla/Peso muerto/Press militar neutros. Datos coherentes entre panel y teléfono (misma rutina, misma carga).
+- Sistema de diseño: solo clases semánticas (bg-card/bg-background/bg-accent/40, border-border/60, bg-primary+primary-foreground en CTA), radios solo rounded-lg/xl (rounded-full reservado a dots/notch/barras), sombra única suave shadow-[0_24px_60px_-40px_oklch(0_0_0/0.8)] en teléfonos, sin glows; primary solo en CTA/anillo/progresos/estados activos/2 cifras clave; iconos lucide delgados size-3.5 sin tiles de color; microcopy mono uppercase text-[8/9px] tracking-[0.16em] + tabular-nums; status bar minimal 9:41 + notch + FS; cero emojis, cero features inventadas (sin IA coach/social/pasos/sueño).
+- Sub-componentes con tipos explícitos (Eyebrow, MiniBar, WeekRing, E1rmChart, MetricTile, TodayCard, WeekCard, PanelDesktop, StatusBar, PhoneNav, PhoneFrame, SessionPhoneBody, ProgressPhoneBody), server component sin "use client" (Reveal ya es client), sin any, sin estilos inline salvo width% de barras. 340 líneas.
+- Verificación: bun run lint → 0 errores 0 warnings · bunx tsc --noEmit → exit 0 · dev.log compila limpio (✓ Compiled). Sin servidores ni navegador (E2E lo hace el principal).
+
+Stage Summary:
+- AppShowcase convertido en una sola composición asimétrica tipo keyshot: dashboard desktop de Mi Zona + 2 teléfonos integrados solapando su esquina inferior derecha, con narrativa de producto real (la rutina del panel es la sesión en curso del teléfono).
+- Patrones prohibidos eliminados (fila de 5 mockups repetidos); design system respetado al 100%; datos de ejemplo solo en pantallas etiquetadas como ilustrativas. Lint 0/0 · tsc 0 · archivo de 340 líneas.
+---
+Task ID: 32
+Agent: main (Z.ai Code) + subagente 32-a
+Task: Rediseño profundo FITSYNC según brief de 41 puntos — "producto real, no web de IA" (auditoría → design system → rediseño → responsive → QA → polish)
+
+Work Log:
+- FASE 1 AUDITORÍA: AI-tells identificados y eliminados — (a) patrón hero SaaS prohibido (H1 gigante + 2 botones + badges flotantes) reemplazado por composición editorial asimétrica; (b) iconos-en-tiles decorativos eliminados de marketing (TrustBar/ValueProps/features strip eliminados o convertidos); (c) grids de cards idénticos (ValueProps 4 cards, ToolsBand 3 cards, AppShowcase 5 columnas) convertidos a composiciones variadas; (d) Caveat/rúbrica decorativa eliminada (layout, globals, final-cta); (e) Badge global pill → rounded-md; (f) radius 12px → 8px base (sm4/md6/lg8/xl12).
+- FASE 3 DESIGN SYSTEM (globals.css): paleta del brief exacta — background #071012, card #0D181A, popover/secondary #101D1F, accent #132326, border #1A2C2F, input #132326, muted-fg #94A7A5, foreground #E6EFEA (blanco suave, no #FFF), primary #3DDC97 con uso estratégico. Profundidad por niveles de superficie, no glows. themeColor/manifest/sw → #071012.
+- COPYWRITING nuevo (dirección del brief, es-AR): hero "Entrená con intención. Progresá con datos."; problema "Entrenar sin registro es adivinar."; showcase "Mi Zona, por dentro"; CTA final "Menos improvisación. Más progreso."; eliminados "Tu mejor versión, cada día." y frases genéricas.
+- FASE 4 REDISEÑO:
+  * hero.tsx reconstruido: mensaje + 1 CTA primaria + link quieto (sin doble botón), spec strip denso con datos reales verificables (200 ejercicios / 7 calculadoras / 4 fórmulas publicadas / 0 permanencia) y ZonePreview refinado (streak chip, barra de semana con fix de items-stretch para alturas %, radii lg/xl, caption de ejemplo). Fix bug: barras de semana colapsaban por items-end + height %.
+  * NUEVO problem-section.tsx: editorial 2 col — lista numerada 01-03 de dolores reales + foto de atleta cinematográfica (generada con z-ai + grade PIL: desat 0.55, hue teal 150, V 0.78) con panel "Lo que FITSYNC registra" (cargas, PRs, e1RM Epley, peso, agua, hábitos — todo real).
+  * tools-band.tsx: grid de 3 cards idénticas → panel índice con filas numeradas y CTA chip (composición distinta al resto).
+  * final-cta.tsx: fondo fotográfico + nuevo copy, sin rúbrica.
+  * TRUST-BAR y VALUE-PROPS eliminados (git rm; solo home-view los importaba); home-view rewired: Hero → Problem → Showcase → Method → Services → Results → Shop → Tools → Lead → Testimonials → FAQ → Final.
+  * navbar: h-16/h-14, "Empezar" ahora outline, Mi Zona única CTA primaria (producto).
+  * REBRAND FITSYNC: site.ts (name FITSYNC, shortName FS, tagline/description nuevos), seo.ts (32 refs), layout metadata, manifest (name/short_name), sw.js, emails de intake/leads APIs. logo.tsx: tile con Zap esmeralda (lucide, fill) + wordmark FIT/SYNC + "training system". Iconos PWA + logo-mark + og.png regenerados con PIL (bolt polygon nítido + DejaVu Bold para og, stripe superior de marca).
+  * 32-a (subagente, OK): app-showcase.tsx reescrito como product family shot — panel desktop "Mi Zona" (URL bar, saludo "Buenas", día/bloque/semana, rutina con series×reps×carga, anillo 4/7, métricas Peso/Agua/Racha) + 2 teléfonos solapados con escala realista (Entrenar en curso 60 kg × 8 con descanso 1:29; Progreso con e1RM 82,3 kg Epley) y narrativa de datos coherente entre dispositivos. Fix mío: saludo "Buenas, Eze" → "Buenas" (Eze es el coach, no el usuario del mockup).
+- FASE 5-6 QA: lint 0/0 · tsc 0 · E2E browser (home completa, Mi Zona auth gate, biblioteca con badges cuadrados + coberturas esmeralda, calculadoras IMC 78kg/178cm → 24,6 exacto) · 320px: home y mi-zona sw==cw==320 · consola 0 errores · dev.log 0 líneas error/hydration · BD verificada en 0 (9 tablas) · grep sin restos de Caveat ni "Ezequiel Coaching" en src.
+- CONSERVADO: las 35+ vistas, APIs, auth PIN, Prisma, tracking, PWA — cero cambios de lógica.
+
+Stage Summary:
+- FITSYNC es ahora una marca con identidad propia: logo bolt, wordmark bicolor, tagline "training system", paleta teal-negro profunda del brief, esmeralda estratégico, fotografía editorial, mockups de producto con datos de ejemplo etiquetados y densidad de información real.
+- Copy directo y específico en es-AR sin frases de IA. Cero features inventadas: todo lo mostrado existe en la app (rutinas, PRs, e1RM Epley, descanso, peso/agua/hábitos, racha, 200 ejercicios, 7 calculadoras).

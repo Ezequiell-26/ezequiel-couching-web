@@ -926,3 +926,16 @@ Stage Summary:
 - 24 fuentes documentadas en #/fuentes (licencia de ics corregida a ISC con evidencia).
 - Archivos: +src/lib/barbell.ts, +src/lib/ics-export.ts; ~calculadoras-view (Discos/VO2máx/tabla 1RM), ~weather route + ~weather-card (UV/sol), ~routines-tab (Agendar), ~fuentes-view (fila 24), ~package.json (+ics@3.12.0).
 - Pendiente heredado: push bloqueado por token GitHub revocado (commits b05f282/a78d31c + este pendientes de pushear).
+
+---
+Task ID: 36-push
+Agent: main (Z.ai Code)
+Task: Push de los commits pendientes con el nuevo token provisto por el usuario
+
+Work Log:
+- El usuario proveyó un nuevo token de GitHub (no se registra en este archivo por seguridad; vive solo en .git/config vía git remote set-url).
+- git push origin main → bb30e90..f6f3110 OK: subieron b05f282 (Task 35 ecosistema de datos), a78d31c (worklog bloqueo) y f6f3110 (Task 36 Discos/VO2máx/UV/.ics).
+- Verificado: ls-remote origin main = f6f3110, working tree limpio, rama sin commits pendientes.
+
+Stage Summary:
+- Push desbloqueado: GitHub queda sincronizado con todo el trabajo de Tasks 35 y 36. Bloqueo heredado cerrado.

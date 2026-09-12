@@ -13,10 +13,13 @@ datasource db {
 
 model Lead {
   id        Int      @id @default(autoincrement())
-  email     String
+  email     String   @unique
   name      String?
   source    String   @default("guia-gratis")
   createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([source])
 }
 
 model Intake {
@@ -35,6 +38,10 @@ model Intake {
   message     String?
   status      String   @default("nuevo")
   createdAt   DateTime @default(now())
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Message {
@@ -45,6 +52,9 @@ model Message {
   read      Boolean  @default(false)
   reply     String?
   createdAt DateTime @default(now())
+
+  @@index([read])
+  @@index([createdAt])
 }
 
 model Order {
@@ -60,6 +70,10 @@ model Order {
   provider      String   @default("manual") // manual | stripe
   providerRef   String?
   createdAt     DateTime @default(now())
+
+  @@index([customerEmail])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Product {
@@ -72,6 +86,9 @@ model Product {
   fileName    String?
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
+
+  @@index([category])
+  @@index([active])
 }
 
 model Plan {
@@ -84,6 +101,9 @@ model Plan {
   priceCents Int?
   active     Boolean  @default(true)
   createdAt  DateTime @default(now())
+
+  @@index([level])
+  @@index([active])
 }
 
 model Post {
@@ -95,6 +115,10 @@ model Post {
   category  String   @default("general")
   published Boolean  @default(true)
   createdAt DateTime @default(now())
+
+  @@index([category])
+  @@index([published])
+  @@index([createdAt])
 }
 
 // ─────────────────────────────────────────────────────────────────

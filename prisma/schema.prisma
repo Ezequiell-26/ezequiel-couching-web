@@ -20,21 +20,21 @@ model Lead {
 }
 
 model Intake {
-  id           Int      @id @default(autoincrement())
-  name         String
-  email        String
-  age          Int?
-  sex          String? // hombre | mujer
-  heightCm     Float?
-  weightKg     Float?
-  goal         String?
-  experience   String?
-  daysPerWeek  Int?
-  equipment    String?
-  injuries     String?
-  message      String?
-  status       String   @default("nuevo")
-  createdAt    DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String
+  age         Int?
+  sex         String? // hombre | mujer
+  heightCm    Float?
+  weightKg    Float?
+  goal        String?
+  experience  String?
+  daysPerWeek Int?
+  equipment   String?
+  injuries    String?
+  message     String?
+  status      String   @default("nuevo")
+  createdAt   DateTime @default(now())
 }
 
 model Message {
@@ -115,31 +115,38 @@ model ClientProfile {
   weightGoalKg Float?
   waterGoalMl  Int?
 
-  routines   Routine[]
-  sessions   WorkoutSession[]
-  weightLogs WeightLog[]
-  waterLogs  WaterLog[]
-  habitLogs  HabitLog[]
-  weekSlots  WeekSlot[]
+  routines         Routine[]
+  sessions         WorkoutSession[]
+  weightLogs       WeightLog[]
+  waterLogs        WaterLog[]
+  habitLogs        HabitLog[]
+  weekSlots        WeekSlot[]
+  challengeEntries ChallengeEntry[]
+  progressPhotos   ProgressPhoto[]
+  sleepLogs        SleepLog[]
+  mealPlans        MealPlan[]
+  communityPosts   CommunityPost[]
+  notifications    Notification[]
+  exports          Export[]
 }
 
 model Routine {
-  id          Int      @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   profileId   Int
   profile     ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   name        String
-  goal        String   @default("general") // general | hipertrofia | fuerza | perder-grasa | resistencia
-  level       String   @default("principiante") // principiante | intermedio | avanzado
-  daysPerWeek Int      @default(3)
-  equipment   String   @default("gimnasio") // gimnasio | mancuernas | casa | peso-corporal
-  source      String   @default("manual") // manual | ia
+  goal        String        @default("general") // general | hipertrofia | fuerza | perder-grasa | resistencia
+  level       String        @default("principiante") // principiante | intermedio | avanzado
+  daysPerWeek Int           @default(3)
+  equipment   String        @default("gimnasio") // gimnasio | mancuernas | casa | peso-corporal
+  source      String        @default("manual") // manual | ia
   notes       String?
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  active      Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
-  items    RoutineItem[]
-  sessions WorkoutSession[]
+  items     RoutineItem[]
+  sessions  WorkoutSession[]
   weekSlots WeekSlot[]
 
   @@index([profileId])
@@ -161,16 +168,16 @@ model RoutineItem {
 }
 
 model WorkoutSession {
-  id         Int       @id @default(autoincrement())
+  id         Int           @id @default(autoincrement())
   profileId  Int
   profile    ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   routineId  Int?
-  routine    Routine?  @relation(fields: [routineId], references: [id])
+  routine    Routine?      @relation(fields: [routineId], references: [id])
   title      String
   day        Int?
-  status     String    @default("activa") // activa | completada
-  volumeKg   Float     @default(0)
-  startedAt  DateTime  @default(now())
+  status     String        @default("activa") // activa | completada
+  volumeKg   Float         @default(0)
+  startedAt  DateTime      @default(now())
   finishedAt DateTime?
 
   sets SetLog[]
@@ -193,7 +200,7 @@ model SetLog {
 }
 
 model WeightLog {
-  id        Int      @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   profileId Int
   profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   date      DateTime // normalizado a medianoche UTC
@@ -204,7 +211,7 @@ model WeightLog {
 }
 
 model WaterLog {
-  id        Int      @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   profileId Int
   profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   date      DateTime // normalizado a medianoche UTC
@@ -215,12 +222,12 @@ model WaterLog {
 }
 
 model HabitLog {
-  id        Int      @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   profileId Int
   profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   date      DateTime // normalizado a medianoche UTC
   habit     String // sueno | proteina | agua | pasos | estiramiento | sin-azucar
-  done      Boolean  @default(false)
+  done      Boolean       @default(false)
 
   @@unique([profileId, date, habit])
   @@index([profileId])
@@ -249,30 +256,30 @@ model WeekSlot {
 
 // Challenges mensuales con objetivos y rankings
 model Challenge {
-  id          Int         @id @default(autoincrement())
-  title       String
-  description String
-  type        String      // steps | workout | water | habit
-  target      Int
-  startDate   DateTime
-  endDate     DateTime
-  active      Boolean     @default(true)
-  participants Int        @default(0)
-  createdAt   DateTime    @default(now())
-  
-  entries     ChallengeEntry[]
+  id           Int      @id @default(autoincrement())
+  title        String
+  description  String
+  type         String // steps | workout | water | habit
+  target       Int
+  startDate    DateTime
+  endDate      DateTime
+  active       Boolean  @default(true)
+  participants Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  entries ChallengeEntry[]
 }
 
 model ChallengeEntry {
-  id          Int       @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   challengeId Int
-  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  challenge   Challenge     @relation(fields: [challengeId], references: [id], onDelete: Cascade)
   profileId   Int
   profile     ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  value       Int       @default(0)
+  value       Int           @default(0)
   rank        Int?
-  completed   Boolean   @default(false)
-  updatedAt   DateTime  @default(now())
+  completed   Boolean       @default(false)
+  updatedAt   DateTime      @default(now())
 
   @@unique([challengeId, profileId])
   @@index([challengeId])
@@ -281,28 +288,28 @@ model ChallengeEntry {
 
 // Fotos de progreso del cliente
 model ProgressPhoto {
-  id        Int       @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   profileId Int
   profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   url       String
-  type      String    // front | back | side | comparison
+  type      String // front | back | side | comparison
   notes     String?
-  takenAt   DateTime  @default(now())
-  createdAt DateTime  @default(now())
+  takenAt   DateTime      @default(now())
+  createdAt DateTime      @default(now())
 
   @@index([profileId])
 }
 
 // Tracker de sueño
 model SleepLog {
-  id        Int       @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   profileId Int
   profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  date      DateTime  // fecha de la noche
+  date      DateTime // fecha de la noche
   hours     Float
-  quality   Int?      // 1-5 escala
+  quality   Int? // 1-5 escala
   notes     String?
-  createdAt DateTime  @default(now())
+  createdAt DateTime      @default(now())
 
   @@unique([profileId, date])
   @@index([profileId])
@@ -310,7 +317,7 @@ model SleepLog {
 
 // Meal planner / planificador de comidas
 model MealPlan {
-  id        Int       @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   profileId Int
   profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   name      String
@@ -318,71 +325,71 @@ model MealPlan {
   protein   Int?
   carbs     Int?
   fats      Int?
-  active    Boolean   @default(true)
-  createdAt DateTime  @default(now())
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
 
-  meals     Meal[]
+  meals Meal[]
 }
 
 model Meal {
-  id        Int       @id @default(autoincrement())
-  mealPlanId Int
-  mealPlan  MealPlan  @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
-  name      String
-  type      String    // desayuno | almuerzo | cena | snack
-  calories  Int?
-  protein   Int?
-  carbs     Int?
-  fats      Int?
-  recipe    String?
+  id          Int      @id @default(autoincrement())
+  mealPlanId  Int
+  mealPlan    MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  name        String
+  type        String // desayuno | almuerzo | cena | snack
+  calories    Int?
+  protein     Int?
+  carbs       Int?
+  fats        Int?
+  recipe      String?
   ingredients String?
-  orderIdx  Int       @default(0)
+  orderIdx    Int      @default(0)
 
   @@index([mealPlanId])
 }
 
 // Comunidad / posts de usuarios
 model CommunityPost {
-  id        Int       @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   profileId Int
   profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   content   String
-  images    String?   // URLs separadas por coma
-  likes     Int       @default(0)
-  comments  Int       @default(0)
-  tags      String?   // tags separados por coma
-  createdAt DateTime  @default(now())
+  images    String? // URLs separadas por coma
+  likes     Int           @default(0)
+  comments  Int           @default(0)
+  tags      String? // tags separados por coma
+  createdAt DateTime      @default(now())
 
   @@index([profileId])
 }
 
 // Notificaciones push
 model Notification {
-  id        Int       @id @default(autoincrement())
+  id        Int            @id @default(autoincrement())
   profileId Int?
   profile   ClientProfile? @relation(fields: [profileId], references: [id], onDelete: Cascade)
   title     String
   body      String
-  type      String    // reminder | achievement | challenge | general
-  read      Boolean   @default(false)
-  data      String?   // JSON con datos extra
+  type      String // reminder | achievement | challenge | general
+  read      Boolean        @default(false)
+  data      String? // JSON con datos extra
   sentAt    DateTime?
-  createdAt DateTime  @default(now())
+  createdAt DateTime       @default(now())
 
   @@index([profileId])
 }
 
 // Exportaciones generadas
 model Export {
-  id        Int       @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   profileId Int
   profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  type      String    // routines | progress | workouts | nutrition
-  format    String    // pdf | csv | json | ics
+  type      String // routines | progress | workouts | nutrition
+  format    String // pdf | csv | json | ics
   url       String?
-  status    String    @default(\"pending\") // pending | ready | expired
+  status    String        @default("pending") // pending | ready | expired
   expiresAt DateTime?
-  createdAt DateTime  @default(now())
+  createdAt DateTime      @default(now())
 
   @@index([profileId])
 }

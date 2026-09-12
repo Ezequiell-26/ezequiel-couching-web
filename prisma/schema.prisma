@@ -241,3 +241,148 @@ model WeekSlot {
   @@unique([profileId, weekday])
   @@index([profileId])
 }
+
+// ─────────────────────────────────────────────────────────────────
+// NUEVAS FEATURES (Task 50+): Gamificación avanzada, comunidad,
+// fotos progreso, sleep tracker, challenges, meal planner, notificaciones
+// ─────────────────────────────────────────────────────────────────
+
+// Challenges mensuales con objetivos y rankings
+model Challenge {
+  id          Int         @id @default(autoincrement())
+  title       String
+  description String
+  type        String      // steps | workout | water | habit
+  target      Int
+  startDate   DateTime
+  endDate     DateTime
+  active      Boolean     @default(true)
+  participants Int        @default(0)
+  createdAt   DateTime    @default(now())
+  
+  entries     ChallengeEntry[]
+}
+
+model ChallengeEntry {
+  id          Int       @id @default(autoincrement())
+  challengeId Int
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  profileId   Int
+  profile     ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  value       Int       @default(0)
+  rank        Int?
+  completed   Boolean   @default(false)
+  updatedAt   DateTime  @default(now())
+
+  @@unique([challengeId, profileId])
+  @@index([challengeId])
+  @@index([profileId])
+}
+
+// Fotos de progreso del cliente
+model ProgressPhoto {
+  id        Int       @id @default(autoincrement())
+  profileId Int
+  profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  url       String
+  type      String    // front | back | side | comparison
+  notes     String?
+  takenAt   DateTime  @default(now())
+  createdAt DateTime  @default(now())
+
+  @@index([profileId])
+}
+
+// Tracker de sueño
+model SleepLog {
+  id        Int       @id @default(autoincrement())
+  profileId Int
+  profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  date      DateTime  // fecha de la noche
+  hours     Float
+  quality   Int?      // 1-5 escala
+  notes     String?
+  createdAt DateTime  @default(now())
+
+  @@unique([profileId, date])
+  @@index([profileId])
+}
+
+// Meal planner / planificador de comidas
+model MealPlan {
+  id        Int       @id @default(autoincrement())
+  profileId Int
+  profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name      String
+  calories  Int?
+  protein   Int?
+  carbs     Int?
+  fats      Int?
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+
+  meals     Meal[]
+}
+
+model Meal {
+  id        Int       @id @default(autoincrement())
+  mealPlanId Int
+  mealPlan  MealPlan  @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  name      String
+  type      String    // desayuno | almuerzo | cena | snack
+  calories  Int?
+  protein   Int?
+  carbs     Int?
+  fats      Int?
+  recipe    String?
+  ingredients String?
+  orderIdx  Int       @default(0)
+
+  @@index([mealPlanId])
+}
+
+// Comunidad / posts de usuarios
+model CommunityPost {
+  id        Int       @id @default(autoincrement())
+  profileId Int
+  profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  content   String
+  images    String?   // URLs separadas por coma
+  likes     Int       @default(0)
+  comments  Int       @default(0)
+  tags      String?   // tags separados por coma
+  createdAt DateTime  @default(now())
+
+  @@index([profileId])
+}
+
+// Notificaciones push
+model Notification {
+  id        Int       @id @default(autoincrement())
+  profileId Int?
+  profile   ClientProfile? @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  type      String    // reminder | achievement | challenge | general
+  read      Boolean   @default(false)
+  data      String?   // JSON con datos extra
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([profileId])
+}
+
+// Exportaciones generadas
+model Export {
+  id        Int       @id @default(autoincrement())
+  profileId Int
+  profile   ClientProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  type      String    // routines | progress | workouts | nutrition
+  format    String    // pdf | csv | json | ics
+  url       String?
+  status    String    @default(\"pending\") // pending | ready | expired
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([profileId])
+}

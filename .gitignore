@@ -1,16 +1,42 @@
-skills/
+```
+# Dependencies
 node_modules/
-.next/
-dev.log
-*.tsbuildinfo
-next-env.d.ts
-# Secretos y datos locales — NO subir a GitHub
-.env
-.env.*
-db/*.db
-db/*.db-journal
-tool-results/
-agent-ctx/
 
-# Referencias subidas por el usuario (no forman parte del sitio)
-upload/
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment variables
+.env
+.env.local
+.env.*
+
+# Cache directories
+.cache/
+.nyc_output/
+coverage/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Database
+prisma/migrations/
+*.db
+*.db-journal
+
+# Temporary files
+*.tmp
+*.temp
+```

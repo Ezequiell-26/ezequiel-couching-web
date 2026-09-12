@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL } from "@/lib/constants";
 
 /** Sitemap de hashes: el router SPA expone las mismas secciones que #/vista. */
 export default function sitemap(): MetadataRoute.Sitemap {

@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Archivo } from "next/font/google";
 import "./globals.css";
-import { SITE_NAME, SITE_URL, organizationJsonLd } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/constants";
+import { organizationJsonLd } from "@/lib/seo";
 import { RegisterSW } from "@/components/pwa/register-sw";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
@@ -40,11 +43,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const orgJsonLd = JSON.stringify(organizationJsonLd());
   return (
-    <html lang="es" className={`${inter.variable} ${archivo.variable}`}>
-      <body className="font-sans">
+    <html lang="es" className={`${inter.variable} ${archivo.variable}`} suppressHydrationWarning>
+      <body className="font-sans antialiased">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: orgJsonLd }} />
         <RegisterSW />
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

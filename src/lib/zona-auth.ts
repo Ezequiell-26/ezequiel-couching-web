@@ -73,6 +73,11 @@ export async function getZonaProfile(): Promise<ClientProfile | null> {
   return profile;
 }
 
+/** Verifica y devuelve la sesión del cliente (alias para consistencia con admin-auth). */
+export async function verifyClientSession(): Promise<ClientProfile | null> {
+  return getZonaProfile();
+}
+
 /** Igual que getZonaProfile: la route decide la respuesta 401. */
 export async function requireZonaProfile(): Promise<ClientProfile | null> {
   return getZonaProfile();
